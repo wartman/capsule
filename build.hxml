@@ -1,0 +1,8 @@
+-cp src
+capsule.Container
+capsule.Mapping
+Test
+
+-main Test
+
+-js dist/capsule.js
