@@ -1,5 +1,5 @@
 package capsule;
 
-class ServiceProvider {
+interface ServiceProvider {
   public function register(container:Container):Void;
 }
