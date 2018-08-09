@@ -1,8 +1,4 @@
+# just tests for now.
 -cp src
-capsule.Container
-capsule.Mapping
-Test
-
--main Test
-
--js dist/capsule.js
+-main test.Run
+-js dist/test.js

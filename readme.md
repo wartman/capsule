@@ -7,7 +7,7 @@ About
 -----
 
 Capsule is a simple dependency injection framework for Haxe, built around
-the idea that all mappings can be reduced to a factory. Rather than use
+the idea that all mappings can be reduced to factory functions. Rather than use
 run-time metadata it is entirely macro based.
 
 For example, take this class:
@@ -49,7 +49,7 @@ class Main {
   public static function main() {
     var container = new Container();
     container.map(String, 'named').toValue('bin');
-    // etc
+    container.map(Fib, 'specific.fib').toType(Fib);
     container.map(Fooable).toType(Fooable);
   }
 
@@ -71,3 +71,26 @@ container.mapType('example.Fooable', null).toFactory(function (container) {
 
 Basically, `toType` is a macro that inspects the type passed to it and generates a factory function
 based on the type's meta-data (`map` is also a macro that automatically generates an ID based on a type).
+
+To Do
+-----
+
+Everything, really, but:
+
+- Some way to check dependencies at runtime
+- Sane error checking
+- Implementing `@:post` functionality
+- Implementing constructor injection a bit better, maybe more like:
+```
+class Foo {
+
+  public function new(
+    @:inject('foo') foo:String,
+    @:inject bar:Bar,
+    ?optional:Bool
+  ) {
+    // code
+  }
+
+}
+```
