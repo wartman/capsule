@@ -35,7 +35,7 @@ class Mapping<T> {
 
   // todo: should be `toClass`! And should only be limited to classes.
   public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr.ExprOf<T>) {
-    var builder = new capsule.macro.FactoryBuilder(type).exportFactory();
+    var builder = new capsule.macro.FactoryBuilder(type).exportFactory(ethis.pos);
     return macro @:pos(ethis.pos) ${ethis}.toFactory(${builder});
   }
 

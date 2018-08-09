@@ -19,11 +19,8 @@ class Container {
   }
 
   public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?id:haxe.macro.Expr.ExprOf<String>) {
-    // get type identifier
     var typeId = capsule.macro.TypeHelpers.getExprType(type);
-    // get value type
     var type = capsule.macro.TypeHelpers.getValueType(type);
-    // forward to runtime method
     return macro @:pos(ethis.pos) $ethis.mapType($typeId, $id, (null:$type));
   }
 

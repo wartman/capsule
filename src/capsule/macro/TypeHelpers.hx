@@ -98,6 +98,21 @@ class TypeHelpers {
     return followType(type).toString();
   }
 
+  public static function isNullable(type:Type):Bool {
+    switch (type) {
+      case TType(t, params):
+        if (Std.string(t) == 'Null')
+          return true;
+        return switch (t.get().type)
+        {
+          case TAnonymous(_): false;
+          case ref: isNullable(ref);
+        }
+      default:
+        return false;
+    }
+  }
+
   /**
     Follow TType references, but not if they point to TAnonymous
   **/

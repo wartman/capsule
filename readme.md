@@ -21,8 +21,10 @@ class Fooable {
   @:inject('named') public var bin:String;
   private var fib:Fib;
 
-  @:inject('specific.fib', null)
-  public function new(fib:Fib, ?optional:String) {
+  public function new(
+    @:inject('specific.fib') fib:Fib,
+    ?optional:String
+  ) {
     this.fib = fib;
   }
 
@@ -50,6 +52,7 @@ class Main {
     var container = new Container();
     container.map(String, 'named').toValue('bin');
     container.map(Fib, 'specific.fib').toType(Fib);
+    container.map(Bar).toType(Bar);
     container.map(Fooable).toType(Fooable);
   }
 
@@ -80,17 +83,3 @@ Everything, really, but:
 - Some way to check dependencies at runtime
 - Sane error checking
 - Implementing `@:post` functionality
-- Implementing constructor injection a bit better, maybe more like:
-```
-class Foo {
-
-  public function new(
-    @:inject('foo') foo:String,
-    @:inject bar:Bar,
-    ?optional:Bool
-  ) {
-    // code
-  }
-
-}
-```

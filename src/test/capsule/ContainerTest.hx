@@ -23,6 +23,17 @@ class ContainerTest extends TestCase {
     assertEquals(expected, 'one');
   }
 
+  public function testConditionalConstructor() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.map(String, 'bar').toValue('bar');
+    container.map(ConditionallyInjectsConstructor).toType(ConditionallyInjectsConstructor);
+    var expected = container.get(ConditionallyInjectsConstructor);
+    assertEquals(expected.foo, 'foo');
+    assertEquals(expected.bar, 'bar');
+    assertEquals(expected.bax, 'default');
+  }
+
   public function testChildOverrides() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
