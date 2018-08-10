@@ -50,6 +50,30 @@ class ContainerTest extends TestCase {
     assertEquals(expected2.bar, 'bar');
   }
 
+  public function testMethodInjection() {
+    var container = new Container();
+    container.map(String).toValue('foo');
+    container.map(String, 'bar').toValue('bar');
+    container.map(String, 'bin').toValue('bin');
+    container.map(String, 'bax').toValue('bax');
+    container.map(Plain).toType(Plain);
+    container.map(InjectsMethods).toType(InjectsMethods);
+    var expected = container.get(InjectsMethods);
+    assertEquals(expected.foo, 'foo');
+    assertEquals(expected.bar, 'bar');
+    assertEquals(expected.bin, 'bin');
+    assertEquals(expected.bax, 'bax');
+    assertEquals(expected.plain.value, 'one');
+  }
+
+  public function testPostInjection() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.map(PostInject).toType(PostInject);
+    var expected = container.get(PostInject);
+    assertEquals(expected.ran, 'foo:one:two:three:four');
+  }
+
   // todo:
   // all the tests
 }

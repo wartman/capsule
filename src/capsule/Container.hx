@@ -18,35 +18,36 @@ class Container {
     return this;
   }
 
-  public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?id:haxe.macro.Expr.ExprOf<String>) {
+  public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     var typeId = capsule.macro.TypeHelpers.getExprType(type);
     var type = capsule.macro.TypeHelpers.getValueType(type);
-    return macro @:pos(ethis.pos) $ethis.mapType($typeId, $id, (null:$type));
+    return macro @:pos(ethis.pos) $ethis.mapType($typeId, $tag, (null:$type));
   }
 
-  public function mapType<T>(type:String, ?id:String, ?value:T):Mapping<T> {
-    var name = getMappingKey(type, id);
+  public function mapType<T>(type:String, ?tag:String, ?value:T):Mapping<T> {
+    var name = getMappingKey(type, tag);
     if (mappings.exists(name)) return cast mappings.get(name);
-    var mapping = new Mapping(type, id);
+    var mapping = new Mapping(type, tag);
     mappings.set(name, mapping);
     return mapping;
   }
 
-  public macro function get<T>(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?id:haxe.macro.Expr.ExprOf<String>) {
+  public macro function get(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     return switch (type.expr) {
-      case haxe.macro.Expr.ExprDef.EConst(haxe.macro.Expr.Constant.CString(_)): macro @:pos(ethis.pos) ${ethis}.getValue($type, $id);
+      case haxe.macro.Expr.ExprDef.EConst(haxe.macro.Expr.Constant.CString(_)): macro @:pos(ethis.pos) ${ethis}.getValue($type, $tag);
       default:
         var typeId = capsule.macro.TypeHelpers.getExprType(type);
-        macro @:pos(ethis.pos) ${ethis}.getValue($typeId, $id);
+        var complex = capsule.macro.TypeHelpers.getValueType(type);
+        macro @:pos(ethis.pos) (${ethis}.getValue($typeId, $tag):$complex);
     }
   }
 
-  public function getValue<T>(type:String, ?id:String, ?container:Container):T {
+  public function getValue<T>(type:String, ?tag:String, ?container:Container):T {
     if (container == null) container = this;
-    var name = getMappingKey(type, id);
+    var name = getMappingKey(type, tag);
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
-      if (parent != null) return parent.getValue(type, id, container);
+      if (parent != null) return parent.getValue(type, tag, container);
       throw 'No mapping was found for ${mapping}';
     }
     return mapping.getValue(container);

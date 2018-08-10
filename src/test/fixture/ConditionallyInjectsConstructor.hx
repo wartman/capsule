@@ -8,8 +8,8 @@ class ConditionallyInjectsConstructor {
 
   public function new(
     @:inject('foo') foo:String,
-    @:inject('bar') bar:String,
-    ?bax:String
+    @:noInject ?bax:String,
+    @:inject('bar') bar:String
   ) {
     this.foo = foo;
     this.bar = bar;

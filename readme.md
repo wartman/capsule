@@ -12,23 +12,31 @@ run-time metadata it is entirely macro based.
 
 For example, take this class:
 
-```
+```haxe
 package example;
 
 class Fooable {
 
   @:inject public var bar:Bar;
   @:inject('named') public var bin:String;
+  private var bif:Bif;
   private var fib:Fib;
 
+  // Constructors are ALWAYS injected, so we 
+  // don't need to mark them.
   public function new(
+    bif:Bif,
+    // We can mark arguments if the need a tag: 
     @:inject('specific.fib') fib:Fib,
-    ?optional:String
+    // ... or tell the Container to skip an argument, so long
+    // as it is nullable.
+    @:noInject ?optional:String
   ) {
+    this.bif = bif;
     this.fib = fib;
   }
 
-  @:post(1) public function after() {
+  @:postInject(1) public function after() {
     trace(bin);
   }
 
@@ -38,12 +46,11 @@ class Fooable {
 
 Now let's map it to the container:
 
-```
-// In `Main.hx`
-
+```haxe
 import capsule.Container;
 import example.Fooable;
 import example.Bar;
+import example.Bif;
 import example.Fib;
 
 class Main {
@@ -52,6 +59,7 @@ class Main {
     var container = new Container();
     container.map(String, 'named').toValue('bin');
     container.map(Fib, 'specific.fib').toType(Fib);
+    container.map(Bif).toType(Bif);
     container.map(Bar).toType(Bar);
     container.map(Fooable).toType(Fooable);
   }
@@ -62,18 +70,19 @@ class Main {
 
 In the above example, `container.map(Fooable).toType(Fooable)` becomes the following (more or less):
 
-```
+```haxe
 container.mapType('example.Fooable', null).toFactory(function (container) {
-  var value = new Fooable(container.get(example.Fib, 'specific.fib'), null);
+  var value = new Fooable(
+    container.get(example.Bif),
+    container.get(example.Fib, 'specific.fib'),
+    null
+  );
   value.bar = container.get(example.Bar);
   value.bin = container.get(String, 'named');
   value.after();
   return value;
 });
 ```
-
-Basically, `toType` is a macro that inspects the type passed to it and generates a factory function
-based on the type's meta-data (`map` is also a macro that automatically generates an ID based on a type).
 
 To Do
 -----
@@ -82,4 +91,25 @@ Everything, really, but:
 
 - Some way to check dependencies at runtime
 - Sane error checking
-- Implementing `@:post` functionality
+- Implementing `@:post` functionality.
+- For Haxe 4, changing the API to this:
+```haxe
+class Foo {
+
+  public function new(@:inject.tag('foo') foo:String) {
+    // etc
+  }
+
+  @:inject public function bar(
+    @:inject.tag('bar') bar:String,
+    @:inject.skip ?bin:String
+  ) {
+    // etc
+  }
+
+  @:inject.post(1) public function after() {
+    // etc
+  }
+
+}
+```

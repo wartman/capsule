@@ -27,12 +27,11 @@ class FactoryBuilder {
     };
 
     for (field in fields) {
-      var meta = field.meta.extract(':inject');
-      // todo: check for `:post`
-      if (meta.length == 0) continue;
-
       switch (field.kind) {
         case FVar(_, _):
+          var meta = field.meta.extract(':inject')[0];
+          if (meta == null) continue;
+
           var name = field.name;
           var fieldType = getType(field.type);
           var idName = fieldType.pack.concat([ fieldType.name ]).join('.');
@@ -40,29 +39,85 @@ class FactoryBuilder {
             expr: EConst(CString(idName)),
             pos: field.pos
           } 
-          var id = meta[0].params.length > 0 ? meta[0].params[0] : {
-            expr:EConst(CIdent('null')),
-            pos: field.pos
-          };
+          var id = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
           exprs.push(macro $p{[ "value", name ]} = container.getValue($typeId, $id));
         case FMethod(k):
-          // todo. Probably can reuse the code I have for the constructor?
+          var meth = field.expr();
+          var meta = field.meta.extract(':inject')[0];
+          if (meta == null) continue;
+
+          if (meta.params.length > 0) {
+            Context.error('You cannot use tagged injections on methods. Use argument injections instead.', field.pos);
+          }
+          var args = getArgumentInjectons(meth);
+          if (args.length == 0) continue;
+          exprs.push(macro @:pos(callPos) $p{[ "value", field.name ]}($a{ args }));
         default:
       }
     }
 
-    var ctor = cls.constructor.get();
-    var args:Array<Expr> = [];
-    var globalInject = ctor.meta.has(':inject');
-    if (globalInject) {
-      var globalMeta = ctor.meta.extract(':inject')[0];
-      if (globalMeta.params.length != 0) {
-        trace(globalMeta);
-        Context.error('Inject metadata cannot have arguments when being used on a constructor. Mark individual arguments with `@:inject("id")` instead.', ctor.pos);
+    var postInjects:Array<{ order:Int, expr:Expr }> = [];
+
+    for (field in fields) {
+      switch (field.kind) {
+        case FMethod(_):
+          var meta = field.meta.extract(':postInject')[0];
+          if (meta == null) continue;
+          if (field.meta.has(':inject')) {
+            Context.error('`@:postInject` and `@:inject` are not allowed on the same method', field.pos);
+          }
+          var order:Int = 0;
+          if (meta.params.length > 0) {
+            switch (meta.params[0].expr) {
+              case EConst(CInt(v)): order = Std.parseInt(v);
+              default:
+                Context.error('`@:postInject` only accepts integers as params', field.pos);
+            }
+          }
+          switch (field.expr().expr) {
+            case TFunction(f):
+              if (f.args.length > 0) {
+                Context.error('`@:postInject` methods cannot have any arguments', field.pos);
+              }
+            default:
+          }
+          postInjects.push({
+            order: order,
+            expr: macro @:pos(callPos) $p{[ "value", field.name ]}()
+          });
+        default:
+          var meta = field.meta.extract(':postInject')[0];
+          if (meta != null) {
+            Context.error('Only methods may be marked with `@:postInject`', field.pos);
+          }
       }
     }
 
-    switch (ctor.expr().expr) {
+    if (postInjects.length > 0) {
+      haxe.ds.ArraySort.sort(postInjects, function (a, b) {
+        var result = a.order - b.order;
+        return result;
+      });
+      exprs = exprs.concat(postInjects.map(function (pi) return pi.expr));
+    }
+
+    var ctor = cls.constructor.get();
+    if(ctor.meta.has(':inject')) {
+      Context.error('Constructors should not be marked with `@:inject` -- they will be injected automatically. You may still use argument injections on them.', ctor.pos);
+    }
+    var args = getArgumentInjectons(ctor.expr());
+    var make = { expr:ENew(tp, args), pos: type.pos };
+
+    return macro function(container:capsule.Container) {
+      var value = ${make};
+      $b{exprs};
+      return value;
+    };
+  }
+
+  private function getArgumentInjectons(fun:TypedExpr) {
+    var args:Array<Expr> = [];
+    switch (fun.expr) {
       case TFunction(f):
         for (arg in f.args) {
           var argMeta = arg.v.meta.extract(':inject');
@@ -70,9 +125,10 @@ class FactoryBuilder {
           var argType = arg.v.t.getType();
 
           if (argMeta.length == 0) {
-            if (!globalInject && !arg.v.t.isNullable()) {
-              Context.error('Construtors must either be injectable or must only have optional arguments.', callPos);            
-            } else if (!globalInject) {
+            if (arg.v.meta.has(':noInject')) {
+              if (!arg.v.t.isNullable()) {
+                Context.error('Methods and constructors must either be injectable or must only have optional arguments.', fun.pos);
+              }
               args.push(macro null);
               continue;
             }
@@ -80,24 +136,14 @@ class FactoryBuilder {
 
           var argTypeId:Expr = {
             expr: EConst(CString(argType)),
-            pos: cls.pos
+            pos: fun.pos
           };
           args.push(macro container.getValue($argTypeId, $argId));
         }
-      default:
+      default: 
+        Context.error('Invalid method type', fun.pos);
     }
-
-    // todo: allow constructor injection
-    var make = { expr:ENew(tp, args), pos: type.pos };
-
-    // TODO:
-    // Need to check the type of Value much sooner, as this will 
-    // throw weird.
-    return macro function(container:capsule.Container) {
-      var value = ${make};
-      $b{exprs};
-      return value;
-    };
+    return args;
   }
 
   private function getClassType(type:Expr):ClassType {
