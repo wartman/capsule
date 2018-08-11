@@ -15,6 +15,22 @@ class ContainerTest extends TestCase {
     assertEquals(container.get(Int, 'one'), 1);
   }
 
+  public function testClosure() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.map(String, 'bar').toValue('bar');
+    container.map(InjectsValues, 'default').toType(InjectsValues);
+    
+    var mapping = container.map(InjectsValues, 'local').toType(InjectsValues);
+    mapping.map(String, 'foo').toValue('changed');
+
+    var expectedLocal = container.get(InjectsValues, 'local');
+    assertEquals(expectedLocal.foo, 'changed');
+    
+    var expectedDefault = container.get(InjectsValues, 'default');
+    assertEquals(expectedDefault.foo, 'foo'); 
+  }
+
   public function testConstructorInjecton() {
     var container = new Container();
     container.map(Plain).toType(Plain);
@@ -43,10 +59,27 @@ class ContainerTest extends TestCase {
     assertEquals(expected1.foo, 'foo');
     assertEquals(expected1.bar, 'bar');
 
-    var child = container.getChildContainer();
-    child.map(String, 'foo').toValue('bar');
+    var child = container.getChild();
+    child.map(String, 'foo').toValue('changed');
     var expected2 = child.get(InjectsValues);
-    assertEquals(expected2.foo, 'bar');
+    assertEquals(expected2.foo, 'changed');
+    assertEquals(expected2.bar, 'bar');
+  }
+
+  public function testExtend() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.map(String, 'bar').toValue('bar');
+    container.map(InjectsValues).toType(InjectsValues);
+    var expected1 = container.get(InjectsValues);
+    assertEquals(expected1.foo, 'foo');
+    assertEquals(expected1.bar, 'bar');
+
+    var container2 = new Container();
+    container2.map(String, 'foo').toValue('changed');
+    var container3 = container2.extend(container);
+    var expected2 = container3.get(InjectsValues);
+    assertEquals(expected2.foo, 'changed');
     assertEquals(expected2.bar, 'bar');
   }
 

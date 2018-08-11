@@ -127,7 +127,7 @@ class FactoryBuilder {
           if (argMeta.length == 0) {
             if (arg.v.meta.has(':noInject')) {
               if (!arg.v.t.isNullable()) {
-                Context.error('Methods and constructors must either be injectable or must only have optional arguments.', fun.pos);
+                Context.error('Arguments marked with `@:noInject` must be optional.', fun.pos);
               }
               args.push(macro null);
               continue;

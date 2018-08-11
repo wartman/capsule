@@ -4,6 +4,7 @@ class Mapping<T> {
 
   public var type(default, null):String;
   public var id(default, null):String;
+  public var closure:Container;
   private var factory:Container->T;
   private var value:T;
   private var isShared:Bool = false;
@@ -13,15 +14,24 @@ class Mapping<T> {
     this.id = id;
   }
 
+  public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, tag:haxe.macro.Expr.ExprOf<String>) {
+    return macro @:pos(ethis.pos) ${ethis}.getClosure().map($type, $tag);
+  }
+
+  public function getClosure() {
+    if (closure == null) closure = new Container();
+    return closure;
+  }
+
   public function getValue(container:Container):T {
     if (factory == null) {
       throw 'No factory exists for mapping ${id}';
     }
     if (isShared) {
-      if (value == null) value = factory(container); 
+      if (value == null) value = factory(handleLocalMappings(container)); 
       return value;
     }
-    return factory(container);
+    return factory(handleLocalMappings(container));
   }
 
   public function toFactory(factory:Container->T) {
@@ -42,6 +52,11 @@ class Mapping<T> {
   public function asShared() {
     isShared = true;
     return this;
+  }
+
+  private function handleLocalMappings(container:Container):Container {
+    if (closure != null) return closure.extend(container);
+    return container;
   }
 
 }

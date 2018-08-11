@@ -4,11 +4,9 @@ typedef ServiceProvider = capsule.ServiceProvider;
 
 class Capsule {
 
-  private static var instance:Container;
-
-  public static function getGlobalContainer() {
-    if (instance == null) instance = new Container();
-    return instance;
+  public function get() {
+    // ??
+    return new Container();
   }
 
 }

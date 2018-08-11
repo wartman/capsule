@@ -5,12 +5,17 @@ class Container {
   private var parent:Container;
   private var mappings:Map<String, Mapping<Dynamic>> = new Map();
 
-  public function new(?parent:Container) {
+  public function new(?parent:Container, ?mappings:Map<String, Mapping<Dynamic>>) {
     this.parent = parent;
+    if (mappings != null) this.mappings = mappings;
   }
 
-  public function getChildContainer():Container {
+  public function getChild() {
     return new Container(this);
+  }
+
+  public function extend(container:Container) {
+    return new Container(container, mappings);
   }
 
   public function provide(serviceProvider:ServiceProvider) {
