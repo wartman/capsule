@@ -27,16 +27,16 @@ class Fooable {
   public function new(
     bif:Bif,
     // We can mark arguments if the need a tag: 
-    @:inject('specific.fib') fib:Fib,
+    @:inject.tag('specific.fib') fib:Fib,
     // ... or tell the Container to skip an argument, so long
     // as it is nullable.
-    @:noInject ?optional:String
+    @:inject.skip ?optional:String
   ) {
     this.bif = bif;
     this.fib = fib;
   }
 
-  @:postInject(1) public function after() {
+  @:inject.post(1) public function after() {
     trace(bin);
   }
 
