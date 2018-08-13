@@ -4,8 +4,7 @@ typedef ServiceProvider = capsule.ServiceProvider;
 
 class Capsule {
 
-  public function get() {
-    // ??
+  public static function get() {
     return new Container();
   }
 

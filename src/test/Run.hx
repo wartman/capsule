@@ -1,15 +1,17 @@
 package test;
 
-import haxe.unit.TestRunner;
+import hex.unittest.notifier.*;
+import hex.unittest.runner.*;
 import test.capsule.ContainerTest;
 
 class Run {
 
   public static function main() {
-    // Using haxe.unit for the moment.
-    var runner = new TestRunner();
-    runner.add(new ContainerTest());
-    runner.run();
+    var emu = new ExMachinaUnitCore();
+    emu.addListener(new ConsoleNotifier(false));
+    emu.addListener(new ExitingNotifier());
+    emu.addTest(ContainerTest);
+    emu.run();
   }
 
 }

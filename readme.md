@@ -59,7 +59,8 @@ class Main {
     var container = new Container();
     container.map(String, 'named').toValue('bin');
     container.map(Fib, 'specific.fib').toType(Fib);
-    container.map(Bif).toType(Bif);
+    // For more fine grained control:
+    container.map(Bif).toFactory(container -> new Bif('bof')).asShared();
     container.map(Bar).toType(Bar);
     container.map(Fooable).toType(Fooable);
   }
@@ -71,7 +72,7 @@ class Main {
 In the above example, `container.map(Fooable).toType(Fooable)` becomes the following (more or less):
 
 ```haxe
-container.mapType('example.Fooable', null).toFactory(function (container) {
+container.mapType('example.Fooable', null).toFactory(container -> {
   var value = new Fooable(
     container.get(example.Bif),
     container.get(example.Fib, 'specific.fib'),
@@ -91,25 +92,3 @@ Everything, really, but:
 
 - Some way to check dependencies at runtime
 - Sane error checking
-- Implementing `@:post` functionality.
-- For Haxe 4, changing the API to this:
-```haxe
-class Foo {
-
-  public function new(@:inject.tag('foo') foo:String) {
-    // etc
-  }
-
-  @:inject public function bar(
-    @:inject.tag('bar') bar:String,
-    @:inject.skip ?bin:String
-  ) {
-    // etc
-  }
-
-  @:inject.post(1) public function after() {
-    // etc
-  }
-
-}
-```

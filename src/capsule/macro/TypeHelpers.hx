@@ -100,6 +100,11 @@ class TypeHelpers {
 
   public static function isNullable(type:Type):Bool {
     switch (type) {
+      // hmm.
+      case TAbstract(t, inst):
+        if (Std.string(t) == 'Null')
+          return true;
+        return false;
       case TType(t, params):
         if (Std.string(t) == 'Null')
           return true;

@@ -1,4 +1,5 @@
 # just tests for now.
 -cp src
+-lib hexunit
 -main test.Run
 -js dist/test.js

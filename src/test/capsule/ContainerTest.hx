@@ -1,20 +1,30 @@
 package test.capsule;
 
-import haxe.unit.TestCase;
 import capsule.Container;
 import test.fixture.*;
 
-class ContainerTest extends TestCase {
+using hex.unittest.assertion.Assert;
 
+class ContainerTest {
+
+  @Test
   public function testSimpleValue() {
     var container = new Container();
     container.map(String, 'str').toValue('foo');
     container.map(Int, 'one').toValue(1);
 
-    assertEquals(container.get(String, 'str'), 'foo');
-    assertEquals(container.get(Int, 'one'), 1);
+    container.get(String, 'str').equals('foo');
+    container.get(Int, 'one').equals(1);
   }
 
+  @Test
+  public function testFactory() {
+    var container = new Container();
+    container.map(String, 'foo').toFactory(container -> 'foo');
+    container.get(String, 'foo').equals('foo');
+  }
+
+  @Test
   public function testClosure() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -25,64 +35,69 @@ class ContainerTest extends TestCase {
     mapping.map(String, 'foo').toValue('changed');
 
     var expectedLocal = container.get(InjectsValues, 'local');
-    assertEquals(expectedLocal.foo, 'changed');
+    expectedLocal.foo.equals('changed');
     
     var expectedDefault = container.get(InjectsValues, 'default');
-    assertEquals(expectedDefault.foo, 'foo'); 
+    expectedDefault.foo.equals('foo'); 
   }
 
+  @Test
   public function testConstructorInjecton() {
     var container = new Container();
     container.map(Plain).toType(Plain);
     container.map(InjectsConstructor).toType(InjectsConstructor);
     var expected = container.get(InjectsConstructor).one.value;
-    assertEquals(expected, 'one');
+    expected.equals('one');
   }
 
+  @Test
   public function testConditionalConstructor() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
     container.map(String, 'bar').toValue('bar');
     container.map(ConditionallyInjectsConstructor).toType(ConditionallyInjectsConstructor);
     var expected = container.get(ConditionallyInjectsConstructor);
-    assertEquals(expected.foo, 'foo');
-    assertEquals(expected.bar, 'bar');
-    assertEquals(expected.bax, 'default');
+    expected.foo.equals('foo');
+    expected.bar.equals('bar');
+    expected.bax.equals('default');
   }
 
+  @Test
   public function testChildOverrides() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
     container.map(String, 'bar').toValue('bar');
     container.map(InjectsValues).toType(InjectsValues);
     var expected1 = container.get(InjectsValues);
-    assertEquals(expected1.foo, 'foo');
-    assertEquals(expected1.bar, 'bar');
+    expected1.foo.equals('foo');
+    expected1.bar.equals('bar');
 
     var child = container.getChild();
     child.map(String, 'foo').toValue('changed');
     var expected2 = child.get(InjectsValues);
-    assertEquals(expected2.foo, 'changed');
-    assertEquals(expected2.bar, 'bar');
+    expected2.foo.equals('changed');
+    expected2.bar.equals('bar');
   }
 
+  @Test
   public function testExtend() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
     container.map(String, 'bar').toValue('bar');
     container.map(InjectsValues).toType(InjectsValues);
     var expected1 = container.get(InjectsValues);
-    assertEquals(expected1.foo, 'foo');
-    assertEquals(expected1.bar, 'bar');
+    expected1.foo.equals('foo');
+    expected1.bar.equals('bar');
 
     var container2 = new Container();
     container2.map(String, 'foo').toValue('changed');
     var container3 = container2.extend(container);
     var expected2 = container3.get(InjectsValues);
-    assertEquals(expected2.foo, 'changed');
-    assertEquals(expected2.bar, 'bar');
+    expected2.foo.equals('changed');
+    expected2.bar.equals('bar');
   }
 
+  @Test
   public function testMethodInjection() {
     var container = new Container();
     container.map(String).toValue('foo');
@@ -92,19 +107,20 @@ class ContainerTest extends TestCase {
     container.map(Plain).toType(Plain);
     container.map(InjectsMethods).toType(InjectsMethods);
     var expected = container.get(InjectsMethods);
-    assertEquals(expected.foo, 'foo');
-    assertEquals(expected.bar, 'bar');
-    assertEquals(expected.bin, 'bin');
-    assertEquals(expected.bax, 'bax');
-    assertEquals(expected.plain.value, 'one');
+    expected.foo.equals('foo');
+    expected.bar.equals('bar');
+    expected.bin.equals('bin');
+    expected.bax.equals('bax');
+    expected.plain.value.equals('one');
   }
 
+  @Test
   public function testPostInjection() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
     container.map(PostInject).toType(PostInject);
     var expected = container.get(PostInject);
-    assertEquals(expected.ran, 'foo:one:two:three:four');
+    expected.ran.equals('foo:one:two:three:four');
   }
 
   // todo:

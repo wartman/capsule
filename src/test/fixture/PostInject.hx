@@ -7,21 +7,21 @@ class PostInject {
 
   public function new() {}
 
-  @:postInject(3) public function four() {
+  @:inject.post(3) public function four() {
     ran += ':four';
   }
 
-  @:postInject public function one() {
+  @:inject.post public function one() {
     ran += foo + ':one';
   }
 
-  @:postInject(1) public function two() {
+  @:inject.post(1) public function two() {
     ran += ':two';
   }
 
-  // Should be added after the previous `@:postInject(1)`
+  // Should be added after the previous `@:inject.post(1)`
   // because it is declared later. Might be a bit brittle.
-  @:postInject(1) public function three() {
+  @:inject.post(1) public function three() {
     ran += ':three';
   }
 

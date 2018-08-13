@@ -49,7 +49,7 @@ class FactoryBuilder {
           if (meta.params.length > 0) {
             Context.error('You cannot use tagged injections on methods. Use argument injections instead.', field.pos);
           }
-          var args = getArgumentInjectons(meth);
+          var args = getArgumentTags(meth);
           if (args.length == 0) continue;
           exprs.push(macro @:pos(callPos) $p{[ "value", field.name ]}($a{ args }));
         default:
@@ -61,23 +61,23 @@ class FactoryBuilder {
     for (field in fields) {
       switch (field.kind) {
         case FMethod(_):
-          var meta = field.meta.extract(':postInject')[0];
+          var meta = field.meta.extract(':inject.post')[0];
           if (meta == null) continue;
           if (field.meta.has(':inject')) {
-            Context.error('`@:postInject` and `@:inject` are not allowed on the same method', field.pos);
+            Context.error('`@:inject.post` and `@:inject` are not allowed on the same method', field.pos);
           }
           var order:Int = 0;
           if (meta.params.length > 0) {
             switch (meta.params[0].expr) {
               case EConst(CInt(v)): order = Std.parseInt(v);
               default:
-                Context.error('`@:postInject` only accepts integers as params', field.pos);
+                Context.error('`@:inject.post` only accepts integers as params', field.pos);
             }
           }
           switch (field.expr().expr) {
             case TFunction(f):
               if (f.args.length > 0) {
-                Context.error('`@:postInject` methods cannot have any arguments', field.pos);
+                Context.error('`@:inject.post` methods cannot have any arguments', field.pos);
               }
             default:
           }
@@ -86,9 +86,9 @@ class FactoryBuilder {
             expr: macro @:pos(callPos) $p{[ "value", field.name ]}()
           });
         default:
-          var meta = field.meta.extract(':postInject')[0];
+          var meta = field.meta.extract(':inject.post')[0];
           if (meta != null) {
-            Context.error('Only methods may be marked with `@:postInject`', field.pos);
+            Context.error('Only methods may be marked with `@:inject.post`', field.pos);
           }
       }
     }
@@ -105,7 +105,7 @@ class FactoryBuilder {
     if(ctor.meta.has(':inject')) {
       Context.error('Constructors should not be marked with `@:inject` -- they will be injected automatically. You may still use argument injections on them.', ctor.pos);
     }
-    var args = getArgumentInjectons(ctor.expr());
+    var args = getArgumentTags(ctor.expr());
     var make = { expr:ENew(tp, args), pos: type.pos };
 
     return macro function(container:capsule.Container) {
@@ -115,19 +115,19 @@ class FactoryBuilder {
     };
   }
 
-  private function getArgumentInjectons(fun:TypedExpr) {
+  private function getArgumentTags(fun:TypedExpr) {
     var args:Array<Expr> = [];
     switch (fun.expr) {
       case TFunction(f):
         for (arg in f.args) {
-          var argMeta = arg.v.meta.extract(':inject');
+          var argMeta = arg.v.meta.extract(':inject.tag');
           var argId = argMeta.length > 0 ? argMeta[0].params[0] : macro null;
           var argType = arg.v.t.getType();
 
           if (argMeta.length == 0) {
-            if (arg.v.meta.has(':noInject')) {
+            if (arg.v.meta.has(':inject.skip')) {
               if (!arg.v.t.isNullable()) {
-                Context.error('Arguments marked with `@:noInject` must be optional.', fun.pos);
+                Context.error('Arguments marked with `@:inject.skip` must be optional.', fun.pos);
               }
               args.push(macro null);
               continue;

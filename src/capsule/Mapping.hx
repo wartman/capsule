@@ -34,7 +34,7 @@ class Mapping<T> {
     return factory(handleLocalMappings(container));
   }
 
-  public function toFactory(factory:Container->T) {
+  public function toFactory(factory:(container:Container)->T) {
     this.factory = factory;
     return this;
   }

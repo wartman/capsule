@@ -7,9 +7,9 @@ class ConditionallyInjectsConstructor {
   public var bax:String;
 
   public function new(
-    @:inject('foo') foo:String,
-    @:noInject ?bax:String,
-    @:inject('bar') bar:String
+    @:inject.tag('foo') foo:String,
+    @:inject.skip ?bax:String,
+    @:inject.tag('bar') bar:String
   ) {
     this.foo = foo;
     this.bar = bar;

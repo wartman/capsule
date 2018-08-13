@@ -15,8 +15,8 @@ class InjectsMethods {
   }
 
   @:inject public function injectBarAndBin(
-    @:inject('bar') bar:String,
-    @:inject('bin') bin:String
+    @:inject.tag('bar') bar:String,
+    @:inject.tag('bin') bin:String
   ) {
     this.bar = bar;
     this.bin = bin;
@@ -27,7 +27,7 @@ class InjectsMethods {
 
   @:inject public function mixedInjection(
     plain:Plain,
-    @:inject('bax') bax:String
+    @:inject.tag('bax') bax:String
   ) {
     this.plain = plain;
     this.bax = bax;
