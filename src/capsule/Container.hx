@@ -18,7 +18,7 @@ class Container {
     return new Container(container, mappings);
   }
 
-  public function provide(serviceProvider:ServiceProvider) {
+  public function use(serviceProvider:ServiceProvider) {
     serviceProvider.register(this);
     return this;
   }

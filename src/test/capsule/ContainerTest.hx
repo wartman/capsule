@@ -123,6 +123,12 @@ class ContainerTest {
     expected.ran.equals('foo:one:two:three:four');
   }
 
-  // todo:
-  // all the tests
+  @Test
+  public function testServiceProvider() {
+    var container = new Container();
+    container.use(new SimpleServiceProvider());
+    var expected = container.get(String, 'foo');
+    expected.equals('foo');
+  }
+
 }
