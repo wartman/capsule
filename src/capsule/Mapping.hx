@@ -9,7 +9,7 @@ class Mapping<T> {
   private var value:T;
   private var isShared:Bool = false;
 
-  public function new(type:String, ?id:String) {
+  public function new(type:String, ?id:String, ?valueType:T) {
     this.type = type;
     this.id = id;
   }
@@ -43,8 +43,11 @@ class Mapping<T> {
     return toFactory(function (container) return value).asShared();
   }
 
-  // todo: should be `toClass`! And should only be limited to classes.
-  public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr.ExprOf<T>) {
+  public macro function toAlias(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
+    return macro @:pos(ethis.pos) $ethis.toFactory(c -> c.get(${type}));
+  }
+
+  public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
     var builder = new capsule.macro.FactoryBuilder(type).exportFactory(ethis.pos);
     return macro @:pos(ethis.pos) ${ethis}.toFactory(${builder});
   }

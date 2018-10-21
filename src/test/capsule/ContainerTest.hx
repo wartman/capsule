@@ -18,6 +18,17 @@ class ContainerTest {
   }
 
   @Test
+  public function testAlternateMethodOfTagging() {
+    var container = new Container();
+    container.map(var str:String).toValue('foo');
+    container.map(var one:Int).toValue(1);
+
+    container.get(var str:String).equals('foo');
+    container.get(var one:Int).equals(1);
+
+  }
+
+  @Test
   public function testFactory() {
     var container = new Container();
     container.map(String, 'foo').toFactory(container -> 'foo');
@@ -48,6 +59,53 @@ class ContainerTest {
     container.map(InjectsConstructor).toType(InjectsConstructor);
     var expected = container.get(InjectsConstructor).one.value;
     expected.equals('one');
+  }
+
+  @Test
+  public function testParams() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container.map('HasParams<String>').toType(HasParams);
+    
+    container.map(Int).toValue(1);
+    container.map('HasParams<Int>').toType(HasParams);
+    
+    var expected = container.get('HasParams<String>');
+    expected.foo.equals('one');
+    var expected = container.get('HasParams<Int>');
+    expected.foo.equals(1);
+
+    // Typing should work here!
+    container.map('Map<String, String>', 'things').toValue([
+      'foo' => 'bar',
+      'bar' => 'bin'
+    ]);
+    var things = container.get('Map<String, String>', 'things');
+    things.get('foo').equals('bar');
+  }
+
+  @Test
+  public function testParamsWithAlternateVars() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container
+      .map(var _:HasParams<String>)
+      .toType(HasParams);
+    container.map(Int).toValue(1);
+    container
+      .map(var _:HasParams<Int>)
+      .toType(HasParams);
+    var expected = container.get(var _:HasParams<String>);
+    expected.foo.equals('one');
+    var expected = container.get(var _:HasParams<Int>);
+    expected.foo.equals(1);
+
+    container.map(var things:Map<String, String>).toValue([
+      'foo' => 'bar',
+      'bar' => 'bin'
+    ]);
+    var things = container.get(var things:Map<String, String>);
+    things.get('foo').equals('bar');
   }
 
   @Test

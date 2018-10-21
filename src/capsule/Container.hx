@@ -23,28 +23,40 @@ class Container {
     return this;
   }
 
-  public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var typeId = capsule.macro.TypeHelpers.getExprType(type);
-    var type = capsule.macro.TypeHelpers.getValueType(type);
-    return macro @:pos(ethis.pos) $ethis.mapType($typeId, $tag, (null:$type));
+  // NOTE:
+  // This is getting too complex -- look into moving it into MappingBuilder.
+  public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+    var key = capsule.macro.MappingBuilder.getMappingKey(def);
+    var type = capsule.macro.MappingBuilder.getMappingType(def);
+    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
+    if (possibleTag != null) tag = possibleTag;
+    var mapping = macro @:pos(ethis.pos) $ethis.mapType($key, $tag, (null:$type));
+    var paramAliases = new capsule.macro.FactoryBuilder(def).exportAliases(def.pos);
+    if (paramAliases != null) {
+      var name = capsule.macro.FactoryBuilder.MAPPING;
+      return macro @:pos(ethis.pos) {
+        var $name = ${mapping};
+        ${paramAliases}
+        $i{name};
+      }
+    }
+    return mapping;
   }
 
   public function mapType<T>(type:String, ?tag:String, ?value:T):Mapping<T> {
     var name = getMappingKey(type, tag);
     if (mappings.exists(name)) return cast mappings.get(name);
-    var mapping = new Mapping(type, tag);
+    var mapping = new Mapping(type, tag, value);
     mappings.set(name, mapping);
     return mapping;
   }
 
-  public macro function get(ethis:haxe.macro.Expr, type:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    return switch (type.expr) {
-      case haxe.macro.Expr.ExprDef.EConst(haxe.macro.Expr.Constant.CString(_)): macro @:pos(ethis.pos) ${ethis}.getValue($type, $tag);
-      default:
-        var typeId = capsule.macro.TypeHelpers.getExprType(type);
-        var complex = capsule.macro.TypeHelpers.getValueType(type);
-        macro @:pos(ethis.pos) (${ethis}.getValue($typeId, $tag):$complex);
-    }
+  public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+    var key = capsule.macro.MappingBuilder.getMappingKey(def);
+    var type = capsule.macro.MappingBuilder.getMappingType(def);
+    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
+    if (possibleTag != null) tag = possibleTag;
+    return macro @:pos(ethis.pos) ($ethis.getValue($key, $tag):$type);
   }
 
   public function getValue<T>(type:String, ?tag:String, ?container:Container):T {
@@ -53,7 +65,7 @@ class Container {
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
       if (parent != null) return parent.getValue(type, tag, container);
-      throw 'No mapping was found for ${mapping}';
+      throw 'No mapping was found for ${name}';
     }
     return mapping.getValue(container);
   }

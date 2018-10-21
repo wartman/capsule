@@ -4,21 +4,54 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 import haxe.macro.Context;
 
-using haxe.macro.TypeTools;
-using capsule.macro.TypeHelpers;
-using Lambda;
+using haxe.macro.Tools;
+using capsule.macro.MappingBuilder;
+// using capsule.macro.TypeHelpers;
 
 class FactoryBuilder {
 
+  public static final MAPPING:String = '__m';
+  public static final CONTAINER:String = '__c';
   private var type:Expr;
 
   public function new(type:Expr) {
     this.type = type;
   }
 
+  public function exportAliases(callPos:Position) {
+    var cls = getClassType(type);
+
+    if (cls == null) return null;
+
+    var realParams = extractParams(type);
+    var exprs:Array<Expr> = [];
+    
+    if (realParams.length > 0) {
+      for (i in 0...cls.params.length) {
+        var type = cls.params[i].t.getTypeName();
+        var real = realParams[i];
+        switch (real) {
+          case TPType(t):
+            var alias = t.toString(); // is this right???
+            exprs.push(macro @:pos(callPos) $i{CONTAINER}.mapType($v{type}).toFactory(c -> c.get($v{alias})));
+          case TPExpr(e):
+            exprs.push(macro @:pos(callPos) $i{CONTAINER}.mapType($v{type}).toValue(${e}));
+          default:
+        }
+      }
+      return macro @:pos(callPos) {
+        var $CONTAINER = $i{MAPPING}.getClosure();
+        $b{exprs};
+      };
+    }
+
+    return null;
+  }
+
   // This is a mess, but you get the idea.
   public function exportFactory(callPos:Position):Expr {
     var cls = getClassType(type);
+    
     var fields = cls.fields.get();
     var exprs:Array<Expr> = [];
     var tp:TypePath = {
@@ -35,12 +68,8 @@ class FactoryBuilder {
           var name = field.name;
           var fieldType = getType(field.type);
           var idName = fieldType.pack.concat([ fieldType.name ]).join('.');
-          var typeId:Expr = {
-            expr: EConst(CString(idName)),
-            pos: field.pos
-          } 
           var id = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
-          exprs.push(macro $p{[ "value", name ]} = container.getValue($typeId, $id));
+          exprs.push(macro $p{[ "value", name ]} = container.getValue($v{idName}, $id));
         case FMethod(k):
           var meth = field.expr();
           var meta = field.meta.extract(':inject')[0];
@@ -122,7 +151,7 @@ class FactoryBuilder {
         for (arg in f.args) {
           var argMeta = arg.v.meta.extract(':inject.tag');
           var argId = argMeta.length > 0 ? argMeta[0].params[0] : macro null;
-          var argType = arg.v.t.getType();
+          var argType = arg.v.t.followType().toString();
 
           if (argMeta.length == 0) {
             if (arg.v.meta.has(':inject.skip')) {
@@ -147,13 +176,28 @@ class FactoryBuilder {
   }
 
   private function getClassType(type:Expr):ClassType {
-    var name = type.getExprTypeName();
+    var name = removeParams(type.getExprTypeName());
     return getType(Context.getType(name));
+  }
+
+  private function extractParams(type:Expr) {
+    var type = type.getMappingType();
+    switch (type) {
+      case TPath(p): 
+        return p.params;
+      default:
+    }
+    return [];
+  }
+
+  private function removeParams(type:String) {
+    var index = type.indexOf("<");
+    return (index>-1) ? type.substr(0, index) : type;
   }
 
   private function getType(type:Type) {
     return switch(type) {
-      case TInst(t, _):
+      case TInst(t, params):
         t.get();
       default: 
         null;
