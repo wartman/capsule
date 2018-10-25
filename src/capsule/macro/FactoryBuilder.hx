@@ -200,29 +200,19 @@ class FactoryBuilder {
   }
 
   private function resolveType(type:Type, paramMap:Map<String, Type>):String {
-    function followParams(params:Array<Type>, resolve:(type:Type)->Type):Array<Type> {
-      return params.map(p -> {
-        var name = p.followType().toString();
-        if (paramMap.exists(name)) {
-          return resolve(paramMap.get(name));
-        }
-        return resolve(p);
-      });
-    }
-
     function resolve(type:Type):Type {
       var resolved = switch (type) {
         case TInst(t, params):
           if (params.length == 0) {
             type.followType();
           } else {
-            TInst(t, followParams(params, resolve)).followType();
+            TInst(t, params.map(resolve)).followType();
           }
         case TAbstract(t, params):
           if (params.length == 0) {
             type.followType();
           } else {
-            TAbstract(t, followParams(params, resolve)).followType();
+            TAbstract(t, params.map(resolve)).followType();
           }
         default: 
           type.followType();
