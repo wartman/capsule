@@ -200,38 +200,42 @@ class FactoryBuilder {
   }
 
   private function resolveType(type:Type, paramMap:Map<String, Type>):String {
-    function followParams(params:Array<Type>) {
+    function followParams(params:Array<Type>, resolve:(type:Type)->Type):Array<Type> {
       return params.map(p -> {
-        var name = resolveType(p, paramMap);
+        var name = p.followType().toString();
         if (paramMap.exists(name)) {
-          return paramMap.get(name).followType().toString();
+          return resolve(paramMap.get(name));
         }
-        return name;
-      }).join(', ');
+        return resolve(p);
+      });
     }
 
-    var name = switch (type) {
-      case TInst(t, params):
-        if (params.length == 0) {
-          type.followType().toString();
-        } else {
-          t.toString() + '<' + followParams(params) + '>';
-        }
-      case TAbstract(t, params):
-        if (params.length == 0) {
-          type.followType().toString();
-        } else {
-          t.toString() + '<' + followParams(params) + '>';
-        }
-      default: 
-        type.followType().toString();
+    function resolve(type:Type):Type {
+      var resolved = switch (type) {
+        case TInst(t, params):
+          if (params.length == 0) {
+            type.followType();
+          } else {
+            TInst(t, followParams(params, resolve)).followType();
+          }
+        case TAbstract(t, params):
+          if (params.length == 0) {
+            type.followType();
+          } else {
+            TAbstract(t, followParams(params, resolve)).followType();
+          }
+        default: 
+          type.followType();
+      }
+
+      return if (paramMap.exists(resolved.toString())) {
+        resolve(paramMap.get(resolved.toString()));
+      } else {
+        resolved;
+      }
     }
 
-    return if (paramMap.exists(name)) {
-      resolveType(paramMap.get(name), paramMap);
-    } else {
-      name;
-    }
+    return resolve(type).toString();
   }
 
   private function removeParams(type:String) {
