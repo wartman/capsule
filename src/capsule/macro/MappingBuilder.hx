@@ -5,6 +5,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using haxe.macro.Tools;
+using tink.MacroApi;
 
 class MappingBuilder {
 
@@ -53,17 +54,16 @@ class MappingBuilder {
       case EVars(vars):
         if (vars.length > 1)
           Context.error('Only one var should be used here', expr.pos);
-        return vars[0].type.toString();
-      case EConst(CString(s)): 
-        return s;
+        return vars[0].type.toType().sure().toString();
+      case EConst(CString(s)):
+        return parseType(s, expr.pos).toType().sure().toString();
       default:
     }
 
     return switch (Context.typeof(expr)) {
       case TType(_, _):
-        var expr = expr.toString();
         try {
-          var type = getTypeName(Context.getType(expr));
+          var type = getTypeName(Context.getType(expr.toString()));
           type;
         } catch (e:Dynamic) {
           '';

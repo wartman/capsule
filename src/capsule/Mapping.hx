@@ -48,7 +48,8 @@ class Mapping<T> {
   }
 
   public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
-    var builder = new capsule.macro.FactoryBuilder(type).exportFactory(ethis.pos);
+    var mappingType = haxe.macro.Context.typeof(ethis);
+    var builder = new capsule.macro.FactoryBuilder(type, mappingType).exportFactory(ethis.pos);
     return macro @:pos(ethis.pos) ${ethis}.toFactory(${builder});
   }
 

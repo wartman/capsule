@@ -1,5 +1,6 @@
 # just tests for now.
 -cp src
+-lib tink_macro
 -lib hexunit
 -main test.Run
 -js dist/test.js

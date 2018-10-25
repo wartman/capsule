@@ -3,56 +3,32 @@ package capsule.macro;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 import haxe.macro.Context;
+import haxe.ds.Map;
 
+using StringTools;
 using haxe.macro.Tools;
+using tink.MacroApi;
 using capsule.macro.MappingBuilder;
-// using capsule.macro.TypeHelpers;
 
 class FactoryBuilder {
 
   public static final MAPPING:String = '__m';
   public static final CONTAINER:String = '__c';
   private var type:Expr;
+  private var mappingType:Type;
 
-  public function new(type:Expr) {
+  public function new(type:Expr, mappingType:Type) {
     this.type = type;
-  }
-
-  public function exportAliases(callPos:Position) {
-    var cls = getClassType(type);
-
-    if (cls == null) return null;
-
-    var realParams = extractParams(type);
-    var exprs:Array<Expr> = [];
-    
-    if (realParams.length > 0) {
-      for (i in 0...cls.params.length) {
-        var type = cls.params[i].t.getTypeName();
-        var real = realParams[i];
-        switch (real) {
-          case TPType(t):
-            var alias = t.toString(); // is this right???
-            exprs.push(macro @:pos(callPos) $i{CONTAINER}.mapType($v{type}).toFactory(c -> c.get($v{alias})));
-          case TPExpr(e):
-            exprs.push(macro @:pos(callPos) $i{CONTAINER}.mapType($v{type}).toValue(${e}));
-          default:
-        }
-      }
-      return macro @:pos(callPos) {
-        var $CONTAINER = $i{MAPPING}.getClosure();
-        $b{exprs};
-      };
-    }
-
-    return null;
+    this.mappingType = mappingType;
   }
 
   // This is a mess, but you get the idea.
   public function exportFactory(callPos:Position):Expr {
     var cls = getClassType(type);
-    
     var fields = cls.fields.get();
+    var mappedType = extractMappedType(mappingType);
+    var paramMap = mapParams(mappedType);
+    resolveParentParams(cls, paramMap);
     var exprs:Array<Expr> = [];
     var tp:TypePath = {
       pack: cls.pack,
@@ -66,10 +42,13 @@ class FactoryBuilder {
           if (meta == null) continue;
 
           var name = field.name;
-          var fieldType = getType(field.type);
-          var idName = fieldType.pack.concat([ fieldType.name ]).join('.');
-          var id = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
-          exprs.push(macro $p{[ "value", name ]} = container.getValue($v{idName}, $id));
+          var fieldType = extractClassType(field.type);
+          var key = fieldType.pack.concat([ fieldType.name ]).join('.');
+          if (paramMap.exists(key)) {
+            key = paramMap.get(key).followType().toString();
+          }
+          var tag = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
+          exprs.push(macro $p{[ "value", name ]} = container.getValue($v{key}, $tag));
         case FMethod(k):
           var meth = field.expr();
           var meta = field.meta.extract(':inject')[0];
@@ -78,7 +57,8 @@ class FactoryBuilder {
           if (meta.params.length > 0) {
             Context.error('You cannot use tagged injections on methods. Use argument injections instead.', field.pos);
           }
-          var args = getArgumentTags(meth);
+
+          var args = getArgumentTags(meth, paramMap);
           if (args.length == 0) continue;
           exprs.push(macro @:pos(callPos) $p{[ "value", field.name ]}($a{ args }));
         default:
@@ -134,7 +114,7 @@ class FactoryBuilder {
     if(ctor.meta.has(':inject')) {
       Context.error('Constructors should not be marked with `@:inject` -- they will be injected automatically. You may still use argument injections on them.', ctor.pos);
     }
-    var args = getArgumentTags(ctor.expr());
+    var args = getArgumentTags(ctor.expr(), paramMap);
     var make = { expr:ENew(tp, args), pos: type.pos };
 
     return macro function(container:capsule.Container) {
@@ -144,14 +124,14 @@ class FactoryBuilder {
     };
   }
 
-  private function getArgumentTags(fun:TypedExpr) {
+  private function getArgumentTags(fun:TypedExpr, paramMap:Map<String, Type>) {
     var args:Array<Expr> = [];
     switch (fun.expr) {
       case TFunction(f):
         for (arg in f.args) {
           var argMeta = arg.v.meta.extract(':inject.tag');
           var argId = argMeta.length > 0 ? argMeta[0].params[0] : macro null;
-          var argType = arg.v.t.followType().toString();
+          var argType = resolveType(arg.v.t, paramMap);
 
           if (argMeta.length == 0) {
             if (arg.v.meta.has(':inject.skip')) {
@@ -163,11 +143,7 @@ class FactoryBuilder {
             }
           }
 
-          var argTypeId:Expr = {
-            expr: EConst(CString(argType)),
-            pos: fun.pos
-          };
-          args.push(macro container.getValue($argTypeId, $argId));
+          args.push(macro container.getValue($v{argType}, $argId));
         }
       default: 
         Context.error('Invalid method type', fun.pos);
@@ -176,18 +152,91 @@ class FactoryBuilder {
   }
 
   private function getClassType(type:Expr):ClassType {
-    var name = removeParams(type.getExprTypeName());
-    return getType(Context.getType(name));
+    var type = getType(type);
+    return extractClassType(type);
   }
 
-  private function extractParams(type:Expr) {
-    var type = type.getMappingType();
+  private function extractClassType(type:Type):ClassType {
+    return switch(type) {
+      case TInst(t, params):
+        t.get();
+      default: 
+        Context.error('Type must be a class: ${type.toString()}', Context.currentPos());
+        null;
+    }
+  }
+
+  private function extractMappedType(type:Type) {
+    return switch (type) {
+      case TInst(t, params): params[0];
+      default: null;
+    }
+  }
+  
+  private function mapParams(type:Type, ?paramMap:Map<String, Type>):Map<String, Type> {
+    if (paramMap == null) paramMap = new Map();
     switch (type) {
-      case TPath(p): 
-        return p.params;
+      case TInst(t, params):
+        var cls = t.get();
+        var clsName = t.toString(); // ?
+        var clsParams = cls.params;
+        for (i in 0...clsParams.length) {
+          paramMap.set('${clsName}.${clsParams[i].name}', params[i]);
+        }
       default:
     }
-    return [];
+    return paramMap;
+  }
+
+  private function resolveParentParams(cls:ClassType, paramMap:Map<String, Type>) {
+    if (cls.superClass == null) return;
+    var clsParams = cls.params;
+    var superT = cls.superClass.t;
+    var superTName = superT.toString() + '.';
+    for (key in paramMap.keys()) {
+      var name = key.replace(superTName, '');
+      for (param in clsParams) {
+        if (param.name == name) {
+          paramMap.set(param.t.toString(), paramMap.get(key));
+        }
+      }
+    }
+    resolveParentParams(cls.superClass.t.get(), paramMap);
+  }
+
+  private function resolveType(type:Type, paramMap:Map<String, Type>):String {
+    function followParams(params:Array<Type>) {
+      return params.map(p -> {
+        var name = resolveType(p, paramMap);
+        if (paramMap.exists(name)) {
+          return paramMap.get(name).followType().toString();
+        }
+        return name;
+      }).join(', ');
+    }
+
+    var name = switch (type) {
+      case TInst(t, params):
+        if (params.length == 0) {
+          type.followType().toString();
+        } else {
+          t.toString() + '<' + followParams(params) + '>';
+        }
+      case TAbstract(t, params):
+        if (params.length == 0) {
+          type.followType().toString();
+        } else {
+          t.toString() + '<' + followParams(params) + '>';
+        }
+      default: 
+        type.followType().toString();
+    }
+
+    return if (paramMap.exists(name)) {
+      resolveType(paramMap.get(name), paramMap);
+    } else {
+      name;
+    }
   }
 
   private function removeParams(type:String) {
@@ -195,13 +244,9 @@ class FactoryBuilder {
     return (index>-1) ? type.substr(0, index) : type;
   }
 
-  private function getType(type:Type) {
-    return switch(type) {
-      case TInst(t, params):
-        t.get();
-      default: 
-        null;
-    }
+  private function getType(type:Expr):Type {
+    var name = removeParams(type.getExprTypeName());
+    return Context.getType(name);
   }
 
 }

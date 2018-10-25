@@ -23,30 +23,18 @@ class Container {
     return this;
   }
 
-  // NOTE:
-  // This is getting too complex -- look into moving it into MappingBuilder.
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     var key = capsule.macro.MappingBuilder.getMappingKey(def);
     var type = capsule.macro.MappingBuilder.getMappingType(def);
     var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
     if (possibleTag != null) tag = possibleTag;
-    var mapping = macro @:pos(ethis.pos) $ethis.mapType($key, $tag, (null:$type));
-    var paramAliases = new capsule.macro.FactoryBuilder(def).exportAliases(def.pos);
-    if (paramAliases != null) {
-      var name = capsule.macro.FactoryBuilder.MAPPING;
-      return macro @:pos(ethis.pos) {
-        var $name = ${mapping};
-        ${paramAliases}
-        $i{name};
-      }
-    }
-    return mapping;
+    return macro @:pos(ethis.pos) $ethis.mapType($key, $tag, (null:$type));
   }
 
-  public function mapType<T>(type:String, ?tag:String, ?value:T):Mapping<T> {
-    var name = getMappingKey(type, tag);
+  public function mapType<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
+    var name = getMappingKey(key, tag);
     if (mappings.exists(name)) return cast mappings.get(name);
-    var mapping = new Mapping(type, tag, value);
+    var mapping = new Mapping(key, tag, value);
     mappings.set(name, mapping);
     return mapping;
   }
@@ -59,12 +47,12 @@ class Container {
     return macro @:pos(ethis.pos) ($ethis.getValue($key, $tag):$type);
   }
 
-  public function getValue<T>(type:String, ?tag:String, ?container:Container):T {
+  public function getValue<T>(key:String, ?tag:String, ?container:Container):T {
     if (container == null) container = this;
-    var name = getMappingKey(type, tag);
+    var name = getMappingKey(key, tag);
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
-      if (parent != null) return parent.getValue(type, tag, container);
+      if (parent != null) return parent.getValue(key, tag, container);
       throw 'No mapping was found for ${name}';
     }
     return mapping.getValue(container);

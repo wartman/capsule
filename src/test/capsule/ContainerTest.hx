@@ -1,7 +1,9 @@
 package test.capsule;
 
+import haxe.ds.Map;
 import capsule.Container;
 import test.fixture.*;
+import test.fixture.params.*;
 
 using hex.unittest.assertion.Assert;
 
@@ -85,7 +87,7 @@ class ContainerTest {
   }
 
   @Test
-  public function testParamsWithAlternateVars() {
+  public function testParamsWithVarSyntax() {
     var container = new Container();
     container.map(String).toValue('one');
     container
@@ -106,6 +108,34 @@ class ContainerTest {
     ]);
     var things = container.get(var things:Map<String, String>);
     things.get('foo').equals('bar');
+  }
+
+  @Test
+  public function testTaggedParams() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('mapped');
+    container.map(var _:HasTaggedParams<String>).toType(HasTaggedParams);
+    container.get(var _:HasTaggedParams<String>).foo.equals('mapped');
+  }
+
+  @Test
+  public function testComplexParams() {
+    var container = new Container();
+    container.map(Int).toValue(2);
+    container.map(String).toValue('bar');
+    container.map(var _:BaseParams<Int, String>).toType(HasComplexParams);
+    var expected = container.get(var _:BaseParams<Int, String>);
+    expected.foo.equals(2);
+    expected.bar.equals('bar');
+  }
+
+  @Test
+  public function testDeepParams() {
+    var container = new Container();
+    container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
+    container.map(var _:HasDeepParams<String, String>).toType(HasDeepParams);
+    var expected = container.get(var _:HasDeepParams<String, String>);
+    expected.map.get('foo').equals('foo');
   }
 
   @Test
