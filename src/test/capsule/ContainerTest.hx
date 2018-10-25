@@ -87,6 +87,18 @@ class ContainerTest {
   }
 
   @Test
+  public function testParamsInProps() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container.map(Int).toValue(1);
+    container.map('InjectsPropWithParam<String>').toType(InjectsPropWithParam);
+    container.map('InjectsPropWithParam<Int>').toType(InjectsPropWithParam);
+
+    container.get('InjectsPropWithParam<String>').foo.equals('one');
+    container.get('InjectsPropWithParam<Int>').foo.equals(1);
+  }
+
+  @Test
   public function testParamsWithVarSyntax() {
     var container = new Container();
     container.map(String).toValue('one');

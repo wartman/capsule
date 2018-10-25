@@ -40,13 +40,8 @@ class FactoryBuilder {
         case FVar(_, _):
           var meta = field.meta.extract(':inject')[0];
           if (meta == null) continue;
-
           var name = field.name;
-          var fieldType = extractClassType(field.type);
-          var key = fieldType.pack.concat([ fieldType.name ]).join('.');
-          if (paramMap.exists(key)) {
-            key = paramMap.get(key).followType().toString();
-          }
+          var key = resolveType(field.type, paramMap);
           var tag = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
           exprs.push(macro $p{[ "value", name ]} = container.getValue($v{key}, $tag));
         case FMethod(k):
