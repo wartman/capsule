@@ -7,13 +7,10 @@ import haxe.ds.Map;
 
 using StringTools;
 using haxe.macro.Tools;
-using tink.MacroApi;
 using capsule.macro.MappingBuilder;
 
 class FactoryBuilder {
 
-  public static final MAPPING:String = '__m';
-  public static final CONTAINER:String = '__c';
   private var type:Expr;
   private var mappingType:Type;
 

@@ -231,4 +231,12 @@ class ContainerTest {
     expected.equals('foo');
   }
 
+  @Test
+  public function testHas() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.has(String, 'foo').isTrue();
+    container.has(String, 'nope').isFalse();
+  }
+
 }

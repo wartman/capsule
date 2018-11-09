@@ -5,7 +5,7 @@ class Mapping<T> {
   public var type(default, null):String;
   public var id(default, null):String;
   public var closure:Container;
-  private var factory:Container->T;
+  private var factory:(Container)->T;
   private var value:T;
   private var isShared:Bool = false;
 
@@ -40,7 +40,7 @@ class Mapping<T> {
   }
 
   public function toValue(value:T) {
-    return toFactory(function (container) return value).asShared();
+    return toFactory(_ -> value).asShared();
   }
 
   public macro function toAlias(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
