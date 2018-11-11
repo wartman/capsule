@@ -5,9 +5,9 @@ class Mapping<T> {
   public var type(default, null):String;
   public var id(default, null):String;
   public var closure:Container;
-  private var factory:(Container)->T;
-  private var value:T;
-  private var isShared:Bool = false;
+  var factory:(Container)->T;
+  var value:T;
+  var isShared:Bool = false;
 
   public function new(type:String, ?id:String, ?valueType:T) {
     this.type = type;
@@ -58,7 +58,7 @@ class Mapping<T> {
     return this;
   }
 
-  private function handleLocalMappings(container:Container):Container {
+  function handleLocalMappings(container:Container):Container {
     if (closure != null) return closure.extend(container);
     return container;
   }

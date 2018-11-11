@@ -2,8 +2,8 @@ package capsule;
 
 class Container {
 
-  private var parent:Container;
-  private var mappings:Map<String, Mapping<Dynamic>> = new Map();
+  var parent:Container;
+  var mappings:Map<String, Mapping<Dynamic>> = new Map();
 
   public function new(?parent:Container, ?mappings:Map<String, Mapping<Dynamic>>) {
     this.parent = parent;
@@ -28,10 +28,10 @@ class Container {
     var type = capsule.macro.MappingBuilder.getMappingType(def);
     var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
     if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.mapType($key, $tag, (null:$type));
+    return macro @:pos(ethis.pos) $ethis.__map($key, $tag, (null:$type));
   }
 
-  public function mapType<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
+  public function __map<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
     var name = getMappingKey(key, tag);
     if (mappings.exists(name)) return cast mappings.get(name);
     var mapping = new Mapping(key, tag, value);
@@ -44,15 +44,15 @@ class Container {
     var type = capsule.macro.MappingBuilder.getMappingType(def);
     var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
     if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) ($ethis.getValue($key, $tag):$type);
+    return macro @:pos(ethis.pos) ($ethis.__get($key, $tag):$type);
   }
 
-  public function getValue<T>(key:String, ?tag:String, ?container:Container):T {
+  public function __get<T>(key:String, ?tag:String, ?container:Container):T {
     if (container == null) container = this;
     var name = getMappingKey(key, tag);
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
-      if (parent != null) return parent.getValue(key, tag, container);
+      if (parent != null) return parent.__get(key, tag, container);
       throw 'No mapping was found for ${name}';
     }
     return mapping.getValue(container);
@@ -62,17 +62,17 @@ class Container {
     var key = capsule.macro.MappingBuilder.getMappingKey(def);
     var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
     if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.hasMapping($key, $tag);
+    return macro @:pos(ethis.pos) $ethis.__has($key, $tag);
   }
 
-  public function hasMapping(key:String, ?tag:String):Bool {
+  public function __has(key:String, ?tag:String):Bool {
     var name = getMappingKey(key, tag);
     if (mappings.exists(name)) return true;
-    if (parent != null) return parent.hasMapping(key, tag);
+    if (parent != null) return parent.__has(key, tag);
     return false;
   }
 
-  private function getMappingKey(type:String, name:String):String {
+  function getMappingKey(type:String, name:String):String {
     if (name == null) name = '';
     return '$type#$name';
   }

@@ -11,8 +11,8 @@ using capsule.macro.MappingBuilder;
 
 class FactoryBuilder {
 
-  private var type:Expr;
-  private var mappingType:Type;
+  var type:Expr;
+  var mappingType:Type;
 
   public function new(type:Expr, mappingType:Type) {
     this.type = type;
@@ -40,7 +40,7 @@ class FactoryBuilder {
           var name = field.name;
           var key = resolveType(field.type, paramMap);
           var tag = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
-          exprs.push(macro $p{[ "value", name ]} = container.getValue($v{key}, $tag));
+          exprs.push(macro $p{[ "value", name ]} = container.__get($v{key}, $tag));
         case FMethod(k):
           var meth = field.expr();
           var meta = field.meta.extract(':inject')[0];
@@ -95,11 +95,8 @@ class FactoryBuilder {
     }
 
     if (postInjects.length > 0) {
-      haxe.ds.ArraySort.sort(postInjects, function (a, b) {
-        var result = a.order - b.order;
-        return result;
-      });
-      exprs = exprs.concat(postInjects.map(function (pi) return pi.expr));
+      haxe.ds.ArraySort.sort(postInjects, (a, b) -> a.order - b.order);
+      exprs = exprs.concat(postInjects.map(pi -> pi.expr));
     }
 
     var ctor = cls.constructor.get();
@@ -116,7 +113,7 @@ class FactoryBuilder {
     };
   }
 
-  private function getArgumentTags(fun:TypedExpr, paramMap:Map<String, Type>) {
+  function getArgumentTags(fun:TypedExpr, paramMap:Map<String, Type>) {
     var args:Array<Expr> = [];
     switch (fun.expr) {
       case TFunction(f):
@@ -135,7 +132,7 @@ class FactoryBuilder {
             }
           }
 
-          args.push(macro container.getValue($v{argType}, $argId));
+          args.push(macro container.__get($v{argType}, $argId));
         }
       default: 
         Context.error('Invalid method type', fun.pos);
@@ -143,12 +140,12 @@ class FactoryBuilder {
     return args;
   }
 
-  private function getClassType(type:Expr):ClassType {
+  function getClassType(type:Expr):ClassType {
     var type = getType(type);
     return extractClassType(type);
   }
 
-  private function extractClassType(type:Type):ClassType {
+  function extractClassType(type:Type):ClassType {
     return switch(type) {
       case TInst(t, params):
         t.get();
@@ -158,14 +155,14 @@ class FactoryBuilder {
     }
   }
 
-  private function extractMappedType(type:Type) {
+  function extractMappedType(type:Type) {
     return switch (type) {
       case TInst(t, params): params[0];
       default: null;
     }
   }
   
-  private function mapParams(type:Type, ?paramMap:Map<String, Type>):Map<String, Type> {
+  function mapParams(type:Type, ?paramMap:Map<String, Type>):Map<String, Type> {
     if (paramMap == null) paramMap = new Map();
     switch (type) {
       case TInst(t, params):
@@ -180,7 +177,7 @@ class FactoryBuilder {
     return paramMap;
   }
 
-  private function resolveParentParams(cls:ClassType, paramMap:Map<String, Type>) {
+  function resolveParentParams(cls:ClassType, paramMap:Map<String, Type>) {
     if (cls.superClass == null) return;
     var clsParams = cls.params;
     var superT = cls.superClass.t;
@@ -196,7 +193,7 @@ class FactoryBuilder {
     resolveParentParams(cls.superClass.t.get(), paramMap);
   }
 
-  private function resolveType(type:Type, paramMap:Map<String, Type>):String {
+  function resolveType(type:Type, paramMap:Map<String, Type>):String {
     function resolve(type:Type):Type {
       var resolved = switch (type) {
         case TInst(t, params):
@@ -225,12 +222,12 @@ class FactoryBuilder {
     return resolve(type).toString();
   }
 
-  private function removeParams(type:String) {
+  function removeParams(type:String) {
     var index = type.indexOf("<");
-    return (index>-1) ? type.substr(0, index) : type;
+    return (index > -1) ? type.substr(0, index) : type;
   }
 
-  private function getType(type:Expr):Type {
+  function getType(type:Expr):Type {
     var name = removeParams(type.getExprTypeName());
     return Context.getType(name);
   }
