@@ -7,7 +7,7 @@ import haxe.ds.Map;
 
 using StringTools;
 using haxe.macro.Tools;
-using capsule.macro.MappingBuilder;
+using capsule.macro.Common;
 
 class TypeFactoryBuilder {
 
@@ -38,7 +38,7 @@ class TypeFactoryBuilder {
           var meta = field.meta.extract(':inject')[0];
           if (meta == null) continue;
           var name = field.name;
-          var key = resolveType(field.type, paramMap);
+          var key = field.type.resolveType(paramMap);
           var tag = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
           exprs.push(macro $p{[ "value", name ]} = container.__get($v{key}, $tag));
         case FMethod(k):
@@ -120,7 +120,7 @@ class TypeFactoryBuilder {
         for (arg in f.args) {
           var argMeta = arg.v.meta.extract(':inject.tag');
           var argId = argMeta.length > 0 ? argMeta[0].params[0] : macro null;
-          var argType = resolveType(arg.v.t, paramMap);
+          var argType = arg.v.t.resolveType(paramMap);
 
           if (argMeta.length == 0) {
             if (arg.v.meta.has(':inject.skip')) {
@@ -193,42 +193,13 @@ class TypeFactoryBuilder {
     resolveParentParams(cls.superClass.t.get(), paramMap);
   }
 
-  function resolveType(type:Type, paramMap:Map<String, Type>):String {
-    function resolve(type:Type):Type {
-      var resolved = switch (type) {
-        case TInst(t, params):
-          if (params.length == 0) {
-            type.followType();
-          } else {
-            TInst(t, params.map(resolve)).followType();
-          }
-        case TAbstract(t, params):
-          if (params.length == 0) {
-            type.followType();
-          } else {
-            TAbstract(t, params.map(resolve)).followType();
-          }
-        default: 
-          type.followType();
-      }
-
-      return if (paramMap.exists(resolved.toString())) {
-        resolve(paramMap.get(resolved.toString()));
-      } else {
-        resolved;
-      }
-    }
-
-    return resolve(type).toString();
-  }
-
   function removeParams(type:String) {
     var index = type.indexOf("<");
     return (index > -1) ? type.substr(0, index) : type;
   }
 
   function getType(type:Expr):Type {
-    var name = removeParams(type.getExprTypeName());
+    var name = removeParams(MappingBuilder.getExprTypeName(type));
     return Context.getType(name);
   }
 

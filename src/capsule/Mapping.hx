@@ -42,7 +42,7 @@ class Mapping<T> {
 
   public macro function toFactory(ethis, factory) {
     var mappingType = haxe.macro.Context.typeof(ethis);
-    var builder = new capsule.macro.FunctionFactoryBuilder(factory, mappingType).exportFactory(ethis.pos);
+    var builder = new capsule.macro.FunctionFactoryBuilder(factory).exportFactory();
     return macro @:pos(ethis.pos) ${ethis}.__toFactory(${builder});
   } 
 
