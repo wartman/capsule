@@ -34,23 +34,29 @@ class Mapping<T> {
     return factory(handleLocalMappings(container));
   }
 
-  public function toFactory(factory:(container:Container)->T) {
+  public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
+    var mappingType = haxe.macro.Context.typeof(ethis);
+    var builder = new capsule.macro.TypeFactoryBuilder(type, mappingType).exportFactory(ethis.pos);
+    return macro @:pos(ethis.pos) ${ethis}.__toFactory(${builder});
+  }
+
+  public macro function toFactory(ethis, factory) {
+    var mappingType = haxe.macro.Context.typeof(ethis);
+    var builder = new capsule.macro.FunctionFactoryBuilder(factory, mappingType).exportFactory(ethis.pos);
+    return macro @:pos(ethis.pos) ${ethis}.__toFactory(${builder});
+  } 
+
+  public function __toFactory(factory:(container:Container)->T) {
     this.factory = factory;
     return this;
   }
 
   public function toValue(value:T) {
-    return toFactory(_ -> value).asShared();
+    return __toFactory(_ -> value).asShared();
   }
 
   public macro function toAlias(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
-    return macro @:pos(ethis.pos) $ethis.toFactory(c -> c.get(${type}));
-  }
-
-  public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {
-    var mappingType = haxe.macro.Context.typeof(ethis);
-    var builder = new capsule.macro.FactoryBuilder(type, mappingType).exportFactory(ethis.pos);
-    return macro @:pos(ethis.pos) ${ethis}.toFactory(${builder});
+    return macro @:pos(ethis.pos) $ethis.__toFactory(c -> c.get(${type}));
   }
 
   public function asShared() {

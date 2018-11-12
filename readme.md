@@ -158,3 +158,35 @@ trace(capsule.get('Example<String>').foo); // => 'foo'
 ```
 
 This currently does not work with tagging, but that's on the list.
+
+For more fine-grained injection, you can use the `toFactory` mapping.
+Any function passed to `toFactory` will be automagically injected for
+you (although you can't use tagging here quite yet):
+
+```haxe
+capsule.map(String).toValue('foo');
+capsule.map('Example<String>').toFactory((foo:String) -> {
+  var example = new Example(foo);
+  trace(example);
+  return example;
+});
+```
+
+This will also work for methods inside classes (in this case, just
+for example, a ServiceProvider):
+
+```haxe
+class FooProvider implements capsule.ServiceProvider {
+
+  public function new() {}
+
+  public function register(container:capsule.Container) {
+    container.map(var foo:Example<String>).toFactory(fooString);
+  }
+
+  function fooString(a:String) {
+    return new Example(a);
+  }
+
+}
+```

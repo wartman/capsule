@@ -8,6 +8,7 @@ class Container {
   public function new(?parent:Container, ?mappings:Map<String, Mapping<Dynamic>>) {
     this.parent = parent;
     if (mappings != null) this.mappings = mappings;
+    __map('capsule.Container').toValue(this);
   }
 
   public function getChild() {

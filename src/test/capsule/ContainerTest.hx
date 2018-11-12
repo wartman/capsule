@@ -33,8 +33,62 @@ class ContainerTest {
   @Test
   public function testFactory() {
     var container = new Container();
-    container.map(String, 'foo').toFactory(container -> 'foo');
+    container.map(String, 'foo').toFactory(() -> 'foo');
     container.get(String, 'foo').equals('foo');
+  }
+
+  @Test
+  public function testFactoryAutoInjection() {
+    var container = new Container();
+    container.map(String).toValue('bar');
+    container
+      .map(String, 'foo')
+      .toFactory((bar:String) -> 'foo' + bar);
+    container.get(String, 'foo').equals('foobar');
+  }
+
+  @Test
+  public function testFactoryWithParams() {
+    var container = new Container();
+    container.map(var _:Array<String>).toValue([ 'bar', 'bin' ]);
+    container
+      .map(String, 'foo')
+      .toFactory((bar:Array<String>) -> 'foo' + bar.join(''));
+    container.get(String, 'foo').equals('foobarbin');
+  }
+
+  // @Test
+  // public function testTaggedFactory() {
+  //   var container = new Container();
+  //   container.map(String, 'bar').toValue('bar');
+  //   container
+  //     .map(String, 'foo')
+  //     .toFactory(function (@:inject.tag('bar') bar:String) {
+  //       return 'foo' + bar;
+  //     });
+  //   container.get(String, 'foo').equals('foobar');
+  // }
+
+  @Test
+  public function testNonInlineFactory() {
+    var container = new Container();
+    var factory = (foo:String) -> foo + 'bar';
+    container.map(String).toValue('foo');
+    container.map(String, 'foobar').toFactory(factory);
+    container.get(String, 'foobar').equals('foobar');
+  }
+
+  function factoryMethod(foo:String, bar:Int) {
+    return foo + ' ' + bar;
+  }
+
+  @Test
+  public function testClassMethodAsFactory() {
+    var container = new Container();
+    container.map(String).toValue('foo');
+    container.map(Int).toValue(1);
+    container.map(String, 'foo1').toFactory(factoryMethod);
+    container.get(String, 'foo1').equals('foo 1');
   }
 
   @Test

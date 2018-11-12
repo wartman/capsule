@@ -9,7 +9,7 @@ using StringTools;
 using haxe.macro.Tools;
 using capsule.macro.MappingBuilder;
 
-class FactoryBuilder {
+class TypeFactoryBuilder {
 
   var type:Expr;
   var mappingType:Type;
