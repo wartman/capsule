@@ -5,6 +5,7 @@ import haxe.macro.Type;
 import haxe.macro.Context;
 import haxe.ds.Map;
 
+using haxe.macro.Tools;
 using capsule.macro.Common;
 
 // TODO: DRY this with TypeFactoryBuilder.
@@ -36,11 +37,16 @@ class FunctionFactoryBuilder {
 
   function getArgs(args:Array<{ name:String, t:Type }>, paramMap:Map<String, Type>) {
     var exprs:Array<Expr> = [];
+    var tag = Context.getType('capsule.Tag');
     for (arg in args) {
-      // todo: extract tags somehow?
-      var argId = macro null;
-      var argType = arg.t.resolveType(paramMap);
-      exprs.push(macro c.__get($v{argType}, $argId));
+      if (arg.t.isTag()) {
+        var argId = arg.t.extractTagName();
+        var argType = arg.t.extractTagType().resolveType(paramMap);
+        exprs.push(macro c.__get($v{argType}, $v{argId}));
+      } else {
+        var argType = arg.t.resolveType(paramMap);
+        exprs.push(macro c.__get($v{argType}, null));
+      }
     }
     return exprs;
   }

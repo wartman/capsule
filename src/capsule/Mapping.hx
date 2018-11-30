@@ -18,6 +18,11 @@ class Mapping<T> {
     return macro @:pos(ethis.pos) ${ethis}.getClosure().map($type, $tag);
   }
 
+  public function with(cb:(closure:Container)->Void) {
+    cb(getClosure());
+    return this;
+  }
+
   public function getClosure() {
     if (closure == null) closure = new Container();
     return closure;

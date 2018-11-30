@@ -1,11 +1,44 @@
 package capsule.macro;
 
 import haxe.macro.Type;
+import haxe.macro.Context;
 
 using haxe.macro.Tools;
 using capsule.macro.Common;
 
 class Common {
+
+  public static function isTag(t:Type) {
+    return Context.unify(t, Context.getType('capsule.Tag'));
+  }
+
+  public static function extractTagName(t:Type) return switch(t) {
+    case TInst(t, params):
+      switch (params[0]) {
+        case TInst(_.get() => t, _):
+          switch (t.kind) {
+            case KExpr({expr: EConst(CString(argId)), pos: _}):
+              argId;
+            default:
+              Context.error('Expected a string as the first param', Context.currentPos());
+              '';
+          }
+        default:
+          Context.error('Expected a Tag', Context.currentPos());
+          '';
+      }
+    default:
+      Context.error('Tag requires params', Context.currentPos());
+      '';
+  }
+  
+  public static function extractTagType(t:Type) return switch(t) {
+    case TInst(t, params):
+      params[1];
+    default:
+      Context.error('Tag requires params', Context.currentPos());
+      null;
+  }
 
   public static function resolveType(type:Type, paramMap:Map<String, Type>):String {
     function resolve(type:Type):Type {
