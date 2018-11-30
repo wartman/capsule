@@ -41,7 +41,7 @@ class FunctionFactoryBuilder {
       if (arg.t.isTag()) {
         var argId = arg.t.extractTagName();
         var argType = arg.t.extractTagType().resolveType(paramMap);
-        exprs.push(macro new capsule.Tag(c.__get($v{argType}, $v{argId})));
+        exprs.push(macro new capsule.Tag(() -> c.__get($v{argType}, $v{argId})));
       } else {
         var argType = arg.t.resolveType(paramMap);
         exprs.push(macro c.__get($v{argType}, null));
