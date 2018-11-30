@@ -75,7 +75,7 @@ class ContainerTest {
     container
       .map(String, 'foo')
       .toFactory(function (bar:Tag<'bar', String>) {
-        return 'foo' + bar;
+        return 'foo' + bar.get();
       });
     container.get(String, 'foo').equals('foobar');
   }

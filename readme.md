@@ -176,7 +176,7 @@ If you need to use a tagged injecton, you can use `capsule.Tag`:
 ```haxe
 capsule.map(String, 'foo').toValue('foo');
 capsule.map('Example<String>').toFactory((foo:capsule.Tag<'foo', String>) -> {
-  var example = new Example(foo);
+  var example = new Example(foo.get());
   trace(example);
   return example;
 });
