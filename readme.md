@@ -174,17 +174,6 @@ capsule.map('Example<String>').toFactory((
 });
 ```
 
-If you need to use a tagged injecton, you can use `capsule.Tag`:
-
-```haxe
-capsule.map(String, 'foo').toValue('foo');
-capsule.map('Example<String>').toFactory((foo:capsule.Tag<'foo', String>) -> {
-  var example = new Example(foo.get());
-  trace(example);
-  return example;
-});
-```
-
 This will also work for methods inside classes (in this case, just
 for example, a ServiceProvider), although you can't use tags here yet:
 
