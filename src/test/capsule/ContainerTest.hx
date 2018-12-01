@@ -1,7 +1,6 @@
 package test.capsule;
 
 import haxe.ds.Map;
-import capsule.Tag;
 import capsule.Container;
 import test.fixture.*;
 import test.fixture.params.*;
