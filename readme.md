@@ -160,11 +160,14 @@ trace(capsule.get('Example<String>').foo); // => 'foo'
 This currently does not work with tagging, but that's on the list.
 
 For more fine-grained injection, you can use the `toFactory` mapping.
-Any function passed to `toFactory` will be automagically injected for you:
+Any function passed to `toFactory` will be automagically injected for
+you:
 
 ```haxe
-capsule.map(String).toValue('foo');
-capsule.map('Example<String>').toFactory((foo:String) -> {
+capsule.map(String, 'foo').toValue('foo');
+capsule.map('Example<String>').toFactory((
+  @:inject.tag('foo') foo:String
+) -> {
   var example = new Example(foo);
   trace(example);
   return example;
@@ -183,7 +186,7 @@ capsule.map('Example<String>').toFactory((foo:capsule.Tag<'foo', String>) -> {
 ```
 
 This will also work for methods inside classes (in this case, just
-for example, a ServiceProvider):
+for example, a ServiceProvider), although you can't use tags here yet:
 
 ```haxe
 class FooProvider implements capsule.ServiceProvider {

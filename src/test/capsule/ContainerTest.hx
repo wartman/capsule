@@ -58,24 +58,14 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobarbin');
   }
 
-  @Test
-  public function testTaggedMapping() {
-    var container = new Container();
-    container
-      .map('Tag<"foo", String>')
-      .toValue('foo');
-    container.get('Tag<"foo", String>').equals('foo');
-    container.get(String, 'foo').equals('foo');
-  }
-
-  @Test
+  // @Test
   public function testTaggedFactory() {
     var container = new Container();
     container.map(String, 'bar').toValue('bar');
     container
       .map(String, 'foo')
-      .toFactory(function (bar:Tag<'bar', String>) {
-        return 'foo' + bar.get();
+      .toFactory(function (@:inject.tag('bar') bar:String) {
+        return 'foo' + bar;
       });
     container.get(String, 'foo').equals('foobar');
   }
