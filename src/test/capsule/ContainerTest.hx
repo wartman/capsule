@@ -57,7 +57,7 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobarbin');
   }
 
-  // @Test
+  @Test
   public function testTaggedFactory() {
     var container = new Container();
     container.map(String, 'bar').toValue('bar');
