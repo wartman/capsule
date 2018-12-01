@@ -58,16 +58,16 @@ class ContainerTest {
   }
 
   // @Test
-  // public function testTaggedFactory() {
-  //   var container = new Container();
-  //   container.map(String, 'bar').toValue('bar');
-  //   container
-  //     .map(String, 'foo')
-  //     .toFactory(function (@:inject.tag('bar') bar:String) {
-  //       return 'foo' + bar;
-  //     });
-  //   container.get(String, 'foo').equals('foobar');
-  // }
+  public function testTaggedFactory() {
+    var container = new Container();
+    container.map(String, 'bar').toValue('bar');
+    container
+      .map(String, 'foo')
+      .toFactory(function (@:inject.tag('bar') bar:String) {
+        return 'foo' + bar;
+      });
+    container.get(String, 'foo').equals('foobar');
+  }
 
   @Test
   public function testNonInlineFactory() {
