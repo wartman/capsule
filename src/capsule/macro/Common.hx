@@ -1,3 +1,4 @@
+#if macro
 package capsule.macro;
 
 import haxe.macro.Type;
@@ -103,3 +104,4 @@ class Common {
   }
 
 }
+#end

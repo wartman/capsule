@@ -1,3 +1,4 @@
+#if macro
 package capsule.macro;
 
 import haxe.macro.Context;
@@ -84,3 +85,4 @@ class MappingBuilder {
   }
 
 }
+#end

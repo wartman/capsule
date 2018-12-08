@@ -1,3 +1,4 @@
+#if macro
 package capsule.macro;
 
 import haxe.macro.Expr;
@@ -31,6 +32,10 @@ class TypeFactoryBuilder {
       pack: cls.pack,
       name: cls.name
     };
+
+    if (cls.constructor == null) {
+      Context.error('A constructor is required for type mappings', cls.pos);
+    }
 
     for (field in fields) {
       switch (field.kind) {
@@ -204,3 +209,4 @@ class TypeFactoryBuilder {
   }
 
 }
+#end

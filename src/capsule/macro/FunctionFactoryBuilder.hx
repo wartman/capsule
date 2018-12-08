@@ -1,3 +1,4 @@
+#if macro
 package capsule.macro;
 
 import haxe.macro.Expr;
@@ -76,3 +77,4 @@ class FunctionFactoryBuilder {
   }
 
 }
+#end
