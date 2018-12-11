@@ -5,17 +5,14 @@ class Mapping<T> {
   public var type(default, null):String;
   public var id(default, null):String;
   public var closure:Container;
-  var factory:(Container)->T;
+  var factory:(container:Container)->T;
   var value:T;
   var isShared:Bool = false;
+  var extensions:Array<(value:T)->T> = [];
 
   public function new(type:String, ?id:String, ?valueType:T) {
     this.type = type;
     this.id = id;
-  }
-
-  public macro function map(ethis:haxe.macro.Expr, type:haxe.macro.Expr, tag:haxe.macro.Expr.ExprOf<String>) {
-    return macro @:pos(ethis.pos) ${ethis}.getClosure().map($type, $tag);
   }
 
   public function with(cb:(closure:Container)->Void) {
@@ -28,15 +25,29 @@ class Mapping<T> {
     return closure;
   }
 
+  public function extend(ext:(v:T)->T) {
+    extensions.push(ext);
+    return this;
+  }
+
   public function getValue(container:Container):T {
     if (factory == null) {
       throw 'No factory exists for mapping ${id}';
     }
     if (isShared) {
-      if (value == null) value = factory(handleLocalMappings(container)); 
+      if (value == null) value = resolve(container); 
       return value;
     }
-    return factory(handleLocalMappings(container));
+    return resolve(container);
+  }
+
+  function resolve(container:Container) {
+    var c = handleLocalMappings(container);
+    var value = factory(c);
+    for (ext in extensions) {
+      value = ext(value);
+    }
+    return value;
   }
 
   public macro function toType(ethis:haxe.macro.Expr, type:haxe.macro.Expr) {

@@ -99,7 +99,7 @@ class ContainerTest {
     container.map(InjectsValues, 'default').toType(InjectsValues);
     
     var mapping = container.map(InjectsValues, 'local').toType(InjectsValues);
-    mapping.map(String, 'foo').toValue('changed');
+    mapping.with(c -> c.map(String, 'foo').toValue('changed'));
 
     var expectedLocal = container.get(InjectsValues, 'local');
     expectedLocal.foo.equals('changed');
@@ -291,6 +291,14 @@ class ContainerTest {
     container.map(String, 'foo').toValue('foo');
     container.has(String, 'foo').isTrue();
     container.has(String, 'nope').isFalse();
+  }
+
+  @Test
+  public function testMappingExtension() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.getMapping(String, 'foo').extend(v -> v + 'bar');
+    container.get(String, 'foo').equals('foobar');
   }
 
 }

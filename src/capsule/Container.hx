@@ -24,6 +24,24 @@ class Container {
     return this;
   }
 
+  public macro function getMapping(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+    var key = capsule.macro.MappingBuilder.getMappingKey(def);
+    var type = capsule.macro.MappingBuilder.getMappingType(def);
+    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
+    if (possibleTag != null) tag = possibleTag;
+    return macro @:pos(ethis.pos) $ethis.__getMapping($key, $tag, (null:$type));
+  }
+
+  public function __getMapping<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
+    var name = getMappingKey(key, tag);
+    var mapping:Mapping<T> = cast mappings.get(name);
+    if (mapping == null) {
+      if (parent != null) return parent.__getMapping(key, tag, value);
+      throw 'No mapping was found for ${name}';
+    }
+    return mapping;
+  }
+
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     var key = capsule.macro.MappingBuilder.getMappingKey(def);
     var type = capsule.macro.MappingBuilder.getMappingType(def);
