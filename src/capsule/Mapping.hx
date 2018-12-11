@@ -26,6 +26,10 @@ class Mapping<T> {
   }
 
   public function extend(ext:(v:T)->T) {
+    if (isShared && value != null) {
+      value = ext(value);
+      return this;
+    }
     extensions.push(ext);
     return this;
   }

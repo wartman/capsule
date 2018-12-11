@@ -301,4 +301,18 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobar');
   }
 
+  @Test
+  public function testSharedMappingExtension() {
+    var container = new Container();
+    
+    container.map(Plain).toType(Plain).asShared();
+    var p = container.get(Plain);
+    p.value.equals('one');
+    container.getMapping(Plain).extend(v -> {
+      v.value = 'changed';
+      v;
+    });
+    p.value.equals('changed');
+  }
+
 }
