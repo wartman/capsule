@@ -1,8 +1,6 @@
-package test;
-
 import hex.unittest.notifier.*;
 import hex.unittest.runner.*;
-import test.capsule.ContainerTest;
+import capsule.ContainerTest;
 
 class Run {
 

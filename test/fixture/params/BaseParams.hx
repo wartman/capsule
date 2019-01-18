@@ -1,4 +1,4 @@
-package test.fixture.params;
+package fixture.params;
 
 class BaseParams<T, M> {
 

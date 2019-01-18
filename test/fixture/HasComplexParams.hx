@@ -1,5 +1,5 @@
-package test.fixture;
+package fixture;
 
-import test.fixture.params.BaseParams;
+import fixture.params.BaseParams;
 
 class HasComplexParams<T> extends BaseParams<T, String> {}

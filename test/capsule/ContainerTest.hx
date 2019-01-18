@@ -1,9 +1,8 @@
-package test.capsule;
+package capsule;
 
 import haxe.ds.Map;
-import capsule.Container;
-import test.fixture.*;
-import test.fixture.params.*;
+import fixture.*;
+import fixture.params.*;
 
 using hex.unittest.assertion.Assert;
 
@@ -304,7 +303,6 @@ class ContainerTest {
   @Test
   public function testSharedMappingExtension() {
     var container = new Container();
-    
     container.map(Plain).toType(Plain).asShared();
     var p = container.get(Plain);
     p.value.equals('one');

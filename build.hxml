@@ -1,4 +1,5 @@
 -cp src
+-cp test
 -lib hexunit
--main test.Run
+-main Run
 -js dist/test.js

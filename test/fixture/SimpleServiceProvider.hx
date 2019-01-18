@@ -1,4 +1,4 @@
-package test.fixture;
+package fixture;
 
 import capsule.ServiceProvider;
 import capsule.Container;
