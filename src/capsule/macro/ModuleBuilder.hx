@@ -16,8 +16,9 @@ class ModuleBuilder {
     if (Context.getLocalClass().get().superClass != null) {
       Context.error(
         'Modules do not currently support inheritance.'
-        + ' Instead, use `@:use` with other modules -- just like you would with service providers.', 
-        Context.currentPos()
+        + ' Instead, use `@:use` with other modules --'
+        + ' just like you would with service providers.', 
+        Context.getLocalClass().get().pos
       );
     }
     return new ModuleBuilder(Context.getBuildFields()).export();

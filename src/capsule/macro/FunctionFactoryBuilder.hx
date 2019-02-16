@@ -13,6 +13,8 @@ using capsule.macro.Common;
 // TODO: DRY this with TypeFactoryBuilder.
 class FunctionFactoryBuilder {
 
+  static final container:String = 'c';
+
   var func:Expr;
 
   public function new(func:Expr) {
@@ -32,6 +34,17 @@ class FunctionFactoryBuilder {
         }
       default: switch (Context.typeof(func)) {
         case TFun(args, ret):
+
+          // // Going to have to figure out a lot of junk to get
+          // // metadata access I think:
+          // var f = Context.typeExpr(func);
+          // trace(f.expr);
+          // switch (f.expr) {
+          //   case TLocal({ t: t }): trace(t);
+          //   case TField({ t: TInst(cls, _) }, fa): trace(fa);
+          //   default:
+          // }
+
           if (args.length == 0) {
             return macro _ -> ${func}();
           } else {
@@ -43,7 +56,7 @@ class FunctionFactoryBuilder {
       }
     }
 
-    return macro (c:capsule.Container) -> $b{body};
+    return macro ($container:capsule.Container) -> $b{body};
   }
 
   function getArgs(f:Function, paramMap:Map<String, Type>) {
@@ -62,7 +75,7 @@ class FunctionFactoryBuilder {
           continue;
         }
       }
-      args.push(macro container.__get($v{argType}, $argId));
+      args.push(macro $i{container}.__get($v{argType}, $argId));
     }
     return args;
   }
@@ -71,7 +84,7 @@ class FunctionFactoryBuilder {
     var exprs:Array<Expr> = [];
     for (arg in args) {
       var argType = arg.t.resolveType(paramMap);
-      exprs.push(macro c.__get($v{argType}, null));
+      exprs.push(macro $i{container}.__get($v{argType}, null));
     }
     return exprs;
   }

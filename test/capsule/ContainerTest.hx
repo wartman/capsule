@@ -62,9 +62,7 @@ class ContainerTest {
     container.map(String, 'bar').toValue('bar');
     container
       .map(String, 'foo')
-      .toFactory(function (@:inject.tag('bar') bar:String) {
-        return 'foo' + bar;
-      });
+      .toFactory(function (@:inject.tag('bar') bar:String) return 'foo' + bar);
     container.get(String, 'foo').equals('foobar');
   }
 
@@ -76,6 +74,15 @@ class ContainerTest {
     container.map(String, 'foobar').toFactory(factory);
     container.get(String, 'foobar').equals('foobar');
   }
+  
+  // @Test
+  // public function testNonInlineFactoryWithMeta() {
+  //   var container = new Container();
+  //   function factory(@:inject.tag('foo') foo:String) return foo + 'bar';
+  //   container.map(String, 'foo').toValue('foo');
+  //   container.map(String, 'foobar').toFactory(factory);
+  //   container.get(String, 'foobar').equals('foobar');
+  // }
 
   function factoryMethod(foo:String, bar:Int) {
     return foo + ' ' + bar;
