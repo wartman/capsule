@@ -2,11 +2,13 @@ package capsule;
 
 import fixture.*;
 
-using hex.unittest.assertion.Assert;
+using medic.Assert;
 
 class ModuleTest {
 
-  @Test
+  public function new() {}
+  
+  @test
   public function moduleWorks() {
     var container = new Container();
     var module = new TestModule();
@@ -14,7 +16,7 @@ class ModuleTest {
     container.get(String, 'other-foo').equals('other foo');
   }
 
-  @Test
+  @test
   public function moduleUsesServiceProvider() {
     var container = new Container();
     var module = new TestModule();
@@ -22,7 +24,7 @@ class ModuleTest {
     container.get(String, 'foo').equals('foo');
   }
 
-  @Test
+  @test
   public function moduleProvidesThings() {
     var container = new Container();
     var module = new TestModule();

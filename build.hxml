@@ -1,5 +1,5 @@
 -cp src
 -cp test
--lib hexunit
+-lib medic
 -main Run
 -js dist/test.js

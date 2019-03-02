@@ -4,11 +4,13 @@ import haxe.ds.Map;
 import fixture.*;
 import fixture.params.*;
 
-using hex.unittest.assertion.Assert;
+using medic.Assert;
 
 class ContainerTest {
 
-  @Test
+  public function new() {}
+
+  @test
   public function testSimpleValue() {
     var container = new Container();
     container.map(String, 'str').toValue('foo');
@@ -18,7 +20,7 @@ class ContainerTest {
     container.get(Int, 'one').equals(1);
   }
 
-  @Test
+  @test
   public function testAlternateMethodOfTagging() {
     var container = new Container();
     container.map(var str:String).toValue('foo');
@@ -29,14 +31,14 @@ class ContainerTest {
 
   }
 
-  @Test
+  @test
   public function testFactory() {
     var container = new Container();
     container.map(String, 'foo').toFactory(() -> 'foo');
     container.get(String, 'foo').equals('foo');
   }
 
-  @Test
+  @test
   public function testFactoryAutoInjection() {
     var container = new Container();
     container.map(String).toValue('bar');
@@ -46,7 +48,7 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @Test
+  @test
   public function testFactoryWithParams() {
     var container = new Container();
     container.map(var _:Array<String>).toValue([ 'bar', 'bin' ]);
@@ -56,7 +58,7 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobarbin');
   }
 
-  @Test
+  @test
   public function testTaggedFactory() {
     var container = new Container();
     container.map(String, 'bar').toValue('bar');
@@ -66,7 +68,7 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @Test
+  @test
   public function testNonInlineFactory() {
     var container = new Container();
     var factory = (foo:String) -> foo + 'bar';
@@ -75,7 +77,7 @@ class ContainerTest {
     container.get(String, 'foobar').equals('foobar');
   }
   
-  // @Test
+  // @test
   // public function testNonInlineFactoryWithMeta() {
   //   var container = new Container();
   //   function factory(@:inject.tag('foo') foo:String) return foo + 'bar';
@@ -88,7 +90,7 @@ class ContainerTest {
     return foo + ' ' + bar;
   }
 
-  @Test
+  @test
   public function testClassMethodAsFactory() {
     var container = new Container();
     container.map(String).toValue('foo');
@@ -97,7 +99,7 @@ class ContainerTest {
     container.get(String, 'foo1').equals('foo 1');
   }
 
-  @Test
+  @test
   public function testClosure() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -114,7 +116,7 @@ class ContainerTest {
     expectedDefault.foo.equals('foo'); 
   }
 
-  @Test
+  @test
   public function testConstructorInjecton() {
     var container = new Container();
     container.map(Plain).toType(Plain);
@@ -123,7 +125,7 @@ class ContainerTest {
     expected.equals('one');
   }
 
-  @Test
+  @test
   public function testParams() {
     var container = new Container();
     container.map(String).toValue('one');
@@ -146,7 +148,7 @@ class ContainerTest {
     things.get('foo').equals('bar');
   }
 
-  @Test
+  @test
   public function testParamsInProps() {
     var container = new Container();
     container.map(String).toValue('one');
@@ -158,7 +160,7 @@ class ContainerTest {
     container.get('InjectsPropWithParam<Int>').foo.equals(1);
   }
 
-  @Test
+  @test
   public function testParamsWithVarSyntax() {
     var container = new Container();
     container.map(String).toValue('one');
@@ -182,7 +184,7 @@ class ContainerTest {
     things.get('foo').equals('bar');
   }
 
-  @Test
+  @test
   public function testTaggedParams() {
     var container = new Container();
     container.map(String, 'foo').toValue('mapped');
@@ -190,7 +192,7 @@ class ContainerTest {
     container.get(var _:HasTaggedParams<String>).foo.equals('mapped');
   }
 
-  @Test
+  @test
   public function testComplexParams() {
     var container = new Container();
     container.map(Int).toValue(2);
@@ -201,7 +203,7 @@ class ContainerTest {
     expected.bar.equals('bar');
   }
 
-  @Test
+  @test
   public function testDeepParams() {
     var container = new Container();
     container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
@@ -210,7 +212,7 @@ class ContainerTest {
     expected.map.get('foo').equals('foo');
   }
 
-  @Test
+  @test
   public function testConditionalConstructor() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -222,7 +224,7 @@ class ContainerTest {
     expected.bax.equals('default');
   }
 
-  @Test
+  @test
   public function testChildOverrides() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -239,7 +241,7 @@ class ContainerTest {
     expected2.bar.equals('bar');
   }
 
-  @Test
+  @test
   public function testExtend() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -257,7 +259,7 @@ class ContainerTest {
     expected2.bar.equals('bar');
   }
 
-  @Test
+  @test
   public function testMethodInjection() {
     var container = new Container();
     container.map(String).toValue('foo');
@@ -274,7 +276,7 @@ class ContainerTest {
     expected.plain.value.equals('one');
   }
 
-  @Test
+  @test
   public function testPostInjection() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -283,7 +285,7 @@ class ContainerTest {
     expected.ran.equals('foo:one:two:three:four');
   }
 
-  @Test
+  @test
   public function testServiceProvider() {
     var container = new Container();
     container.use(new SimpleServiceProvider());
@@ -291,7 +293,7 @@ class ContainerTest {
     expected.equals('foo');
   }
 
-  @Test
+  @test
   public function testHas() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -299,7 +301,7 @@ class ContainerTest {
     container.has(String, 'nope').isFalse();
   }
 
-  @Test
+  @test
   public function testMappingExtension() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -307,7 +309,7 @@ class ContainerTest {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @Test
+  @test
   public function testSharedMappingExtension() {
     var container = new Container();
     container.map(Plain).toType(Plain).asShared();
