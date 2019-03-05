@@ -83,8 +83,8 @@ container.mapType('example.Fooable', null).toFactory(container -> {
 });
 ```
 
-Useage
-------
+Usage
+-----
 
 Mapping types without params is simple:
 

@@ -12,6 +12,8 @@ using capsule.macro.Common;
 
 class TypeFactoryBuilder {
 
+  static final container:String = 'c';
+
   var type:Expr;
   var mappingType:Type;
 
@@ -45,7 +47,7 @@ class TypeFactoryBuilder {
           var name = field.name;
           var key = field.type.resolveType(paramMap);
           var tag = meta.params.length > 0 ? meta.params[0] : macro @:pos(field.pos) null;
-          exprs.push(macro $p{[ "value", name ]} = container.__get($v{key}, $tag));
+          exprs.push(macro $p{[ "value", name ]} = $i{container}.__get($v{key}, $tag));
         case FMethod(k):
           var meth = field.expr();
           var meta = field.meta.extract(':inject')[0];
@@ -111,7 +113,7 @@ class TypeFactoryBuilder {
     var args = getArgumentTags(ctor.expr(), paramMap);
     var make = { expr:ENew(tp, args), pos: type.pos };
 
-    return macro function(container:capsule.Container) {
+    return macro function($container:capsule.Container) {
       var value = ${make};
       $b{exprs};
       return value;
@@ -137,7 +139,7 @@ class TypeFactoryBuilder {
             }
           }
 
-          args.push(macro container.__get($v{argType}, $argId));
+          args.push(macro $i{container}.__get($v{argType}, $argId));
         }
       default: 
         Context.error('Invalid method type', fun.pos);
@@ -166,7 +168,7 @@ class TypeFactoryBuilder {
       default: null;
     }
   }
-  
+
   function mapParams(type:Type, ?paramMap:Map<String, Type>):Map<String, Type> {
     if (paramMap == null) paramMap = new Map();
     switch (type) {
