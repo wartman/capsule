@@ -185,19 +185,26 @@ class TypeFactoryBuilder {
   }
 
   function resolveParentParams(cls:ClassType, paramMap:Map<String, Type>) {
-    if (cls.superClass == null) return;
     var clsParams = cls.params;
-    var superT = cls.superClass.t;
-    var superTName = superT.toString() + '.';
-    for (key in paramMap.keys()) {
-      var name = key.replace(superTName, '');
-      for (param in clsParams) {
-        if (param.name == name) {
-          paramMap.set(param.t.toString(), paramMap.get(key));
+
+    function resolve(c:{ t:Ref<ClassType>, params:Array<Type> }) {
+      var superName = c.t.toString() + '.';
+      for (key in paramMap.keys()) {
+        var name = key.replace(superName, '');
+        for (param in clsParams) {
+          if (param.name == name) {
+            paramMap.set(param.t.toString(), paramMap.get(key));
+          }
         }
       }
+      resolveParentParams(c.t.get(), paramMap);
     }
-    resolveParentParams(cls.superClass.t.get(), paramMap);
+
+    if (cls.superClass != null) resolve(cls.superClass);
+    if (cls.interfaces != null && cls.interfaces.length > 0) {
+      for (iface in cls.interfaces) resolve(iface);
+    }
+
   }
 
   function removeParams(type:String) {

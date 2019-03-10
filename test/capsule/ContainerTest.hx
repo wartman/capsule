@@ -204,12 +204,26 @@ class ContainerTest {
   }
 
   @test
+  public function testUsesComplexParams() {
+    var container = new Container();
+    container.map(Int).toValue(2);
+    container.map(String).toValue('bar');
+    container.map(var _:BaseParams<Int, String>).toType(HasComplexParams);
+    container.map(var _:UsesBaseParams<Int, String>).toType(CorrectlyFollowsComplexParams);
+    var expected = container.get(var _:UsesBaseParams<Int, String>);
+    expected.baseParams.foo.equals(2);
+    expected.baseParams.bar.equals('bar');
+  }
+
+  @test
   public function testDeepParams() {
     var container = new Container();
     container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
+    container.map('String').toValue('foo');
     container.map(var _:HasDeepParams<String, String>).toType(HasDeepParams);
     var expected = container.get(var _:HasDeepParams<String, String>);
     expected.map.get('foo').equals('foo');
+    expected.foo.equals('foo');
   }
 
   @test
