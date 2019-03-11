@@ -203,8 +203,8 @@ class ContainerTest {
     expected.bar.equals('bar');
   }
 
-  @test
-  public function testUsesComplexParams() {
+  @test('Interfaces are correctly resolved')
+  public function testWorksOnInterfaces() {
     var container = new Container();
     container.map(Int).toValue(2);
     container.map(String).toValue('bar');
@@ -334,6 +334,17 @@ class ContainerTest {
       v;
     });
     p.value.equals('changed');
+  }
+
+  @test
+  public function throwsUsefulError() {
+    var container = new Container();
+    try {
+      container.get(String, 'foo');
+      Assert.fail('Should have thrown a ContainerError');  
+    } catch (e:ContainerError) {
+      Assert.pass();
+    }
   }
 
 }

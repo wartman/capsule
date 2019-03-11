@@ -72,7 +72,7 @@ class Container {
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
       if (parent != null) return parent.__get(key, tag, container);
-      throw 'No mapping was found for ${name}';
+      throw new ContainerError('No mapping was found for ${name}');
     }
     return mapping.getValue(container);
   }
