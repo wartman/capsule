@@ -66,13 +66,13 @@ class Container {
     return macro @:pos(ethis.pos) ($ethis.__get($key, $tag):$type);
   }
 
-  public function __get<T>(key:String, ?tag:String, ?container:Container):T {
+  public function __get<T>(key:String, ?tag:String, ?container:Container #if debug , ?pos:haxe.PosInfos #end):T {
     if (container == null) container = this;
     var name = getMappingKey(key, tag);
     var mapping:Mapping<T> = cast mappings.get(name);
     if (mapping == null) {
       if (parent != null) return parent.__get(key, tag, container);
-      throw new ContainerError('No mapping was found for ${name}');
+      throw new ContainerError('No mapping was found for ${name}' #if debug , pos #end);
     }
     return mapping.getValue(container);
   }

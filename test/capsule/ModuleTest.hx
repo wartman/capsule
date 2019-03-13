@@ -32,11 +32,41 @@ class ModuleTest {
     container.get(InjectsConstructor).one.value.equals('one');
   }
 
+  @test('Vairables marked `_` with no expression map to types')
+  public function moduleRegistersDeps() {
+    var container = new Container();
+    var module = new TestModule();
+    module.register(container);
+    container.get(Plain).value.equals('one');
+    container.get('HasParams<Plain>').foo.value.equals('one');
+  }
+  
+  @test('Vairables with a name with no expression map to tagged types')
+  public function moduleRegistersNammedDeps() {
+    var container = new Container();
+    var module = new TestModule();
+    module.register(container);
+    container.get(Plain, 'named').value.equals('one');
+  }
+  
+  @test('Vairables with an expression map to values')
+  public function moduleRegistersNammedValues() {
+    var container = new Container();
+    var module = new TestModule();
+    module.register(container);
+    container.get(String, 'thing').equals('thing');
+  }
+
 }
 
 private class TestModule implements Module {
 
   @:use var provider:SimpleServiceProvider;
+
+  @:provide var _:Plain;
+  @:provide var _:HasParams<Plain>;
+  @:provide var named:Plain;
+  @:provide var thing:String = 'thing';
 
   @:provide('other-foo')
   function foo():String {
@@ -47,11 +77,6 @@ private class TestModule implements Module {
   // function foobar(@:inject.tag('foo') foo:String) {
   //   return foo + 'bar';
   // }
-
-  @:provide
-  function plain():Plain {
-    return new Plain();
-  }
 
   @:provide
   function injectsCon(plain:Plain):InjectsConstructor {

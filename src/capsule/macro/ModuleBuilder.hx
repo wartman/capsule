@@ -42,6 +42,7 @@ class ModuleBuilder {
 
     }).fields.find(f -> f.name == 'new');
     var constructorBody:Array<Expr> = [];
+    var toRemove:Array<Field> = [];
 
     for (f in fields) switch(f.kind) {
       case FFun(func):
@@ -56,15 +57,16 @@ class ModuleBuilder {
       case FVar(t, e):
         var propName = f.name;
         if (f.meta.exists(m -> m.name == provider)) {
+          toRemove.push(f);
           var meta = f.meta.find(m -> m.name == provider);
-          var tag = macro null;
+          var tag = propName != '_' ? macro $v{propName} : macro null;
           if (meta.params.length > 0) tag = meta.params[0];
           var name = t.toType().follow().toString();
           if (e != null) {
-            constructorBody.push(macro $i{propName} = ${e});
-            f.kind = FVar(t, null);
+            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toValue(${e}));
+          } else {
+            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toType($v{name}));
           }
-          registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toValue($i{propName}));
         }
         if (f.meta.exists(m -> m.name == use)) {
           if (e != null) {
@@ -78,6 +80,8 @@ class ModuleBuilder {
         }
       default:
     }
+
+    fields = fields.filter(f -> toRemove.indexOf(f) < 0);
 
     switch (constructor.kind) {
       case FFun(f): 
