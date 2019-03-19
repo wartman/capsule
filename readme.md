@@ -161,13 +161,14 @@ This currently does not work with tagging, but that's on the list.
 
 For more fine-grained injection, you can use the `toFactory` mapping.
 Any function passed to `toFactory` will be automagically injected for
-you:
+you (Note that short lambdas do not currently work properly with metadata
+and may not work with it at all in the future):
 
 ```haxe
 capsule.map(String, 'foo').toValue('foo');
-capsule.map('Example<String>').toFactory((
+capsule.map('Example<String>').toFactory(function (
   @:inject.tag('foo') foo:String
-) -> {
+) {
   var example = new Example(foo);
   trace(example);
   return example;
