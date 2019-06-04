@@ -10,6 +10,7 @@ using Lambda;
 class ModuleBuilder {
 
   static final provider:String = ':provide';
+  static final share:String = ':share';
   static final use:String = ':use';
 
   public static function build() {
@@ -52,7 +53,11 @@ class ModuleBuilder {
           if (meta.params.length > 0) tag = meta.params[0];
           var name = func.ret.toType().follow().toString();
           var method = f.name;
-          registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toFactory($i{method}));
+          if (f.meta.exists(m -> m.name == share)) {
+            registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toFactory($i{method}).asShared());
+          } else {
+            registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toFactory($i{method}));
+          }
         }
       case FVar(t, e):
         var propName = f.name;

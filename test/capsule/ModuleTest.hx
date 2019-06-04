@@ -57,6 +57,19 @@ class ModuleTest {
     container.get(String, 'thing').equals('thing');
   }
 
+  @test('Providers can be shared')
+  public function providersCanBeShared() {
+    var container = new Container();
+    var module = new TestModule();
+    module.register(container);
+    var data = container.get('Array<String>');
+    data[0].equals('foo');
+    data.push('bar');
+    var beta = container.get('Array<String>');
+    beta.length.equals(2);
+    beta[1].equals('bar');
+  }
+
 }
 
 private class TestModule implements Module {
@@ -81,6 +94,12 @@ private class TestModule implements Module {
   @:provide
   function injectsCon(plain:Plain):InjectsConstructor {
     return new InjectsConstructor(plain);
+  }
+
+  @:provide
+  @:share
+  function shared():Array<String> {
+    return [ 'foo' ];
   }
 
 }

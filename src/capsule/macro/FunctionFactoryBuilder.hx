@@ -62,19 +62,18 @@ class FunctionFactoryBuilder {
   function getArgs(f:Function, paramMap:Map<String, Type>) {
     var args:Array<Expr> = [];
     for (arg in f.args) {
+      if (arg.meta.exists(m -> m.name == ':inject.skip')) {
+        if (!arg.type.toType().isNullable()) {
+          Context.error('Arguments marked with `@:inject.skip` must be optional.', Context.currentPos());
+        }
+        args.push(macro null);
+        continue;
+      }
+      
       var argMeta = arg.meta.find(m -> m.name == ':inject.tag');
       var argId = argMeta != null ? argMeta.params[0] : macro null;
       var argType = arg.type.toType().resolveType(paramMap);
-
-      if (argMeta != null) {
-        if (arg.meta.exists(m -> m.name == ':inject.skip')) {
-          if (!arg.type.toType().isNullable()) {
-            Context.error('Arguments marked with `@:inject.skip` must be optional.', Context.currentPos());
-          }
-          args.push(macro null);
-          continue;
-        }
-      }
+    
       args.push(macro $i{container}.__get($v{argType}, $argId));
     }
     return args;
