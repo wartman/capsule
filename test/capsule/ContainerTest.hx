@@ -28,7 +28,6 @@ class ContainerTest {
 
     container.get(var str:String).equals('foo');
     container.get(var one:Int).equals(1);
-
   }
 
   @test
