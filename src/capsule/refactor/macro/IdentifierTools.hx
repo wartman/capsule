@@ -1,36 +1,16 @@
 #if macro
 package capsule.refactor.macro;
 
-import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Context;
 import haxe.macro.Type;
 
 using haxe.macro.Tools;
 using capsule.refactor.macro.TypeInfoTools;
 
-class MappingBuilder {
+class IdentifierTools {
 
-  public static function extractMappingTag(expr:Expr):Null<ExprOf<String>> {
-    return switch (expr.expr) {
-      case EVars(vars):
-        if (vars.length > 1)
-          Context.error('Only one var should be used here', expr.pos);
-        var name = vars[0].name;
-        if (name != '_') {
-          macro @:pos(expr.pos) $v{name};
-        } else {
-          null;
-        }
-      default: null;
-    }
-  }
-
-  public static function getMappingKey(expr:Expr):ExprOf<String> {
-    var id = getExprTypeName(expr);
-    return macro $v{id};
-  }
-
-  public static function getMappingType(expr:Expr):ComplexType {
+  public static function getExprType(expr:Expr):ComplexType {
     switch (expr.expr) {
       case EConst(CString(name)):
         return parseType(name, expr.pos);
@@ -49,8 +29,30 @@ class MappingBuilder {
 
     return null;
   }
+  
+  public static function getIdentifier(expr:Expr, ?tag:Expr):ExprOf<capsule.refactor.Identifier> {
+    switch (expr.expr) {
+      case EVars(vars):
+        if (vars.length > 1) {
+          Context.error('Only one var should be used here', expr.pos);
+        }
+        
+        var name = vars[0].name;
+        if (name != '_') {
+          tag = macro @:pos(expr.pos) $v{name};
+        }
+      default: null;
+    }
 
-  public static function getExprTypeName(expr:Expr):String {
+    if (tag == null) {
+      tag = macro null;
+    }
+
+    var type = getExprTypeName(expr);
+    return macro @:pos(expr.pos) new capsule.refactor.Identifier($v{type}, ${tag});
+  }
+
+  static function getExprTypeName(expr:Expr):String {
     switch (expr.expr) {
       case EVars(vars):
         if (vars.length > 1)

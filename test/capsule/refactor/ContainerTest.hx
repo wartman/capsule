@@ -28,16 +28,20 @@ class ContainerTest {
   @test('Mappings can be added via macros')
   public function testMacroMap() {
     var container = new Container();
+    
+    container.map(String).toValue('bar');
     container.map(String, 'str').toValue('foo');
     container.map(Int, 'one').toValue(1);
 
     container.get(String, 'str').equals('foo');
     container.get(Int, 'one').equals(1);
+    container.get(String).equals('bar');
   }
 
   @test('`Var` can be used to tag mappings')
   public function testAlternateMethodOfTagging() {
     var container = new Container();
+    
     container.map(var str:String).toValue('foo');
     container.map(var one:Int).toValue(1);
 

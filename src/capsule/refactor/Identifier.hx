@@ -1,27 +1,15 @@
 package capsule.refactor;
 
-enum IdentifierImpl {
-  IdType(type:String);
-  IdTagged(type:String, tag:String);
-}
-
-abstract Identifier(IdentifierImpl) from IdentifierImpl to IdentifierImpl {
+abstract Identifier(String) {
   
-  public inline function new(type:String, ?tag:String) {
+  public function new(type:String, ?tag:String) {
     this = tag == null
-      ? IdType(type)
-      : IdTagged(type, tag);
+      ? type
+      : '${type}#${tag}';
   }
 
-  public inline function unbox():IdentifierImpl {
+  @:to public inline function toString():String {
     return this;
-  }
-
-  public function toString() {
-    return switch unbox() {
-      case IdType(type): type;
-      case IdTagged(type, tag): '${type}#${tag}';
-    }
   }
 
   @:op(A == B)

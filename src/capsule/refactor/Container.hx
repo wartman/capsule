@@ -1,11 +1,12 @@
 package capsule.refactor;
 
+import haxe.ds.Map;
+
 using Type;
-using Lambda;
 
 class Container {
   
-  final mappings:Array<Mapping<Dynamic>> = [];
+  final mappings:Map<Identifier, Mapping<Dynamic>> = [];
 
   public function new() {
     addMapping(new Mapping(
@@ -15,38 +16,31 @@ class Container {
   }
 
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.refactor.macro.MappingBuilder.getMappingKey(def);
-    var type = capsule.refactor.macro.MappingBuilder.getMappingType(def);
-    var possibleTag = capsule.refactor.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.mapIdentifier(
-      new Identifier($key, $tag),
-      (null:$type)
-    );
+    var identifier = capsule.refactor.macro.IdentifierTools.getIdentifier(def, tag);
+    var type = capsule.refactor.macro.IdentifierTools.getExprType(def);
+    return macro @:pos(ethis.pos) ($ethis.mapIdentifier(${identifier}):capsule.refactor.Mapping<$type>);
   }
 
   public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.refactor.macro.MappingBuilder.getMappingKey(def);
-    var type = capsule.refactor.macro.MappingBuilder.getMappingType(def);
-    var possibleTag = capsule.refactor.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) ($ethis.getValueByIdentifier(
-      new Identifier($key, $tag)
-    ):$type);
+    var identifier = capsule.refactor.macro.IdentifierTools.getIdentifier(def, tag);
+    var type = capsule.refactor.macro.IdentifierTools.getExprType(def);
+    return macro @:pos(ethis.pos) ($ethis.getValueByIdentifier(${identifier}):$type);
   }
 
   public function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
-    // todo: check if mapping exists first
-    mappings.push(mapping);
+    if (mappings.exists(mapping.identifier)) {
+      return getMappingByIdentifier(mapping.identifier);
+    }
+    mappings.set(mapping.identifier, mapping);
     return mapping;
   }
 
-  public function mapIdentifier<T>(identifier:Identifier, ?value:T):Mapping<T> {
+  public function mapIdentifier<T>(identifier:Identifier):Mapping<T> {
     return addMapping(new Mapping(identifier));
   }
 
   public function getMappingByIdentifier<T>(id:Identifier):Mapping<T> {
-    var m = mappings.find(m -> m.identifier == id);
+    var m = mappings.get(id);
     if (m == null) {
       throw 'Mapping not found: ${id.toString()}';
     }
