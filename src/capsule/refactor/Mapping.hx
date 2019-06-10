@@ -8,18 +8,22 @@ class Mapping<T> {
 
   public function new(identifier:Identifier, ?provider:Provider<T>) {
     this.identifier = identifier;
-    this.provider = provider == null ? Provider.empty() : provider;
+    this.provider = provider == null ? ProvideNone : provider;
   }
 
-  // public macro function toClass() {}
+  public macro function toClass(ethis:haxe.macro.Expr, cls:haxe.macro.Expr) {
+    var mappingType = haxe.macro.Context.typeof(ethis);
+    var factory = capsule.refactor.macro.ClassFactoryBuilder.create(cls, mappingType);
+    return macro @:pos(ethis.pos) $ethis.toFactory(${factory});
+  }
 
   public function toFactory(factory:Factory<T>) {
-    toProvider(Provider.factory(factory));
+    toProvider(ProvideFactory(factory));
     return this;
   }
 
   public function toValue(value:T) {
-    toProvider(Provider.value(value));
+    toProvider(ProvideValue(value));
     return this;
   }
 
@@ -30,13 +34,13 @@ class Mapping<T> {
   }
 
   public function asShared() {
-    switch provider.unbox() {
-      case None:
+    switch provider {
+      case ProvideNone:
         throw 'You cannot share a mapping that does not have a provider';
       case ProvideAlias(id):
-        provider = Provider.shared(c -> c.getValueByIdentifier(id));
+        provider = ProvideShared(c -> c.getValueByIdentifier(id));
       case ProvideFactory(factory):
-        provider = Provider.shared(factory);
+        provider = ProvideShared(factory);
       case ProvideValue(_) | ProvideShared(_):
         // noop
     }
@@ -44,8 +48,8 @@ class Mapping<T> {
   }
 
   public function getValue(container:Container):T {
-    return switch provider.unbox() {
-      case None: 
+    return switch provider {
+      case ProvideNone: 
         null;
       case ProvideValue(value):
         value;
@@ -53,7 +57,7 @@ class Mapping<T> {
         factory(container);
       case ProvideShared(factory):
         var value = factory(container);
-        provider = Provider.value(value);
+        provider = ProvideValue(value);
         value;
       case ProvideAlias(id): 
         container.getValueByIdentifier(id);
@@ -61,23 +65,23 @@ class Mapping<T> {
   }
 
   public function extend(ext:(v:T)->T) {
-    switch provider.unbox() {
-      case None:
+    switch provider {
+      case ProvideNone:
         throw 'You cannot extend a mapping that does not have a provider';
       case ProvideValue(value):
-        provider = Provider.value(ext(value));
+        provider = ProvideValue(ext(value));
       case ProvideFactory(factory):
-        provider = Provider.factory(c -> ext(factory(c)));
+        provider = ProvideFactory(c -> ext(factory(c)));
       case ProvideShared(factory):
-        provider = Provider.shared(c -> ext(factory(c)));
+        provider = ProvideShared(c -> ext(factory(c)));
       case ProvideAlias(id): 
-        provider = Provider.factory(c -> ext(c.getValueByIdentifier(id)));
+        provider = ProvideFactory(c -> ext(c.getValueByIdentifier(id)));
     }
     return this;
   }
 
   function checkProvider() {
-    if (provider.unbox() != None) {
+    if (provider != ProvideNone) {
       throw 'A mapping was already bound to a provider';
     }
   }

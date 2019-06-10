@@ -11,20 +11,18 @@ class Container {
   public function new() {
     addMapping(new Mapping(
       new Identifier(this.getClass().getClassName()),
-      Provider.value(this)
+      ProvideValue(this)
     ));
   }
 
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var identifier = capsule.refactor.macro.IdentifierTools.getIdentifier(def, tag);
-    var type = capsule.refactor.macro.IdentifierTools.getExprType(def);
-    return macro @:pos(ethis.pos) ($ethis.mapIdentifier(${identifier}):capsule.refactor.Mapping<$type>);
+    var mapping = capsule.refactor.macro.MappingBuilder.create(def, tag);
+    return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
   }
 
   public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var identifier = capsule.refactor.macro.IdentifierTools.getIdentifier(def, tag);
-    var type = capsule.refactor.macro.IdentifierTools.getExprType(def);
-    return macro @:pos(ethis.pos) ($ethis.getValueByIdentifier(${identifier}):$type);
+    var dep = capsule.refactor.macro.IdentifierBuilder.createDependency(def, tag);
+    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
   }
 
   public function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
@@ -35,8 +33,8 @@ class Container {
     return mapping;
   }
 
-  public function mapIdentifier<T>(identifier:Identifier):Mapping<T> {
-    return addMapping(new Mapping(identifier));
+  public inline function getMappingByDependency<T>(dep:Dependency<T>):Mapping<T> {
+    return getMappingByIdentifier(dep);
   }
 
   public function getMappingByIdentifier<T>(id:Identifier):Mapping<T> {

@@ -9,6 +9,7 @@ class Run {
     // runner.add(new ContainerTest());
     // runner.add(new ModuleTest());
     runner.add(new capsule.refactor.ContainerTest());
+    runner.add(new capsule.refactor.MappingTest());
     runner.run();
   }
 

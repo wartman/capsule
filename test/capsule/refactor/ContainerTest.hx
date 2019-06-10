@@ -1,5 +1,7 @@
 package capsule.refactor;
 
+import capsule.refactor.fixture.*;
+
 using medic.Assert;
 
 class ContainerTest {
@@ -11,18 +13,20 @@ class ContainerTest {
     var container = new Container();
     container.addMapping(new Mapping(
       new Identifier('String', 'foo'),
-      new Provider(c -> 'foo')
+      ProvideFactory(c -> 'foo')
     ));
     var mapping:Mapping<String> = container.getMappingByIdentifier(new Identifier('String', 'foo'));
     mapping.getValue(container).equals('foo');
   }
 
-  @test('Mappings can be added during runtime')
-  public function testRuntimeMap() {
+  @test('Mappings can have type params')
+  public function testTypeParams() {
     var container = new Container();
-    container.mapIdentifier(new Identifier('String', 'foo')).toValue('foo');
-    var expected:String = container.getValueByIdentifier(new Identifier('String', 'foo'));
-    expected.equals('foo');
+    container.map('Array<String>').toValue([ 'a', 'b' ]);
+    var values = container.get(var _:Array<String>);
+    values.length.equals(2);
+    values[0].equals('a');
+    values[1].equals('b');
   }
 
   @test('Mappings can be added via macros')
@@ -36,6 +40,30 @@ class ContainerTest {
     container.get(String, 'str').equals('foo');
     container.get(Int, 'one').equals(1);
     container.get(String).equals('bar');
+  }
+
+  @test('Mappings resolve full type paths')
+  public function testTypePaths() {
+    var container = new Container();
+
+    container.map(Simple).toValue(new Simple('a'));
+    container.get(Simple).a.equals('a');
+  }
+
+  @test('Mappings resolve full type paths when strings are used')
+  public function testStringTypePaths() {
+    var container = new Container();
+
+    container.map('Simple').toValue(new Simple('a'));
+    container.get('Simple').a.equals('a');
+  }
+
+  @test('Mappings resolve full type paths when vars are used')
+  public function testVarTypePaths() {
+    var container = new Container();
+
+    container.map(var _:Simple).toValue(new Simple('a'));
+    container.get(var _:Simple).a.equals('a');
   }
 
   @test('`Var` can be used to tag mappings')
