@@ -68,6 +68,12 @@ class IdentifierBuilder {
   static function typeToString(type:Type, paramMap:Map<String, Type>):String {
     function resolve(type:Type) {
       var resolved = switch type {
+        case TType(t, params):
+          if (params.length == 0) {
+            followType(type);
+          } else {
+            followType(TType(t, params.map(resolve)));
+          }
         case TInst(t, params): 
           if (params.length == 0) {
             followType(type);
@@ -85,11 +91,14 @@ class IdentifierBuilder {
       }
 
       var key = resolved.toString();
-      return if (paramMap.exists(key)) {
+      var out = if (paramMap.exists(key)) {
         resolve(paramMap.get(key));
       } else {
         resolved;
       }
+      
+      // trace('resolving: ${type.toString()} -> ${out.toString()}');
+      return out;
     }
 
     return resolve(type).toString();
@@ -97,13 +106,15 @@ class IdentifierBuilder {
 
   static function followType(type:Type):Type {
     return switch (type) {
-      case TType(t, params):
-        if (Std.string(t) == 'Null') {
-          followType(params[0]);
-        } else switch (t.get().type) {
-          case TAnonymous(_): type;
-          case ref: followType(ref);
-        }
+      case TType(t, params) if (Std.string(t) == 'Null'):
+        followType(params[0]);
+      // case TType(t, params):
+      //   if (Std.string(t) == 'Null') {
+      //     followType(params[0]);
+      //   } else switch (t.get().type) {
+      //     case TAnonymous(_): type;
+      //     case ref: followType(ref);
+      //   }
       default: type;
     }
   }

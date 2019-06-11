@@ -1,5 +1,6 @@
 package capsule.refactor;
 
+import haxe.ds.Map;
 import capsule.refactor.fixture.*;
 import fixture.*;
 
@@ -93,13 +94,12 @@ class ContainerTest {
     var expected = container.get('HasParams<Int>');
     expected.foo.equals(1);
 
-    // Typing should work here!
-    // container.map('Map<String, String>', 'things').toValue([
-    //   'foo' => 'bar',
-    //   'bar' => 'bin'
-    // ]);
-    // var things = container.get('Map<String, String>', 'things');
-    // things.get('foo').equals('bar');
+    container.map('Map<String, String>', 'things').toValue([
+      'foo' => 'bar',
+      'bar' => 'bin'
+    ]);
+    var things = container.get('Map<String, String>', 'things');
+    things.get('foo').equals('bar');
   }
 
   @test

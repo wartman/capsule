@@ -2,10 +2,8 @@ package capsule.refactor;
 
 abstract Identifier(String) {
   
-  public function new(type:String, ?tag:String) {
-    this = tag == null
-      ? type
-      : '${type}#${tag}';
+  public inline function new(type:String, ?tag:String) {
+    this = tag == null ? type : '${type}#${tag}';
   }
 
   @:to public inline function toString():String {
