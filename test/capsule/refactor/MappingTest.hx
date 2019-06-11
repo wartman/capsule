@@ -19,9 +19,10 @@ class MappingTest {
       ProvideValue('Ok')
     ));
 
-    mapping.toClass(Simple);
-
-    mapping.getValue(container).a.equals('Ok');
+    mapping
+      .toClass(Simple)
+      .getValue(container)
+      .a.equals('Ok');
   }
 
 }

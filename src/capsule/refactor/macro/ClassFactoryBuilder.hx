@@ -53,8 +53,8 @@ class ClassFactoryBuilder {
     };
   }
   
-  static function getClassType(type:Expr):ClassType {
-    var type = getType(type);
+  static function getClassType(expr:Expr):ClassType {
+    var type = getType(expr);
     return switch type {
       case TInst(t, _):
         t.get();
@@ -109,7 +109,7 @@ class ClassFactoryBuilder {
   }
 
   static function getType(type:Expr):Type {
-    var name = IdentifierBuilder.exprToType(type).toType().toString();
+    var name = IdentifierBuilder.exprToType(type).toString();
     return Context.getType(removeParams(name));
   }
 

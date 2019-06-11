@@ -1,6 +1,7 @@
 package capsule.refactor;
 
 import capsule.refactor.fixture.*;
+import fixture.*;
 
 using medic.Assert;
 
@@ -75,6 +76,42 @@ class ContainerTest {
 
     container.get(var str:String).equals('foo');
     container.get(var one:Int).equals(1);
+  }
+
+  
+  @test
+  public function testParams() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container.map('HasParams<String>').toClass(HasParams);
+    
+    container.map(Int).toValue(1);
+    container.map('HasParams<Int>').toClass(HasParams);
+    
+    var expected = container.get('HasParams<String>');
+    expected.foo.equals('one');
+    var expected = container.get('HasParams<Int>');
+    expected.foo.equals(1);
+
+    // Typing should work here!
+    // container.map('Map<String, String>', 'things').toValue([
+    //   'foo' => 'bar',
+    //   'bar' => 'bin'
+    // ]);
+    // var things = container.get('Map<String, String>', 'things');
+    // things.get('foo').equals('bar');
+  }
+
+  @test
+  public function testParamsInProps() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container.map(Int).toValue(1);
+    container.map('InjectsPropWithParam<String>').toClass(InjectsPropWithParam);
+    container.map('InjectsPropWithParam<Int>').toClass(InjectsPropWithParam);
+
+    container.get('InjectsPropWithParam<String>').foo.equals('one');
+    container.get('InjectsPropWithParam<Int>').foo.equals(1);
   }
 
 }

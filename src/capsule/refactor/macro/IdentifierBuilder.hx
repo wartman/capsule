@@ -31,7 +31,7 @@ class IdentifierBuilder {
     } catch (e:Dynamic) {
       '';
     }
-    var ct = type.toComplexType();
+    var ct = parseType(name, Context.currentPos());
     return macro (new capsule.refactor.Dependency($v{name}, ${tag}):capsule.refactor.Dependency<$ct>);
   }
 
