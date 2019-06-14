@@ -2,4 +2,6 @@
 -cp test
 -lib medic
 -main Run
+# analyzer-optimize makes generated code way better
+-D analyzer-optimize
 -js dist/test.js

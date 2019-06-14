@@ -14,7 +14,7 @@ class Mapping<T> {
   public macro function toClass(ethis:haxe.macro.Expr, cls:haxe.macro.Expr) {
     var mappingType = haxe.macro.Context.typeof(ethis);
     var factory = capsule.refactor.macro.ClassFactoryBuilder.create(cls, mappingType);
-    return macro @:pos(ethis.pos) $ethis.toFactory(${factory});
+    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
 
   public function toFactory(factory:Factory<T>) {
@@ -36,7 +36,7 @@ class Mapping<T> {
   public function asShared() {
     switch provider {
       case ProvideNone:
-        throw 'You cannot share a mapping that does not have a provider';
+        throw new ProviderDoesNotExistError(identifier, 'You cannot share a mapping that does not have a provider.');
       case ProvideAlias(id):
         provider = ProvideShared(c -> c.getValueByIdentifier(id));
       case ProvideFactory(factory):
@@ -67,7 +67,7 @@ class Mapping<T> {
   public function extend(ext:(v:T)->T) {
     switch provider {
       case ProvideNone:
-        throw 'You cannot extend a mapping that does not have a provider';
+        throw new ProviderDoesNotExistError(identifier, 'You cannot extend a mapping that does not have a provider');
       case ProvideValue(value):
         provider = ProvideValue(ext(value));
       case ProvideFactory(factory):
@@ -82,7 +82,7 @@ class Mapping<T> {
 
   function checkProvider() {
     if (provider != ProvideNone) {
-      throw 'A mapping was already bound to a provider';
+      throw new ProviderAlreadyExistsError(identifier);
     }
   }
 

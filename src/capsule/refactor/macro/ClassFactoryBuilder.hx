@@ -13,7 +13,9 @@ class ClassFactoryBuilder {
 
   static final container:String = 'c';
   static final inject:String = ':inject';
-  
+  static final skip:String = ':inject.skip';
+  static final tag:String = ':inject.tag';
+
   public static function create(type:Expr, mappingType:Type) {
     var exprs:Array<Expr> = [];
     var cls = getClassType(type);
@@ -40,8 +42,8 @@ class ClassFactoryBuilder {
     }
 
     var ctor = cls.constructor.get();
-    if(ctor.meta.has(':inject')) {
-      Context.error('Constructors should not be marked with `@:inject` -- they will be injected automatically. You may still use argument injections on them.', ctor.pos);
+    if(ctor.meta.has(inject)) {
+      Context.error('Constructors should not be marked with `@${inject}` -- they will be injected automatically. You may still use argument injections on them.', ctor.pos);
     }
     var args = getArgumentTags(ctor.expr(), paramMap);
     var make = { expr:ENew(tp, args), pos: type.pos };
@@ -123,11 +125,11 @@ class ClassFactoryBuilder {
     switch (fun.expr) {
       case TFunction(f):
         for (arg in f.args) {
-          var argMeta = arg.v.meta.extract(':inject.tag');
+          var argMeta = arg.v.meta.extract(tag);
           if (argMeta.length == 0) {
-            if (arg.v.meta.has(':inject.skip')) {
+            if (arg.v.meta.has(skip)) {
               if (!isNullable(arg.v.t)) {
-                Context.error('Arguments marked with `@:inject.skip` must be optional.', fun.pos);
+                Context.error('Arguments marked with `@${skip}` must be optional.', fun.pos);
               }
               args.push(macro null);
               continue;

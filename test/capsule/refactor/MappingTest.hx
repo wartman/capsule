@@ -25,4 +25,17 @@ class MappingTest {
       .a.equals('Ok');
   }
 
+  @test('Factory mapping extension')
+  public function testMappingExtension() {
+    var container = new Container();
+    var mapping = new Mapping(
+      new Identifier('String', 'foo'),
+      Provider.ProvideFactory(c -> 'foo')
+    );
+    mapping.extend(v -> v + 'bar');
+    mapping.getValue(container).equals('foobar');
+  }
+  
+  // todo: test other extensions
+
 }
