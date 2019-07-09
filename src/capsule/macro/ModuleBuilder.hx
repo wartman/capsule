@@ -63,8 +63,8 @@ class ModuleBuilder {
           if (f.meta.exists(m -> m.name == share)) {
             registerBody.push(macro @:pos(f.pos) c.addMapping(new capsule.Mapping(
               new capsule.Identifier($v{name}, ${tag}),
-              ProvideFactory(${method})
-            ).asShared()));
+              ProvideShared(${method})
+            )));
           } else {
             registerBody.push(macro @:pos(f.pos) c.addMapping(new capsule.Mapping(
               new capsule.Identifier($v{name}, ${tag}),
