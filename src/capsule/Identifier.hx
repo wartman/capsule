@@ -1,4 +1,4 @@
-package capsule.refactor;
+package capsule;
 
 using StringTools;
 

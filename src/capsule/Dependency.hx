@@ -1,4 +1,4 @@
-package capsule.refactor;
+package capsule;
 
 abstract Dependency<T>(Identifier) to Identifier from Identifier {
   

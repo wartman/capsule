@@ -1,4 +1,4 @@
-package capsule.refactor.fixture;
+package fixture;
 
 class Simple {
   

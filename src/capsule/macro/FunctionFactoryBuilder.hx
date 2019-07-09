@@ -4,24 +4,15 @@ package capsule.macro;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 import haxe.macro.Context;
-import haxe.ds.Map;
 
 using Lambda;
 using haxe.macro.Tools;
-using capsule.macro.Common;
 
-// TODO: DRY this with TypeFactoryBuilder.
 class FunctionFactoryBuilder {
-
+  
   static final container:String = 'c';
 
-  var func:Expr;
-
-  public function new(func:Expr) {
-    this.func = func;
-  }
-
-  public function exportFactory():Expr {
+  public static function create(func:Expr) {
     var body:Array<Expr> = [];
 
     switch (func.expr) {
@@ -32,38 +23,18 @@ class FunctionFactoryBuilder {
           var args = getArgs(f, new Map());
           body.push(macro return ${func}($a{args}));
         }
-      default: switch (Context.typeof(func)) {
-        case TFun(args, ret):
-
-          // // Going to have to figure out a lot of junk to get
-          // // metadata access I think:
-          // var f = Context.typeExpr(func);
-          // trace(f.expr);
-          // switch (f.expr) {
-          //   case TLocal({ t: t }): trace(t);
-          //   case TField({ t: TInst(cls, _) }, fa): trace(fa);
-          //   default:
-          // }
-
-          if (args.length == 0) {
-            return macro _ -> ${func}();
-          } else {
-            var args = getMethodArgs(args, new Map());
-            body.push(macro return ${func}($a{args}));
-          }
-        default: 
-          Context.error('Expected a function', func.pos);
-      }
+      default: 
+        Context.error('Expected a function', func.pos);
     }
 
     return macro ($container:capsule.Container) -> $b{body};
   }
 
-  function getArgs(f:Function, paramMap:Map<String, Type>) {
+  static function getArgs(f:Function, paramMap:Map<String, Type>) {
     var args:Array<Expr> = [];
     for (arg in f.args) {
       if (arg.meta.exists(m -> m.name == ':inject.skip')) {
-        if (!arg.type.toType().isNullable()) {
+        if (!isNullable(arg.type.toType())) {
           Context.error('Arguments marked with `@:inject.skip` must be optional.', Context.currentPos());
         }
         args.push(macro null);
@@ -72,20 +43,31 @@ class FunctionFactoryBuilder {
       
       var argMeta = arg.meta.find(m -> m.name == ':inject.tag');
       var argId = argMeta != null ? argMeta.params[0] : macro null;
-      var argType = arg.type.toType().resolveType(paramMap);
-    
-      args.push(macro $i{container}.__get($v{argType}, $argId));
+      var dep = IdentifierBuilder.createDependencyForType(arg.type.toType(), argId, paramMap);
+
+      args.push(macro $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
     }
     return args;
   }
 
-  function getMethodArgs(args:Array<{ name:String, t:Type }>, paramMap:Map<String, Type>) {
-    var exprs:Array<Expr> = [];
-    for (arg in args) {
-      var argType = arg.t.resolveType(paramMap);
-      exprs.push(macro $i{container}.__get($v{argType}, null));
+  
+  static function isNullable(type:Type):Bool {
+    switch (type) {
+      // hmm.
+      case TAbstract(t, inst):
+        if (Std.string(t) == 'Null')
+          return true;
+        return false;
+      case TType(t, params):
+        if (Std.string(t) == 'Null')
+          return true;
+        return switch (t.get().type) {
+          case TAnonymous(_): false;
+          case ref: isNullable(ref);
+        }
+      default:
+        return false;
     }
-    return exprs;
   }
 
 }

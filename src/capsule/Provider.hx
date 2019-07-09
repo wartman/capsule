@@ -1,4 +1,4 @@
-package capsule.refactor;
+package capsule;
 
 enum Provider<T> {
   ProvideNone;

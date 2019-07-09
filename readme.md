@@ -1,6 +1,8 @@
 Capsule
 =======
 
+> Note: this readme may be out of date and not reflect the current API as I go through some refactoring.
+
 About
 -----
 
@@ -56,31 +58,34 @@ class Main {
   public static function main() {
     var container = new Container();
     container.map(String, 'named').toValue('bin');
-    container.map(Fib, 'specific.fib').toType(Fib);
+    container.map(Fib, 'specific.fib').toClass(Fib);
     // For more fine grained control:
     container.map(Bif).toFactory(container -> new Bif('bof')).asShared();
-    container.map(Bar).toType(Bar);
-    container.map(Fooable).toType(Fooable);
+    container.map(Bar).toClass(Bar);
+    container.map(Fooable).toClass(Fooable);
   }
 
 }
 
 ```
 
-In the above example, `container.map(Fooable).toType(Fooable)` becomes the following (more or less):
+In the above example, `container.map(Fooable).toClass(Fooable)` becomes the following (more or less):
 
 ```haxe
-container.mapType('example.Fooable', null).toFactory(container -> {
-  var value = new Fooable(
-    container.get(example.Bif),
-    container.get(example.Fib, 'specific.fib'),
-    null
-  );
-  value.bar = container.get(example.Bar);
-  value.bin = container.get(String, 'named');
-  value.after();
-  return value;
-});
+container.addMapping(new container.Mapping(
+  new container.Identifier('example.Fooable', null),
+  ProvideFactory(container -> {
+    var value = new Fooable(
+      container.get(example.Bif),
+      container.get(example.Fib, 'specific.fib'),
+      null
+    );
+    value.bar = container.get(example.Bar);
+    value.bin = container.get(String, 'named');
+    value.after();
+    return value;
+  })
+));
 ```
 
 Usage
@@ -90,7 +95,7 @@ Mapping types without params is simple:
 
 ```haxe
 container.map(String).toValue('foo');
-container.map(MyClass).toType(MyClass);
+container.map(MyClass).toClass(MyClass);
 ```
 
 You can also give mappings a `tag`, which is especially useful
@@ -153,7 +158,7 @@ class Example<T> {
 }
 
 capsule.map(String).toValue('foo');
-capsule.map('Example<String>').toType(Example);
+capsule.map('Example<String>').toClass(Example);
 trace(capsule.get('Example<String>').foo); // => 'foo'
 ```
 
@@ -161,8 +166,7 @@ This currently does not work with tagging, but that's on the list.
 
 For more fine-grained injection, you can use the `toFactory` mapping.
 Any function passed to `toFactory` will be automagically injected for
-you (Note that short lambdas do not currently work properly with metadata
-and may not work with it at all in the future):
+you (Note that arrow functions do not work with metadata):
 
 ```haxe
 capsule.map(String, 'foo').toValue('foo');
@@ -175,21 +179,21 @@ capsule.map('Example<String>').toFactory(function (
 });
 ```
 
-This will also work for methods inside classes (in this case, just
-for example, a ServiceProvider), although you can't use tags here yet:
+`toFactory` will NOT work if you pass in a reference to a function or a method.
 
 ```haxe
-class FooProvider implements capsule.ServiceProvider {
-
-  public function new() {}
-
-  public function register(container:capsule.Container) {
-    container.map(var foo:Example<String>).toFactory(fooString);
-  }
-
-  function fooString(a:String) {
-    return new Example(a);
-  }
-
-}
+// This will not work:
+var foo = function (
+  @:inject.tag('foo') foo:String
+) {
+  var example = new Example(foo);
+  trace(example);
+  return example;
+};
+capsule.map('Example<String>').toFactory(foo);
 ```
+
+Modules and ServiceProviders
+============================
+
+> This is todo. Check the tests to see how Modules work for now.

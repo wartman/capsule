@@ -1,3 +1,3 @@
-package capsule.refactor;
+package capsule;
 
 typedef Factory<T> = (container:Container)->T;

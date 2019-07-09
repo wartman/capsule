@@ -1,99 +1,105 @@
 package capsule;
 
+import haxe.ds.Map;
+
+using Type;
+
+typedef ContainerGetOptions<T> = {
+  ?fallbackToUntaggedType:Bool
+};
+
 class Container {
+  
+  final parent:Container;
+  final mappings:Map<Identifier, Mapping<Dynamic>>;
 
-  var parent:Container;
-  var mappings:Map<String, Mapping<Dynamic>> = new Map();
-
-  public function new(?parent:Container, ?mappings:Map<String, Mapping<Dynamic>>) {
+  public function new(?parent:Container, ?mappings:Map<Identifier, Mapping<Dynamic>>) {
     this.parent = parent;
-    if (mappings != null) this.mappings = mappings;
-    __map('capsule.Container').toValue(this);
-  }
-
-  public function getChild() {
-    return new Container(this);
+    this.mappings = mappings != null ? mappings : [];
+    addMapping(new Mapping(
+      new Identifier(this.getClass().getClassName()),
+      ProvideValue(this)
+    ));
   }
 
   public function extend(container:Container) {
     return new Container(container, mappings);
   }
 
-  public function use(serviceProvider:ServiceProvider) {
-    serviceProvider.register(this);
-    return this;
+  public function getChild() {
+    return new Container(this);
   }
 
-  public macro function getMapping(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.macro.MappingBuilder.getMappingKey(def);
-    var type = capsule.macro.MappingBuilder.getMappingType(def);
-    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.__getMapping($key, $tag, (null:$type));
-  }
-
-  public function __getMapping<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
-    var name = getMappingKey(key, tag);
-    var mapping:Mapping<T> = cast mappings.get(name);
-    if (mapping == null) {
-      if (parent != null) return parent.__getMapping(key, tag, value);
-      throw 'No mapping was found for ${name}';
-    }
-    return mapping;
+  public function use(service:ServiceProvider):Void {
+    service.register(this);
   }
 
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.macro.MappingBuilder.getMappingKey(def);
-    var type = capsule.macro.MappingBuilder.getMappingType(def);
-    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.__map($key, $tag, (null:$type));
-  }
-
-  public function __map<T>(key:String, ?tag:String, ?value:T):Mapping<T> {
-    var name = getMappingKey(key, tag);
-    if (mappings.exists(name)) return cast mappings.get(name);
-    var mapping = new Mapping(key, tag, value);
-    mappings.set(name, mapping);
-    return mapping;
+    var mapping = capsule.macro.MappingBuilder.create(def, tag);
+    return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
   }
 
   public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.macro.MappingBuilder.getMappingKey(def);
-    var type = capsule.macro.MappingBuilder.getMappingType(def);
-    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) ($ethis.__get($key, $tag):$type);
-  }
-
-  public function __get<T>(key:String, ?tag:String, ?container:Container #if debug , ?pos:haxe.PosInfos #end):T {
-    if (container == null) container = this;
-    var name = getMappingKey(key, tag);
-    var mapping:Mapping<T> = cast mappings.get(name);
-    if (mapping == null) {
-      if (parent != null) return parent.__get(key, tag, container);
-      throw new ContainerError('No mapping was found for ${name}' #if debug , pos #end);
-    }
-    return mapping.getValue(container);
+    var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
+    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
   }
 
   public macro function has(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
-    var key = capsule.macro.MappingBuilder.getMappingKey(def);
-    var possibleTag = capsule.macro.MappingBuilder.extractMappingTag(def);
-    if (possibleTag != null) tag = possibleTag;
-    return macro @:pos(ethis.pos) $ethis.__has($key, $tag);
+    var id = capsule.macro.IdentifierBuilder.createDependency(def, tag);
+    return macro @:pos(ethis.pos) $ethis.hasMappingByIdentifier(${id});
   }
 
-  public function __has(key:String, ?tag:String):Bool {
-    var name = getMappingKey(key, tag);
-    if (mappings.exists(name)) return true;
-    if (parent != null) return parent.__has(key, tag);
-    return false;
+  public function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
+    if (mappings.exists(mapping.identifier)) {
+      return getMappingByIdentifier(mapping.identifier);
+    }
+    mappings.set(mapping.identifier, mapping);
+    return mapping;
   }
 
-  function getMappingKey(type:String, name:String):String {
-    if (name == null) name = '';
-    return '$type#$name';
+  public inline function getMappingByDependency<T>(
+    dep:Dependency<T>,
+    ?options:ContainerGetOptions<T>
+  ):Mapping<T> {
+    return getMappingByIdentifier(dep, options);
+  }
+
+  public function hasMappingByIdentifier(id:Identifier) {
+    return mappings.exists(id);
+  }
+
+  public function getMappingByIdentifier<T>(
+    id:Identifier,
+    ?options:ContainerGetOptions<T>
+  ):Mapping<T> {
+    if (options == null) {
+      options = { fallbackToUntaggedType: false };
+    }
+    var m = mappings.get(id);
+    if (m == null) {
+      function finish() {
+        if (id.hasTag() && options.fallbackToUntaggedType) {
+          return getMappingByIdentifier(id.withoutTag());
+        }
+        throw new MappingNotFoundError(id);
+      }
+
+      if (parent != null) try {
+        return parent.getMappingByIdentifier(id, options);
+      } catch (_:MappingNotFoundError) {
+        return finish();
+      }
+
+      return finish();
+    }
+    return cast m;
+  }
+
+  public function getValueByIdentifier<T>(
+    id:Identifier,
+    ?options:ContainerGetOptions<T>
+  ):T {
+    return getMappingByIdentifier(id, options).getValue(this);
   }
 
 }

@@ -48,15 +48,28 @@ class ModuleBuilder {
     for (f in fields) switch(f.kind) {
       case FFun(func):
         if (f.meta.exists(m -> m.name == provider)) {
+          toRemove.push(f);
           var meta = f.meta.find(m -> m.name == provider);
           var tag = macro null;
           if (meta.params.length > 0) tag = meta.params[0];
+          if (func.ret == null) {
+            Context.error('You must provide a return type', f.pos);
+          }
           var name = func.ret.toType().follow().toString();
-          var method = f.name;
+          var method = FunctionFactoryBuilder.create({
+            expr: EFunction(f.name, func),
+            pos: f.pos
+          });
           if (f.meta.exists(m -> m.name == share)) {
-            registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toFactory($i{method}).asShared());
+            registerBody.push(macro @:pos(f.pos) c.addMapping(new capsule.Mapping(
+              new capsule.Identifier($v{name}, ${tag}),
+              ProvideFactory(${method})
+            ).asShared()));
           } else {
-            registerBody.push(macro @:pos(f.pos) c.__map($v{name}, ${tag}).toFactory($i{method}));
+            registerBody.push(macro @:pos(f.pos) c.addMapping(new capsule.Mapping(
+              new capsule.Identifier($v{name}, ${tag}),
+              ProvideFactory(${method})
+            )));
           }
         }
       case FVar(t, e):
@@ -70,7 +83,7 @@ class ModuleBuilder {
           if (e != null) {
             registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toValue(${e}));
           } else {
-            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toType($v{name}));
+            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toClass($v{name}));
           }
         }
         if (f.meta.exists(m -> m.name == use)) {

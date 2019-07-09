@@ -1,6 +1,6 @@
-package capsule.refactor;
+package capsule;
 
-import capsule.refactor.fixture.*;
+import fixture.*;
 
 using medic.Assert;
 using Type;

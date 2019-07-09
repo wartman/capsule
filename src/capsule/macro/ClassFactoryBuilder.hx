@@ -1,5 +1,5 @@
 #if macro
-package capsule.refactor.macro;
+package capsule.macro;
 
 import haxe.ds.Map;
 import haxe.macro.Expr;
@@ -15,6 +15,7 @@ class ClassFactoryBuilder {
   static final inject:String = ':inject';
   static final skip:String = ':inject.skip';
   static final tag:String = ':inject.tag';
+  static final post:String = ':inject.post';
 
   public static function create(type:Expr, mappingType:Type) {
     var exprs:Array<Expr> = [];
@@ -23,6 +24,7 @@ class ClassFactoryBuilder {
     var tp:TypePath = { pack: cls.pack, name: cls.name };
     var mappedType = extractMappedType(mappingType);
     var paramMap = mapParams(mappedType);
+    var postInjects:Array<{ order:Int, expr:Expr }> = [];
     resolveParentParams(cls, paramMap);
     
     if (cls.constructor == null) {
@@ -30,15 +32,56 @@ class ClassFactoryBuilder {
     }
 
     for (field in fields) switch field.kind {
+
       case FVar(_, _) if (field.meta.has(inject)):
         var meta = field.meta.extract(inject)[0];
         var name = field.name;
-        var tag = macro $v{meta.params[0]};
+        var tag = meta.params[0];
         var dep = IdentifierBuilder.createDependencyForType(field.type, tag, paramMap);
         exprs.push(macro value.$name = $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
-      case FMethod(_):
-        // todo
+      
+      case FMethod(k) if (field.meta.has(inject)):
+        var meta = field.meta.extract(inject)[0];
+        var name = field.name;
+        if (meta.params.length > 0) {
+          Context.error('You cannot use tagged injections on methods. Use argument injections instead.', field.pos);
+        }
+         var args = getArgumentTags(field.expr(), paramMap);
+         exprs.push(macro value.$name($a{args}));
+
+      case FMethod(_) if (field.meta.has(post)):
+        var meta = field.meta.extract(post)[0];
+        var name = field.name;
+        if (field.meta.has(inject)) {
+          Context.error('`@${post}` and `@${inject}` are not allowed on the same method', field.pos);
+        }
+        var order:Int = 0;
+        if (meta.params.length > 0) {
+          switch (meta.params[0].expr) {
+            case EConst(CInt(v)): order = Std.parseInt(v);
+            default:
+              Context.error('`@${post}` only accepts integers as params', field.pos);
+          }
+        }
+        switch (field.expr().expr) {
+          case TFunction(f):
+            if (f.args.length > 0) {
+              Context.error('`@${post}` methods cannot have any arguments', field.pos);
+            }
+          default:
+        }
+        postInjects.push({
+          order: order,
+          expr: macro value.$name()
+        });
+
       default:
+
+    }
+
+    if (postInjects.length > 0) {
+      haxe.ds.ArraySort.sort(postInjects, (a, b) -> a.order - b.order);
+      exprs = exprs.concat(postInjects.map(pi -> pi.expr));
     }
 
     var ctor = cls.constructor.get();
@@ -48,7 +91,7 @@ class ClassFactoryBuilder {
     var args = getArgumentTags(ctor.expr(), paramMap);
     var make = { expr:ENew(tp, args), pos: type.pos };
 
-    return macro function($container:capsule.refactor.Container) {
+    return macro function($container:capsule.Container) {
       var value = ${make};
       $b{exprs};
       return value;

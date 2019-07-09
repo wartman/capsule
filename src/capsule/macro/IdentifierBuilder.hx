@@ -1,5 +1,5 @@
 #if macro
-package capsule.refactor.macro;
+package capsule.macro;
 
 import haxe.ds.Map;
 import haxe.macro.Context;
@@ -10,13 +10,13 @@ using haxe.macro.Tools;
 
 class IdentifierBuilder {
 
-  public static function create(type:Type, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>):ExprOf<Identifier> {
+  public static function create(type:Type, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>):ExprOf<capsule.Identifier> {
     var name = try {  
       typeToString(type, paramMap != null ? paramMap : []);
     } catch (e:Dynamic) {
       '';
     }
-    return macro new capsule.refactor.Identifier($v{name}, ${tag});
+    return macro new capsule.Identifier($v{name}, ${tag});
   }
 
   public static function createDependency(expr:Expr, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>) {
@@ -32,7 +32,8 @@ class IdentifierBuilder {
       '';
     }
     var ct = parseType(name, Context.currentPos());
-    return macro (new capsule.refactor.Dependency($v{name}, ${tag}):capsule.refactor.Dependency<$ct>);
+    if (tag == null) tag = macro null;
+    return macro (new capsule.Dependency($v{name}, ${tag}):capsule.Dependency<$ct>);
   }
 
   public static function exprToTag(expr:Expr):Null<ExprOf<String>> {

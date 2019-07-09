@@ -70,6 +70,15 @@ class ModuleTest {
     beta[1].equals('bar');
   }
 
+  @test('Providers can have tagged args')
+  public function providerHasTaggedArg() {
+    var container = new Container();
+    var module = new TestModule();
+    module.register(container);
+    var foobar = container.get(String, 'foobar');
+    foobar.equals('other foobar');
+  }
+
 }
 
 private class TestModule implements Module {
@@ -86,10 +95,10 @@ private class TestModule implements Module {
     return 'other foo';
   }
 
-  // @:provide('foobar')
-  // function foobar(@:inject.tag('foo') foo:String) {
-  //   return foo + 'bar';
-  // }
+  @:provide('foobar')
+  function foobar(@:inject.tag('other-foo') foo:String):String {
+    return foo + 'bar';
+  }
 
   @:provide
   function injectsCon(plain:Plain):InjectsConstructor {
