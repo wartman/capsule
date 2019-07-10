@@ -50,7 +50,8 @@ class ModuleBuilder {
         if (f.meta.exists(m -> m.name == provider)) {
           toRemove.push(f);
           var meta = f.meta.find(m -> m.name == provider);
-          var tag = macro null;
+          var propName = f.name;
+          var tag = propName != '_' ? macro $v{propName} : macro null;
           if (meta.params.length > 0) tag = meta.params[0];
           if (func.ret == null) {
             Context.error('You must provide a return type', f.pos);

@@ -95,19 +95,19 @@ private class TestModule implements Module {
     return 'other foo';
   }
 
-  @:provide('foobar')
+  @:provide
   function foobar(@:inject.tag('other-foo') foo:String):String {
     return foo + 'bar';
   }
 
   @:provide
-  function injectsCon(plain:Plain):InjectsConstructor {
+  function _(plain:Plain):InjectsConstructor {
     return new InjectsConstructor(plain);
   }
 
   @:provide
   @:share
-  function shared():Array<String> {
+  function _():Array<String> {
     return [ 'foo' ];
   }
 

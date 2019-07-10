@@ -196,4 +196,67 @@ capsule.map('Example<String>').toFactory(foo);
 Modules and ServiceProviders
 ============================
 
-> This is todo. Check the tests to see how Modules work for now.
+Modules are simple ways to set up services. They look like this:
+
+```haxe
+import capsule.Module;
+
+class Example implements Module {
+
+  // You can include other Modules or ServiceProviders
+  // in a module with `@:use`.
+  @:use var someModule:OtherModule;
+
+  // Optionally you can assign an instance:
+  @:use var someModule:ModuleThatNeedsInitialization 
+    = new ModuleThatNeedsInitialization('option');
+
+  // Variables marked `_` will be mapped without tags.
+  // this is the same as: 
+  //  `container.map(String).to('Default String')`
+  // or
+  //  `container.map(var _:String).to('Default String')`
+  //
+  // Note that you can have more than one var with the
+  // same name in Modules -- these are NOT real properties
+  // and will not exist on the compiled class.
+  @:provide var _:String = 'Default String';
+  @:provide var _:Int = 1;
+
+  // Named vars are used as tags.
+  @:provide var foo:String = 'foo';
+
+  // Vars without a value will be mapped to a class (the same
+  // as `container.map(Foo).toClass(Foo)`):
+  @:provide var _:Foo;
+
+  // Methods work using the same rules: `_` is an untagged
+  // mapping, any other name is used as a tag. Params will
+  // be injected.
+  //
+  // Note that a return type is REQUIRED here.
+  @:provide function _(@:inject.tag('foo') foo:String):Foo {
+    return new Foo(foo);
+  }
+
+  // `@:share` will create a shared mapping. By default, mappings
+  // in a module are NOT shared.
+  @:provide 
+  @:share
+  function bar(foo:String, num:Int):Bar {
+    return new Bar(foo, num);
+  }
+
+}
+
+```
+
+To use a `Module` or `ServiceProvider` just pass the instance to `Container#use`:
+
+```haxe
+var container = new Container();
+container.use(new Example());
+var foo = container.get(Foo);
+```
+
+> More detail coming soon.
