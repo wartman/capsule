@@ -39,7 +39,7 @@ class Container {
     return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
   }
 
-  public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+  public macro function get<T>(ethis:haxe.macro.Expr, def:haxe.macro.Expr.ExprOf<T>, ?tag:haxe.macro.Expr.ExprOf<String>):haxe.macro.Expr.ExprOf<T> {
     var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
     return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
   }

@@ -79,6 +79,17 @@ class ModuleTest {
     foobar.equals('other foobar');
   }
 
+  @test('Properties are automatically shared')
+  public function autoShare() {
+    var container = new Container();
+    container.use(new TestModule());
+    var auto = container.get(InjectsConstructor);
+    auto.one.value.equals('one');
+    auto.one.value = 'changed';
+    var two = container.get(InjectsConstructor);
+    two.one.value.equals('changed');
+  }
+
 }
 
 private class TestModule implements Module {
@@ -89,6 +100,7 @@ private class TestModule implements Module {
   @:provide var _:HasParams<Plain>;
   @:provide var named:Plain;
   @:provide var thing:String = 'thing';
+  @:provide var autoShared:InjectsConstructor;
 
   @:provide('other-foo')
   function foo():String {

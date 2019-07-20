@@ -84,7 +84,7 @@ class ModuleBuilder {
           if (e != null) {
             registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toValue(${e}));
           } else {
-            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toClass($v{name}));
+            registerBody.push(macro @:pos(f.pos) c.map($v{name}, ${tag}).toClass($v{name}).asShared());
           }
         }
         if (f.meta.exists(m -> m.name == use)) {
