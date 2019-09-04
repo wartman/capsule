@@ -58,7 +58,7 @@ class ModuleBuilder {
           }
           var name = func.ret.toType().follow().toString();
           var method = FunctionFactoryBuilder.create({
-            expr: EFunction(f.name, func),
+            expr: EFunction(FNamed(f.name), func),
             pos: f.pos
           });
           if (f.meta.exists(m -> m.name == share)) {

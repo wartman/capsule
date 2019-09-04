@@ -25,7 +25,6 @@ class Mapping<T> {
   }
 
   public macro function toFactory(ethis:haxe.macro.Expr, factory:haxe.macro.Expr) {
-    // var mappingType = haxe.macro.Context.typeof(ethis);
     var factory = capsule.macro.FunctionFactoryBuilder.create(factory);
     return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
@@ -35,7 +34,7 @@ class Mapping<T> {
     return this;
   }
 
-  public function toProvider(provider:Provider<T>) {
+  public function toProvider(provider:Provider<T>):Mapping<T> {
     checkProvider();
     this.provider = provider;
     return this;
