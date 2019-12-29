@@ -7,6 +7,7 @@ import haxe.macro.Context;
 
 using Lambda;
 using haxe.macro.Tools;
+using capsule.macro.BuilderTools;
 
 class FunctionFactoryBuilder {
   
@@ -34,7 +35,7 @@ class FunctionFactoryBuilder {
     var args:Array<Expr> = [];
     for (arg in f.args) {
       if (arg.meta.exists(m -> m.name == ':inject.skip')) {
-        if (!isNullable(arg.type.toType())) {
+        if (!arg.type.toType().isNullable()) {
           Context.error('Arguments marked with `@:inject.skip` must be optional.', Context.currentPos());
         }
         args.push(macro null);
@@ -48,26 +49,6 @@ class FunctionFactoryBuilder {
       args.push(macro $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
     }
     return args;
-  }
-
-  
-  static function isNullable(type:Type):Bool {
-    switch (type) {
-      // hmm.
-      case TAbstract(t, inst):
-        if (Std.string(t) == 'Null')
-          return true;
-        return false;
-      case TType(t, params):
-        if (Std.string(t) == 'Null')
-          return true;
-        return switch (t.get().type) {
-          case TAnonymous(_): false;
-          case ref: isNullable(ref);
-        }
-      default:
-        return false;
-    }
   }
 
 }

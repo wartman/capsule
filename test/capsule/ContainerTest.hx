@@ -21,16 +21,6 @@ class ContainerTest {
   }
 
   @test
-  public function testAlternateMethodOfTagging() {
-    var container = new Container();
-    container.map(var str:String).toValue('foo');
-    container.map(var one:Int).toValue(1);
-
-    container.get(var str:String).equals('foo');
-    container.get(var one:Int).equals(1);
-  }
-
-  @test
   public function testFactory() {
     var container = new Container();
     container.map(String, 'foo').toFactory(() -> 'foo');
@@ -50,7 +40,7 @@ class ContainerTest {
   @test
   public function testFactoryWithParams() {
     var container = new Container();
-    container.map(var _:Array<String>).toValue([ 'bar', 'bin' ]);
+    container.map('Array<String>').toValue([ 'bar', 'bin' ]);
     container
       .map(String, 'foo')
       .toFactory((bar:Array<String>) -> 'foo' + bar.join(''));
@@ -66,38 +56,7 @@ class ContainerTest {
       .toFactory(function (@:inject.tag('bar') bar:String) return 'foo' + bar);
     container.get(String, 'foo').equals('foobar');
   }
-
-  // @test
-  // public function testNonInlineFactory() {
-  //   var container = new Container();
-  //   var factory = (foo:String) -> foo + 'bar';
-  //   container.map(String).toValue('foo');
-  //   container.map(String, 'foobar').toFactory(factory);
-  //   container.get(String, 'foobar').equals('foobar');
-  // }
   
-  // @test
-  // public function testNonInlineFactoryWithMeta() {
-  //   var container = new Container();
-  //   function factory(@:inject.tag('foo') foo:String) return foo + 'bar';
-  //   container.map(String, 'foo').toValue('foo');
-  //   container.map(String, 'foobar').toFactory(factory);
-  //   container.get(String, 'foobar').equals('foobar');
-  // }
-
-  function factoryMethod(foo:String, bar:Int) {
-    return foo + ' ' + bar;
-  }
-
-  // @test
-  // public function testClassMethodAsFactory() {
-  //   var container = new Container();
-  //   container.map(String).toValue('foo');
-  //   container.map(Int).toValue(1);
-  //   container.map(String, 'foo1').toFactory(factoryMethod);
-  //   container.get(String, 'foo1').equals('foo 1');
-  // }
-
   @test
   public function testClosure() {
     var container = new Container();
@@ -122,6 +81,13 @@ class ContainerTest {
     container.map(InjectsConstructor).toClass(InjectsConstructor);
     var expected = container.get(InjectsConstructor).one.value;
     expected.equals('one');
+  }
+
+  @test
+  public function testBuild() {
+    var container = new Container();
+    container.map(String).toValue('one');
+    container.build('HasParams<String>').foo.equals('one');
   }
 
   @test
@@ -160,35 +126,11 @@ class ContainerTest {
   }
 
   @test
-  public function testParamsWithVarSyntax() {
-    var container = new Container();
-    container.map(String).toValue('one');
-    container
-      .map(var _:HasParams<String>)
-      .toClass(HasParams);
-    container.map(Int).toValue(1);
-    container
-      .map(var _:HasParams<Int>)
-      .toClass(HasParams);
-    var expected = container.get(var _:HasParams<String>);
-    expected.foo.equals('one');
-    var expected = container.get(var _:HasParams<Int>);
-    expected.foo.equals(1);
-
-    container.map(var things:Map<String, String>).toValue([
-      'foo' => 'bar',
-      'bar' => 'bin'
-    ]);
-    var things = container.get(var things:Map<String, String>);
-    things.get('foo').equals('bar');
-  }
-
-  @test
   public function testTaggedParams() {
     var container = new Container();
     container.map(String, 'foo').toValue('mapped');
-    container.map(var _:HasTaggedParams<String>).toClass(HasTaggedParams);
-    container.get(var _:HasTaggedParams<String>).foo.equals('mapped');
+    container.map('HasTaggedParams<String>').toClass(HasTaggedParams);
+    container.get('HasTaggedParams<String>').foo.equals('mapped');
   }
 
   @test
@@ -196,8 +138,8 @@ class ContainerTest {
     var container = new Container();
     container.map(Int).toValue(2);
     container.map(String).toValue('bar');
-    container.map(var _:BaseParams<Int, String>).toClass(HasComplexParams);
-    var expected = container.get(var _:BaseParams<Int, String>);
+    container.map('BaseParams<Int, String>').toClass(HasComplexParams);
+    var expected = container.get('BaseParams<Int, String>');
     expected.foo.equals(2);
     expected.bar.equals('bar');
   }
@@ -207,9 +149,9 @@ class ContainerTest {
     var container = new Container();
     container.map(Int).toValue(2);
     container.map(String).toValue('bar');
-    container.map(var _:BaseParams<Int, String>).toClass(HasComplexParams);
-    container.map(var _:UsesBaseParams<Int, String>).toClass(CorrectlyFollowsComplexParams);
-    var expected = container.get(var _:UsesBaseParams<Int, String>);
+    container.map('BaseParams<Int, String>').toClass(HasComplexParams);
+    container.map('UsesBaseParams<Int, String>').toClass(CorrectlyFollowsComplexParams);
+    var expected = container.get('UsesBaseParams<Int, String>');
     expected.baseParams.foo.equals(2);
     expected.baseParams.bar.equals('bar');
   }
@@ -219,8 +161,8 @@ class ContainerTest {
     var container = new Container();
     container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
     container.map('String').toValue('foo');
-    container.map(var _:HasDeepParams<String, String>).toClass(HasDeepParams);
-    var expected = container.get(var _:HasDeepParams<String, String>);
+    container.map('HasDeepParams<String, String>').toClass(HasDeepParams);
+    var expected = container.get('HasDeepParams<String, String>');
     expected.map.get('foo').equals('foo');
     expected.foo.equals('foo');
   }
@@ -299,9 +241,17 @@ class ContainerTest {
   }
 
   @test
-  public function testServiceProvider() {
+  public function testServiceProviderInstance() {
     var container = new Container();
     container.use(new SimpleServiceProvider());
+    var expected = container.get(String, 'foo');
+    expected.equals('foo');
+  }
+
+  @test
+  public function testServiceProvider() {
+    var container = new Container();
+    container.use(SimpleServiceProvider);
     var expected = container.get(String, 'foo');
     expected.equals('foo');
   }
@@ -312,6 +262,22 @@ class ContainerTest {
     container.map(String, 'foo').toValue('foo');
     container.has(String, 'foo').isTrue();
     container.has(String, 'nope').isFalse();
+  }
+
+  @test
+  public function testAbstractsAreHandledRight() {
+    var container = new Container();
+    container.map(AbstractString).toValue(new AbstractString('foo'));
+    container.get(AbstractString).unBox().equals('foo');
+  }
+
+  @test
+  public function testResolvesTypedefsCorrectly() {
+    var container = new Container();
+    container.map(StringArray).toValue([ 'foo', 'bar' ]);
+    container.has('Array<String>').isFalse();
+    container.get(StringArray)[0].equals('foo');
+    container.get(StringArray)[1].equals('bar');
   }
 
   @test

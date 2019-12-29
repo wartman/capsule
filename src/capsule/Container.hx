@@ -1,12 +1,9 @@
 package capsule;
 
+import haxe.PosInfos;
 import haxe.ds.Map;
 
 using Type;
-
-typedef ContainerGetOptions<T> = {
-  ?fallbackToUntaggedType:Bool
-};
 
 class Container {
   
@@ -30,8 +27,12 @@ class Container {
     return new Container(this);
   }
 
-  public function use(service:ServiceProvider):Void {
-    service.register(this);
+  public macro function use(ethis:haxe.macro.Expr, service:haxe.macro.Expr) {
+    var e:haxe.macro.Expr = switch service.expr {
+      case ENew(_, _): service;
+      default: macro @:pos(ethis.pos) $ethis.build(${service});
+    }
+    return macro @:pos(ethis.pos) $ethis.useServiceProvider(${e});
   }
 
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
@@ -49,6 +50,15 @@ class Container {
     return macro @:pos(ethis.pos) $ethis.hasMappingByIdentifier(${id});
   }
 
+  public macro function build(ethis:haxe.macro.Expr.ExprOf<Class<Dynamic>>, def:haxe.macro.Expr) {
+    var mapping = capsule.macro.MappingBuilder.create(def, macro null);
+    return macro @:pos(ethis.pos) ${mapping}.toClass(${def}).getValue(${ethis});
+  }
+
+  public function useServiceProvider(service:ServiceProvider):Void {
+    service.register(this);
+  }
+
   public function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
     if (mappings.exists(mapping.identifier)) {
       return getMappingByIdentifier(mapping.identifier);
@@ -57,49 +67,25 @@ class Container {
     return mapping;
   }
 
-  public inline function getMappingByDependency<T>(
-    dep:Dependency<T>,
-    ?options:ContainerGetOptions<T>
-  ):Mapping<T> {
-    return getMappingByIdentifier(dep, options);
+  public inline function getMappingByDependency<T>(dep:Dependency<T>):Mapping<T> {
+    return getMappingByIdentifier(dep);
   }
 
   public function hasMappingByIdentifier(id:Identifier) {
     return mappings.exists(id);
   }
 
-  public function getMappingByIdentifier<T>(
-    id:Identifier,
-    ?options:ContainerGetOptions<T>
-  ):Mapping<T> {
-    if (options == null) {
-      options = { fallbackToUntaggedType: false };
-    }
+  public function getMappingByIdentifier<T>(id:Identifier #if debug , ?pos:PosInfos #end):Mapping<T> {
     var m = mappings.get(id);
     if (m == null) {
-      function finish() {
-        if (id.hasTag() && options.fallbackToUntaggedType) {
-          return getMappingByIdentifier(id.withoutTag());
-        }
-        throw new MappingNotFoundError(id);
-      }
-
-      if (parent != null) try {
-        return parent.getMappingByIdentifier(id, options);
-      } catch (_:MappingNotFoundError) {
-        return finish();
-      }
-
-      return finish();
+      if (parent != null) return parent.getMappingByIdentifier(id);
+      throw new MappingNotFoundError(id #if debug , pos #end);
     }
     return cast m;
   }
 
-  public function getValueByIdentifier<T>(
-    id:Identifier,
-    ?options:ContainerGetOptions<T>
-  ):T {
-    return getMappingByIdentifier(id, options).getValue(this);
+  public function getValueByIdentifier<T>(id:Identifier):T {
+    return getMappingByIdentifier(id).getValue(this);
   }
 
 }

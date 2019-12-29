@@ -7,6 +7,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using haxe.macro.Tools;
+using capsule.macro.BuilderTools;
 
 class IdentifierBuilder {
 
@@ -16,12 +17,12 @@ class IdentifierBuilder {
     } catch (e:Dynamic) {
       '';
     }
+    if (tag == null) tag = macro null;
     return macro new capsule.Identifier($v{name}, ${tag});
   }
 
   public static function createDependency(expr:Expr, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>) {
-    if (tag == null) tag = exprToTag(expr);
-    var type = exprToType(expr).toType();
+    var type = expr.resolveComplexType().toType();
     return createDependencyForType(type, tag, paramMap);
   }
 
@@ -31,39 +32,9 @@ class IdentifierBuilder {
     } catch (e:Dynamic) {
       '';
     }
-    var ct = parseType(name, Context.currentPos());
+    var ct = name.parseAsType(Context.currentPos());
     if (tag == null) tag = macro null;
     return macro (new capsule.Dependency($v{name}, ${tag}):capsule.Dependency<$ct>);
-  }
-
-  public static function exprToTag(expr:Expr):Null<ExprOf<String>> {
-    return switch expr.expr {
-      case EVars(vars):
-        if (vars.length > 1) {
-          Context.error('Only one var should be used here', expr.pos);
-        }
-        macro $v{vars[0].name};
-      default: null;
-    }
-  }
-
-  public static function exprToType(expr:Expr):ComplexType {
-    return switch expr.expr {
-      case EConst(CString(s)):
-        parseType(s, expr.pos);
-      case EVars(vars):
-        if (vars.length > 1) {
-          Context.error('Only one var should be used here', expr.pos);
-        }
-        vars[0].type;
-      default:
-        switch Context.typeof(expr) {
-          case TType(_, _):
-            return parseType(expr.toString(), expr.pos);
-          default: 
-            null;
-        }
-    }
   }
 
   static function typeToString(type:Type, paramMap:Map<String, Type>):String {
@@ -98,7 +69,6 @@ class IdentifierBuilder {
         resolved;
       }
       
-      // trace('resolving: ${type.toString()} -> ${out.toString()}');
       return out;
     }
 
@@ -117,13 +87,6 @@ class IdentifierBuilder {
       //     case ref: followType(ref);
       //   }
       default: type;
-    }
-  }
-
-  static function parseType(name:String, pos:Position):ComplexType {
-    return switch(Context.parse('(null:${name})', pos)) {
-      case macro (null:$type): type;
-      default: null;
     }
   }
 

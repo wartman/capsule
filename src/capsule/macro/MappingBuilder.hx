@@ -4,12 +4,12 @@ package capsule.macro;
 import haxe.macro.Expr;
 
 using haxe.macro.Tools;
+using capsule.macro.BuilderTools;
 
 class MappingBuilder {
   
   public static function create(expr:Expr, ?tag:ExprOf<String>) {
-    if (tag == null) tag = IdentifierBuilder.exprToTag(expr);
-    var type = IdentifierBuilder.exprToType(expr);
+    var type = expr.resolveComplexType();
     var identifier = IdentifierBuilder.create(type.toType(), tag);
     return macro @:pos(expr.pos) (new capsule.Mapping(${identifier}):capsule.Mapping<$type>);
   }

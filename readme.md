@@ -1,11 +1,6 @@
 Capsule
 =======
 
-> Note: this readme may be out of date and not reflect the current API as I go through some refactoring.
-
-About
------
-
 Capsule is a simple dependency injection framework for Haxe, built around
 the idea that all mappings can be reduced to factory functions. Rather than use
 run-time metadata it is entirely macro based.
@@ -88,10 +83,10 @@ container.addMapping(new container.Mapping(
 ));
 ```
 
-Usage
------
+Mapping
+-------
 
-Mapping types without params is simple:
+Mapping types is simple:
 
 ```haxe
 container.map(String).toValue('foo');
@@ -106,36 +101,33 @@ container.map(String, 'foo').toValue('foo');
 var foo = container.get(String, 'foo');
 ```
 
-You can also use an alternate, slightly weird syntax to
-tag types (which compiles to be exactly the same as the above):
+An issue you may run into are type parameters. The following syntax will not work
+with Haxe:
 
 ```haxe
-container.map(var foo:String).toValue('foo');
-var foo = container.get(var foo:String);
-```
-
-This `var` syntax makes a bit more sense when you're dealing with
-types that have parameters. To explain, let's first note that this 
-will not work, due to the limitations of Haxe's syntax:
-
-```haxe
+// This will not compile, and haxe will throw something like
+// `expected an expression`:
 container.map(Map<String, String>).toValue([
   'foo' => 'bar'
 ]);
 ```
 
-Instead, you have two options. You can pass a `String` to map or
-use the `var` syntax -- and note that an underscore, such as 
-`var _:T`, will be treated the same as a mapping without a tag.
+There are two ways around this. The first is to create a `typedef`:
 
 ```haxe
-// String method:
-container.map('Map<String, String>').toValue([
+
+typedef StringMap = Map<String, String>;
+
+container.map(StringMap).toValue([
   'foo' => 'bar'
 ]);
 
-// Var method:
-container.map(var _:Map<String, String>).toValue([
+```
+
+This is a bit clumsy, however, so Capsule will also let you pass a string to `map` which it will then parse into the correct type:
+
+```haxe
+container.map('Map<String, String>').toValue([
   'foo' => 'bar'
 ]);
 ```
@@ -162,7 +154,23 @@ capsule.map('Example<String>').toClass(Example);
 trace(capsule.get('Example<String>').foo); // => 'foo'
 ```
 
-This currently does not work with tagging, but that's on the list.
+This will even work with tags:
+
+```haxe
+class Example<T> {
+
+  var foo:T;
+
+  public function new(@:inject.tag('foo') foo:T) {
+    this.foo = foo;
+  }
+
+}
+
+capsule.map(String, 'foo').toValue('foo');
+capsule.map('Example<String>').toClass(Example);
+trace(capsule.get('Example<String>').foo); // => 'foo'
+```
 
 For more fine-grained injection, you can use the `toFactory` mapping.
 Any function passed to `toFactory` will be automagically injected for
@@ -193,70 +201,56 @@ var foo = function (
 capsule.map('Example<String>').toFactory(foo);
 ```
 
-Modules and ServiceProviders
-============================
+If a mapping does not exist, Capsule will throw a `capsule.MappingNotFoundError`. Set `-D debug` in your HXML to get position info with these errors.
 
-Modules are simple ways to set up services. They look like this:
+ServiceProviders
+----------------
+
+A `capsule.ServiceProvider` is a simple way to, well, provide services.
+
+To create a ServiceProvider, simply implement the interface:
 
 ```haxe
-import capsule.Module;
+import capsule.Container;
+import capsule.ServiceProvider;
 
-class Example implements Module {
+class FooProvider implements ServiceProvider {
 
-  // You can include other Modules or ServiceProviders
-  // in a module with `@:use`.
-  @:use var someModule:OtherModule;
+  final foo:String;
 
-  // Optionally you can assign an instance:
-  @:use var someModule:ModuleThatNeedsInitialization 
-    = new ModuleThatNeedsInitialization('option');
-
-  // Variables marked `_` will be mapped without tags.
-  // this is the same as: 
-  //  `container.map(String).to('Default String')`
-  // or
-  //  `container.map(var _:String).to('Default String')`
-  //
-  // Note that you can have more than one var with the
-  // same name in Modules -- these are NOT real properties
-  // and will not exist on the compiled class.
-  @:provide var _:String = 'Default String';
-  @:provide var _:Int = 1;
-
-  // Named vars are used as tags.
-  @:provide var foo:String = 'foo';
-
-  // Vars without a value will be mapped to a class (the same
-  // as `container.map(Foo).toClass(Foo)`):
-  @:provide var _:Foo;
-
-  // Methods work using the same rules: `_` is an untagged
-  // mapping, any other name is used as a tag. Params will
-  // be injected.
-  //
-  // Note that a return type is REQUIRED here.
-  @:provide function _(@:inject.tag('foo') foo:String):Foo {
-    return new Foo(foo);
+  public function new(foo) {
+    this.foo = foo;
   }
 
-  // `@:share` will create a shared mapping. By default, mappings
-  // in a module are NOT shared.
-  @:provide 
-  @:share
-  function bar(foo:String, num:Int):Bar {
-    return new Bar(foo, num);
+  public function register(container:Container) {
+    container.map(String, 'foo').toValue(foo);
   }
 
 }
-
 ```
 
-To use a `Module` or `ServiceProvider` just pass the instance to `Container#use`:
+... and then pass it to a Container using `Container#use`:
 
 ```haxe
-var container = new Container();
-container.use(new Example());
-var foo = container.get(Foo);
+var container = new capsule.Container();
+container.use(new FooProvider('foo'));
+trace(container.get(String, 'foo')) // => 'foo';
 ```
 
-> More detail coming soon.
+If you don't need to configure your service provider, you can just pass the class directly to `Container#use`:
+
+```haxe
+class SimpleProvider implements capsule.ServiceProvider {
+
+  public function new() {}
+
+  public function register(container:capsule.Container) {
+    container.map(String, 'foo').toValue('foo');
+  }
+  
+}
+
+var container = new capsule.Container();
+container.use(SimpleProvider);
+trace(container.get(String, 'foo')) // => 'foo';
+```
