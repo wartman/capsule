@@ -28,9 +28,10 @@ class Container {
   }
 
   public macro function use(ethis:haxe.macro.Expr, service:haxe.macro.Expr) {
-    var e:haxe.macro.Expr = switch service.expr {
-      case ENew(_, _): service;
-      default: macro @:pos(ethis.pos) $ethis.build(${service});
+    var e:haxe.macro.Expr = if (haxe.macro.Context.unify(haxe.macro.Context.typeof(service), haxe.macro.Context.getType('capsule.ServiceProvider'))) {
+      service;
+    } else {
+      macro @:pos(service.pos) $ethis.build(${service});
     }
     return macro @:pos(ethis.pos) $ethis.useServiceProvider(${e});
   }
