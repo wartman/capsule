@@ -37,22 +37,22 @@ class Container {
 
   public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     var mapping = capsule.macro.MappingBuilder.create(def, tag);
-    return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
+    return macro @:pos(def.pos) $ethis.addMapping(${mapping});
   }
 
   public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>):haxe.macro.Expr {
     var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
+    return macro @:pos(def.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
   }
 
   public macro function has(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
     var id = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(ethis.pos) $ethis.hasMappingByIdentifier(${id});
+    return macro @:pos(def.pos) $ethis.hasMappingByIdentifier(${id});
   }
 
   public macro function build(ethis:haxe.macro.Expr.ExprOf<Class<Dynamic>>, def:haxe.macro.Expr) {
     var mapping = capsule.macro.MappingBuilder.create(def, macro null);
-    return macro @:pos(ethis.pos) ${mapping}.toClass(${def}).getValue(${ethis});
+    return macro @:pos(def.pos) ${mapping}.toClass(${def}).getValue(${ethis});
   }
 
   public function useServiceProvider(service:ServiceProvider):Void {
@@ -67,8 +67,8 @@ class Container {
     return mapping;
   }
 
-  public inline function getMappingByDependency<T>(dep:Dependency<T>):Mapping<T> {
-    return getMappingByIdentifier(dep);
+  public inline function getMappingByDependency<T>(dep:Dependency<T> #if debug , ?pos:PosInfos #end):Mapping<T> {
+    return getMappingByIdentifier(dep #if debug , pos #end);
   }
 
   public function hasMappingByIdentifier(id:Identifier) {

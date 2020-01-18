@@ -39,7 +39,7 @@ class ClassFactoryBuilder {
         var name = field.name;
         var tag = meta.params[0];
         var dep = IdentifierBuilder.createDependencyForType(field.type, tag, paramMap);
-        exprs.push(macro value.$name = $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
+        exprs.push(macro @:pos(type.pos) value.$name = $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
       
       case FMethod(k) if (field.meta.has(inject)):
         var meta = field.meta.extract(inject)[0];
@@ -48,7 +48,7 @@ class ClassFactoryBuilder {
           Context.error('You cannot use tagged injections on methods. Use argument injections instead.', field.pos);
         }
         var args = getArgumentTags(field.expr(), paramMap);
-        exprs.push(macro value.$name($a{args}));
+        exprs.push(macro @:pos(type.pos) value.$name($a{args}));
 
       case FMethod(_) if (field.meta.has(post)):
         var meta = field.meta.extract(post)[0];
@@ -73,7 +73,7 @@ class ClassFactoryBuilder {
         }
         postInjects.push({
           order: order,
-          expr: macro value.$name()
+          expr: macro @:pos(Context.currentPos()) value.$name()
         });
 
       default:
@@ -92,7 +92,7 @@ class ClassFactoryBuilder {
     var args = getArgumentTags(ctor.expr(), paramMap);
     var make = { expr:ENew(tp, args), pos: type.pos };
 
-    return macro function($container:capsule.Container) {
+    return macro @:pos(type.pos) function($container:capsule.Container) {
       var value = ${make};
       $b{exprs};
       return value;
@@ -182,7 +182,7 @@ class ClassFactoryBuilder {
           
           var argId = argMeta.length > 0 ? argMeta[0].params[0] : macro null;
           var dep = IdentifierBuilder.createDependencyForType(arg.v.t, argId, paramMap);
-          args.push(macro $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
+          args.push(macro @:pos(Context.currentPos()) $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
         }
       default: 
         Context.error('Invalid method type', fun.pos);

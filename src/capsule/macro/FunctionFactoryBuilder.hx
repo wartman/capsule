@@ -19,16 +19,16 @@ class FunctionFactoryBuilder {
     switch (func.expr) {
       case EFunction(_, f):
         if (f.args.length == 0) {
-          return macro _ -> ${func}();
+          return macro @:pos(func.pos) _ -> ${func}();
         } else {
           var args = getArgs(f, new Map());
-          body.push(macro return ${func}($a{args}));
+          body.push(macro @:pos(func.pos) return ${func}($a{args}));
         }
       default: 
         Context.error('Expected a function', func.pos);
     }
 
-    return macro ($container:capsule.Container) -> $b{body};
+    return macro @:pos(func.pos) ($container:capsule.Container) -> $b{body};
   }
 
   static function getArgs(f:Function, paramMap:Map<String, Type>) {
@@ -45,8 +45,9 @@ class FunctionFactoryBuilder {
       var argMeta = arg.meta.find(m -> m.name == ':inject.tag');
       var argId = argMeta != null ? argMeta.params[0] : macro null;
       var dep = IdentifierBuilder.createDependencyForType(arg.type.toType(), argId, paramMap);
+      var pos = arg.value != null ? arg.value.pos : f.expr.pos;
 
-      args.push(macro $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
+      args.push(macro @:pos(pos) $i{container}.getMappingByDependency(${dep}).getValue($i{container}));
     }
     return args;
   }

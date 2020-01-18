@@ -21,12 +21,12 @@ class Mapping<T> {
   public macro function toClass(ethis:haxe.macro.Expr, cls:haxe.macro.Expr) {
     var mappingType = haxe.macro.Context.typeof(ethis);
     var factory = capsule.macro.ClassFactoryBuilder.create(cls, mappingType);
-    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
+    return macro @:pos(cls.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
 
   public macro function toFactory(ethis:haxe.macro.Expr, factory:haxe.macro.Expr) {
     var factory = capsule.macro.FunctionFactoryBuilder.create(factory);
-    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
+    return macro @:pos(factory.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
 
   public function toValue(value:T) {
