@@ -291,4 +291,12 @@ class ContainerTest {
     }
   }
 
+  @test
+  public function canGetMappings() {
+    var container = new Container();
+    container.map(String, 'foo').toValue('foo');
+    container.getMapping(String, 'foo').extend(v -> v += 'bar');
+    container.get(String, 'foo').equals('foobar');
+  }
+
 }
