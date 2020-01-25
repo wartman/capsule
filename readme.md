@@ -1,9 +1,14 @@
 Capsule
 =======
 
+[![Build Status](https://travis-ci.com/wartman/capsule.svg?branch=master)](https://travis-ci.com/wartman/capsule)
+
 Capsule is a simple dependency injection framework for Haxe, built around
 the idea that all mappings can be reduced to factory functions. Rather than use
 run-time metadata it is entirely macro based.
+
+About
+-----
 
 For example, take this class:
 
