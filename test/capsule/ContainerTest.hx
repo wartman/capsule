@@ -4,9 +4,9 @@ import haxe.ds.Map;
 import fixture.*;
 import fixture.params.*;
 
-using medic.Assert;
+using Medic;
 
-class ContainerTest {
+class ContainerTest implements TestCase {
 
   public function new() {}
 

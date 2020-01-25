@@ -2,10 +2,10 @@ package capsule;
 
 import fixture.*;
 
-using medic.Assert;
+using Medic;
 using Type;
 
-class MappingTest {
+class MappingTest implements TestCase {
 
   public function new() {}
 

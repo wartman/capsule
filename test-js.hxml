@@ -1,0 +1,3 @@
+test-common.hxml
+
+-js dist/js/index.js

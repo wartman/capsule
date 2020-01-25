@@ -1,0 +1,15 @@
+language: haxe
+
+haxe:
+- development
+- stable
+
+before_install:
+# using git until medic is published
+- haxelib git medic https://github.com/wartman/medic --always
+
+script:
+- haxe test-js.hxml
+- node dist/js/index.js
+
+#todo: other targets
