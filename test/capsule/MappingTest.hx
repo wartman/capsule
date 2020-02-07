@@ -35,6 +35,20 @@ class MappingTest implements TestCase {
     mapping.extend(v -> v + 'bar');
     mapping.getValue(container).equals('foobar');
   }
+
+  @test('`.to` shortcut works')
+  public function testMappingShortcut() {
+    var container = new Container();
+
+    var valueMapping = new Mapping(new Identifier('String', 'foo')).to('foo');
+    valueMapping.getValue(container).equals('foo');
+
+    var clsMapping = new Mapping(new Identifier('fixture.Plain')).to(Plain);
+    clsMapping.getValue(container).value.equals('one');
+    
+    var factoryMapping = new Mapping(new Identifier('String', 'foo')).to(() -> 'foo');
+    factoryMapping.getValue(container).equals('foo');
+  }
   
   // todo: test other extensions
 

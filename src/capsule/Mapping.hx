@@ -18,6 +18,19 @@ class Mapping<T> {
     return this;
   }
 
+  public macro function to(ethis:haxe.macro.Expr, expr:haxe.macro.Expr) {
+    var t = haxe.macro.Context.typeof(expr);
+    return switch t {
+      case TFun(_, _): macro @:pos(expr.pos) $ethis.toFactory(${expr});
+      case TType(_, _): macro @:pos(expr.pos) $ethis.toClass(${expr});
+      default: macro @:pos(expr.pos) $ethis.toValue(${expr});
+    }
+  }
+
+  public macro function toShared(ethis:haxe.macro.Expr, expr:haxe.macro.Expr) {
+    return macro @:pos(expr.pos) $ethis.to(${expr}).asShared();
+  }
+
   public macro function toClass(ethis:haxe.macro.Expr, cls:haxe.macro.Expr) {
     var mappingType = haxe.macro.Context.typeof(ethis);
     var factory = capsule.macro.ClassFactoryBuilder.create(cls, mappingType);

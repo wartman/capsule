@@ -206,6 +206,21 @@ var foo = function (
 capsule.map('Example<String>').toFactory(foo);
 ```
 
+You can also let capsule infer a mapping for you:
+
+```haxe
+// Mapping `to` a class will be inferred as `toClass`.
+container.map(MyClass).to(MyClass);
+
+// Mapping `to` a function will be inferred as `toFactory`.
+container.map(MyClass).to(function () {
+  return new MyClass();
+});
+
+// Mapping `to` any other value will be `toValue`.
+container.map(String).to('foo');
+```
+
 If a mapping does not exist, Capsule will throw a `capsule.MappingNotFoundError`. Set `-D debug` in your HXML to get position info with these errors.
 
 ServiceProviders
