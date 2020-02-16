@@ -299,4 +299,15 @@ class ContainerTest implements TestCase {
     container.get(String, 'foo').equals('foobar');
   }
 
+  @test
+  public function idsCanBeVars() {
+    var container = new Container();
+    var id = 'foo';
+    container.map(String, id).to('foo');
+    container.map(String, 'bar').to('bar');
+    container.get(String, id).equals('foo');
+    id = 'bar';
+    container.get(String, id).equals('bar');
+  }
+
 }

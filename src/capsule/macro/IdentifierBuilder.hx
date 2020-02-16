@@ -17,7 +17,7 @@ class IdentifierBuilder {
     } catch (e:Dynamic) {
       '';
     }
-    return macro new capsule.Identifier($v{addTagToName(name, tag)});
+    return macro new capsule.Identifier(${addTagToName(name, tag)});
   }
 
   public static function createDependency(expr:Expr, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>) {
@@ -32,18 +32,22 @@ class IdentifierBuilder {
       '';
     }
     var ct = name.parseAsType(Context.currentPos());
-    return macro (new capsule.Dependency($v{addTagToName(name, tag)}):capsule.Dependency<$ct>);
+    var name = addTagToName(name, tag);
+    return macro (new capsule.Dependency(${name}):capsule.Dependency<$ct>);
   }
 
   static function addTagToName(name:String, ?tag:ExprOf<String>) {
     if (tag != null) switch tag {
-      case { expr: EConst(CString(s, _)), pos: _ }: 
-        name += '#' + s;
       case macro null:
+      case { expr: EConst(CString(s, _)), pos: pos }: 
+        name += '#' + s;
+        return macro @:pos(pos) $v{name};
+      case { expr: EConst(CIdent(_)), pos: pos }:
+        return macro @:pos(pos) $v{name} + '#' + ${tag};
       default: 
         throw 'assert';
     }
-    return name;
+    return macro $v{name};
   }
 
   static function typeToString(type:Type, paramMap:Map<String, Type>):String {
