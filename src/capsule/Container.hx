@@ -36,29 +36,48 @@ class Container {
     return macro @:pos(ethis.pos) $ethis.useServiceProvider(${e});
   }
 
-  public macro function map(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+  public macro function map(
+    ethis:haxe.macro.Expr,
+    def:haxe.macro.Expr,
+    ?tag:haxe.macro.Expr.ExprOf<String>
+  ) {
     var mapping = capsule.macro.MappingBuilder.create(def, tag);
-    return macro @:pos(def.pos) $ethis.addMapping(${mapping});
+    return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
   }
 
-  public macro function get(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>):haxe.macro.Expr {
+  public macro function get(
+    ethis:haxe.macro.Expr,
+    def:haxe.macro.Expr,
+    ?tag:haxe.macro.Expr.ExprOf<String>
+  ):haxe.macro.Expr {
     var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(def.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
+    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
   }
 
-  public macro function getMapping(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>):haxe.macro.Expr {
+  public macro function getMapping(
+    ethis:haxe.macro.Expr,
+    def:haxe.macro.Expr,
+    ?tag:haxe.macro.Expr.ExprOf<String>
+  ):haxe.macro.Expr {
     var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(def.pos) $ethis.getMappingByDependency(${dep});
+    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep});
   }
 
-  public macro function has(ethis:haxe.macro.Expr, def:haxe.macro.Expr, ?tag:haxe.macro.Expr.ExprOf<String>) {
+  public macro function has(
+    ethis:haxe.macro.Expr,
+    def:haxe.macro.Expr,
+    ?tag:haxe.macro.Expr.ExprOf<String>
+  ) {
     var id = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(def.pos) $ethis.hasMappingByIdentifier(${id});
+    return macro @:pos(ethis.pos) $ethis.hasMappingByIdentifier(${id});
   }
 
-  public macro function build(ethis:haxe.macro.Expr.ExprOf<Class<Dynamic>>, def:haxe.macro.Expr) {
+  public macro function build(
+    ethis:haxe.macro.Expr.ExprOf<Class<Dynamic>>,
+    def:haxe.macro.Expr
+  ) {
     var mapping = capsule.macro.MappingBuilder.create(def, macro null);
-    return macro @:pos(def.pos) ${mapping}.toClass(${def}).getValue(${ethis});
+    return macro @:pos(ethis.pos) ${mapping}.toClass(${def}).getValue(${ethis});
   }
 
   public function useServiceProvider(service:ServiceProvider):Void {

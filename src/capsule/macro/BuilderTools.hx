@@ -27,8 +27,8 @@ class BuilderTools {
     }
   }
 
-  static public function parseAsType(name:String, pos:Position):ComplexType {
-    return switch Context.parse('(null:${name})', pos) {
+  static public function parseAsType(name:String):ComplexType {
+    return switch Context.parse('(null:${name})', Context.currentPos()) {
       case macro (null:$type): type;
       default: null;
     }
@@ -37,10 +37,10 @@ class BuilderTools {
   static public function resolveComplexType(expr:Expr):ComplexType {
     return switch expr.expr {
       case EConst(CString(s)):
-        parseAsType(s, expr.pos);
+        parseAsType(s);
       default: switch Context.typeof(expr) {
         case TType(_, _):
-          parseAsType(expr.toString(), expr.pos);
+          parseAsType(expr.toString());
         default:
           Context.error('Invalid expression: expected a string or type', expr.pos);
           null;

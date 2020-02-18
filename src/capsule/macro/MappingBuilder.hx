@@ -10,7 +10,7 @@ class MappingBuilder {
   
   public static function create(expr:Expr, ?tag:ExprOf<String>) {
     var type = expr.resolveComplexType();
-    var identifier = IdentifierBuilder.create(type.toType(), tag);
+    var identifier = IdentifierBuilder.create(type.toType(), expr.pos, tag);
     return macro @:pos(expr.pos) (new capsule.Mapping(${identifier}):capsule.Mapping<$type>);
   }
 

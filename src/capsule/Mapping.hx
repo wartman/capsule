@@ -18,28 +18,40 @@ class Mapping<T> {
     return this;
   }
 
-  public macro function to(ethis:haxe.macro.Expr, expr:haxe.macro.Expr) {
+  public macro function to(
+    ethis:haxe.macro.Expr,
+    expr:haxe.macro.Expr
+  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
     var t = haxe.macro.Context.typeof(expr);
     return switch t {
-      case TFun(_, _): macro @:pos(expr.pos) $ethis.toFactory(${expr});
-      case TType(_, _): macro @:pos(expr.pos) $ethis.toClass(${expr});
-      default: macro @:pos(expr.pos) $ethis.toValue(${expr});
+      case TFun(_, _): macro @:pos(ethis.pos) $ethis.toFactory(${expr});
+      case TType(_, _): macro @:pos(ethis.pos) $ethis.toClass(${expr});
+      default: macro @:pos(ethis.pos) $ethis.toValue(${expr});
     }
   }
 
-  public macro function toShared(ethis:haxe.macro.Expr, expr:haxe.macro.Expr) {
-    return macro @:pos(expr.pos) $ethis.to(${expr}).asShared();
+  public macro function toShared(
+    ethis:haxe.macro.Expr, 
+    expr:haxe.macro.Expr
+  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
+    return macro @:pos(ethis.pos) $ethis.to(${expr}).asShared();
   }
 
-  public macro function toClass(ethis:haxe.macro.Expr, cls:haxe.macro.Expr) {
+  public macro function toClass(
+    ethis:haxe.macro.Expr,
+    cls:haxe.macro.Expr.ExprOf<Class<T>>
+  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
     var mappingType = haxe.macro.Context.typeof(ethis);
     var factory = capsule.macro.ClassFactoryBuilder.create(cls, mappingType);
-    return macro @:pos(cls.pos) $ethis.toProvider(ProvideFactory(${factory}));
+    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
 
-  public macro function toFactory(ethis:haxe.macro.Expr, factory:haxe.macro.Expr) {
+  public macro function toFactory(
+    ethis:haxe.macro.Expr,
+    factory:haxe.macro.Expr
+  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
     var factory = capsule.macro.FunctionFactoryBuilder.create(factory);
-    return macro @:pos(factory.pos) $ethis.toProvider(ProvideFactory(${factory}));
+    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
   }
 
   public function toValue(value:T) {

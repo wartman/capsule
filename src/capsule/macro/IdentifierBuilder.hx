@@ -11,43 +11,50 @@ using capsule.macro.BuilderTools;
 
 class IdentifierBuilder {
 
-  public static function create(type:Type, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>):ExprOf<capsule.Identifier> {
+  public static function create(
+    type:Type,
+    pos:Position,
+    ?tag:ExprOf<String>,
+    ?paramMap:Map<String, Type>
+  ):ExprOf<capsule.Identifier> {
     var name = try {  
       typeToString(type, paramMap != null ? paramMap : []);
     } catch (e:Dynamic) {
       '';
     }
-    return macro new capsule.Identifier(${addTagToName(name, tag)});
+    if (tag == null) {
+      tag = macro null;
+    }
+    var id = macro @:pos(pos) $v{name};
+    return macro @:pos(pos) new capsule.Identifier(${id}, ${tag});
   }
 
-  public static function createDependency(expr:Expr, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>) {
+  public static function createDependency(
+    expr:Expr, 
+    ?tag:ExprOf<String>,
+    ?paramMap:Map<String, Type>
+  ) {
     var type = expr.resolveComplexType().toType();
-    return createDependencyForType(type, tag, paramMap);
+    return createDependencyForType(type, expr.pos, tag, paramMap);
   }
 
-  public static function createDependencyForType(type:Type, ?tag:ExprOf<String>, ?paramMap:Map<String, Type>) {
+  public static function createDependencyForType(
+    type:Type,
+    pos:Position, 
+    ?tag:ExprOf<String>,
+    ?paramMap:Map<String, Type>
+  ) {
     var name = try {  
       typeToString(type, paramMap != null ? paramMap : []);
     } catch (e:Dynamic) {
       '';
     }
-    var ct = name.parseAsType(Context.currentPos());
-    var name = addTagToName(name, tag);
-    return macro (new capsule.Dependency(${name}):capsule.Dependency<$ct>);
-  }
-
-  static function addTagToName(name:String, ?tag:ExprOf<String>) {
-    if (tag != null) switch tag {
-      case macro null:
-      case { expr: EConst(CString(s, _)), pos: pos }: 
-        name += '#' + s;
-        return macro @:pos(pos) $v{name};
-      case { expr: EConst(CIdent(_)), pos: pos }:
-        return macro @:pos(pos) $v{name} + '#' + ${tag};
-      default: 
-        throw 'assert';
+    var ct = name.parseAsType();
+    var id = macro @:pos(pos) $v{name};
+    if (tag == null) {
+      tag = macro null;
     }
-    return macro $v{name};
+    return macro @:pos(pos) (new capsule.Dependency(${id}, ${tag}):capsule.Dependency<$ct>);
   }
 
   static function typeToString(type:Type, paramMap:Map<String, Type>):String {
