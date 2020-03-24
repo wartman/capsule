@@ -8,9 +8,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Small API fixes",
+    "releasenote": "Added toAlias",
     "classPath": "src",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "url": "https://github.com/wartman/capsule",
     "dependencies": {}
 }
