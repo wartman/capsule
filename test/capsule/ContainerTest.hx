@@ -56,6 +56,16 @@ class ContainerTest implements TestCase {
       .toFactory(function (@:inject.tag('bar') bar:String) return 'foo' + bar);
     container.get(String, 'foo').equals('foobar');
   }
+
+  @test
+  public function testAlias() {
+    var container = new Container();
+    container.map(Int).toValue(1);
+    container.map(Int, 'foo').toAlias(Int);
+    container.get(Int, 'foo').equals(1);
+    container.getMapping(Int).extend(i -> i + 2);
+    container.get(Int, 'foo').equals(3);
+  }
   
   @test
   public function testClosure() {

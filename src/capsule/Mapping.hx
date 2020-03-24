@@ -30,6 +30,16 @@ class Mapping<T> {
     }
   }
 
+  public macro function toAlias(
+    ethis:haxe.macro.Expr, 
+    expr:haxe.macro.Expr,
+    ?tag:haxe.macro.Expr.ExprOf<String>
+  ) {
+    if (tag == null) tag = macro null;
+    var id = capsule.macro.IdentifierBuilder.createDependency(expr, tag, []);
+    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideAlias(${id}));
+  }
+
   public macro function toShared(
     ethis:haxe.macro.Expr, 
     expr:haxe.macro.Expr
