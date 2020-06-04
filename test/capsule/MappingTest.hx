@@ -9,7 +9,7 @@ class MappingTest implements TestCase {
 
   public function new() {}
 
-  @test('Classes can be automatically injected')
+  @:test('Classes can be automatically injected')
   public function testToClass() {
     var container = new Container();
     var mapping = new Mapping(new Identifier(Simple.getClassName()));
@@ -25,7 +25,7 @@ class MappingTest implements TestCase {
       .a.equals('Ok');
   }
 
-  @test('Factory mapping extension')
+  @:test('Factory mapping extension')
   public function testMappingExtension() {
     var container = new Container();
     var mapping = new Mapping(
@@ -36,7 +36,7 @@ class MappingTest implements TestCase {
     mapping.getValue(container).equals('foobar');
   }
 
-  @test('`.to` shortcut works')
+  @:test('`.to` shortcut works')
   public function testMappingShortcut() {
     var container = new Container();
 

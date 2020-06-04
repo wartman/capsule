@@ -10,7 +10,7 @@ class ContainerTest implements TestCase {
 
   public function new() {}
 
-  @test
+  @:test
   public function testSimpleValue() {
     var container = new Container();
     container.map(String, 'str').toValue('foo');
@@ -20,14 +20,14 @@ class ContainerTest implements TestCase {
     container.get(Int, 'one').equals(1);
   }
 
-  @test
+  @:test
   public function testFactory() {
     var container = new Container();
     container.map(String, 'foo').toFactory(() -> 'foo');
     container.get(String, 'foo').equals('foo');
   }
 
-  @test
+  @:test
   public function testFactoryAutoInjection() {
     var container = new Container();
     container.map(String).toValue('bar');
@@ -37,7 +37,7 @@ class ContainerTest implements TestCase {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @test
+  @:test
   public function testFactoryWithParams() {
     var container = new Container();
     container.map('Array<String>').toValue([ 'bar', 'bin' ]);
@@ -47,7 +47,7 @@ class ContainerTest implements TestCase {
     container.get(String, 'foo').equals('foobarbin');
   }
 
-  @test
+  @:test
   public function testTaggedFactory() {
     var container = new Container();
     container.map(String, 'bar').toValue('bar');
@@ -57,7 +57,7 @@ class ContainerTest implements TestCase {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @test
+  @:test
   public function testAlias() {
     var container = new Container();
     container.map(Int).toValue(1);
@@ -67,7 +67,7 @@ class ContainerTest implements TestCase {
     container.get(Int, 'foo').equals(3);
   }
   
-  @test
+  @:test
   public function testClosure() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -84,7 +84,7 @@ class ContainerTest implements TestCase {
     expectedDefault.foo.equals('foo'); 
   }
 
-  @test
+  @:test
   public function testConstructorInjecton() {
     var container = new Container();
     container.map(Plain).toClass(Plain);
@@ -93,14 +93,14 @@ class ContainerTest implements TestCase {
     expected.equals('one');
   }
 
-  @test
+  @:test
   public function testBuild() {
     var container = new Container();
     container.map(String).toValue('one');
     container.build('HasParams<String>').foo.equals('one');
   }
 
-  @test
+  @:test
   public function testParams() {
     var container = new Container();
     container.map(String).toValue('one');
@@ -123,7 +123,7 @@ class ContainerTest implements TestCase {
     things.get('foo').equals('bar');
   }
 
-  @test
+  @:test
   public function testParamsInProps() {
     var container = new Container();
     container.map(String).toValue('one');
@@ -135,7 +135,7 @@ class ContainerTest implements TestCase {
     container.get('InjectsPropWithParam<Int>').foo.equals(1);
   }
 
-  @test
+  @:test
   public function testTaggedParams() {
     var container = new Container();
     container.map(String, 'foo').toValue('mapped');
@@ -143,7 +143,7 @@ class ContainerTest implements TestCase {
     container.get('HasTaggedParams<String>').foo.equals('mapped');
   }
 
-  @test
+  @:test
   public function testComplexParams() {
     var container = new Container();
     container.map(Int).toValue(2);
@@ -154,7 +154,7 @@ class ContainerTest implements TestCase {
     expected.bar.equals('bar');
   }
 
-  @test('Interfaces are correctly resolved')
+  @:test('Interfaces are correctly resolved')
   public function testWorksOnInterfaces() {
     var container = new Container();
     container.map(Int).toValue(2);
@@ -166,7 +166,7 @@ class ContainerTest implements TestCase {
     expected.baseParams.bar.equals('bar');
   }
 
-  @test
+  @:test
   public function testDeepParams() {
     var container = new Container();
     container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
@@ -177,7 +177,7 @@ class ContainerTest implements TestCase {
     expected.foo.equals('foo');
   }
 
-  @test
+  @:test
   public function testConditionalConstructor() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -189,7 +189,7 @@ class ContainerTest implements TestCase {
     expected.bax.equals('default');
   }
 
-  @test
+  @:test
   public function testChildOverrides() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -206,7 +206,7 @@ class ContainerTest implements TestCase {
     expected2.bar.equals('bar');
   }
 
-  @test
+  @:test
   public function testExtend() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -224,7 +224,7 @@ class ContainerTest implements TestCase {
     expected2.bar.equals('bar');
   }
 
-  @test
+  @:test
   public function testMethodInjection() {
     var container = new Container();
     container.map(String).toValue('foo');
@@ -241,7 +241,7 @@ class ContainerTest implements TestCase {
     expected.plain.value.equals('one');
   }
 
-  @test
+  @:test
   public function testPostInjection() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -250,7 +250,7 @@ class ContainerTest implements TestCase {
     expected.ran.equals('foo:one:two:three:four');
   }
 
-  @test
+  @:test
   public function testServiceProviderInstance() {
     var container = new Container();
     container.use(new SimpleServiceProvider());
@@ -258,7 +258,7 @@ class ContainerTest implements TestCase {
     expected.equals('foo');
   }
 
-  @test
+  @:test
   public function testServiceProvider() {
     var container = new Container();
     container.use(SimpleServiceProvider);
@@ -266,7 +266,7 @@ class ContainerTest implements TestCase {
     expected.equals('foo');
   }
 
-  @test
+  @:test
   public function testHas() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -274,14 +274,14 @@ class ContainerTest implements TestCase {
     container.has(String, 'nope').isFalse();
   }
 
-  @test
+  @:test
   public function testAbstractsAreHandledRight() {
     var container = new Container();
     container.map(AbstractString).toValue(new AbstractString('foo'));
     container.get(AbstractString).unBox().equals('foo');
   }
 
-  @test
+  @:test
   public function testResolvesTypedefsCorrectly() {
     var container = new Container();
     container.map(StringArray).toValue([ 'foo', 'bar' ]);
@@ -290,7 +290,7 @@ class ContainerTest implements TestCase {
     container.get(StringArray)[1].equals('bar');
   }
 
-  @test
+  @:test
   public function throwsUsefulError() {
     var container = new Container();
     try {
@@ -301,7 +301,7 @@ class ContainerTest implements TestCase {
     }
   }
 
-  @test
+  @:test
   public function canGetMappings() {
     var container = new Container();
     container.map(String, 'foo').toValue('foo');
@@ -309,7 +309,7 @@ class ContainerTest implements TestCase {
     container.get(String, 'foo').equals('foobar');
   }
 
-  @test
+  @:test
   public function idsCanBeVars() {
     var container = new Container();
     var id = 'foo';
