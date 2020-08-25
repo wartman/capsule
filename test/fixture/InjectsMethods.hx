@@ -1,7 +1,6 @@
 package fixture;
 
 class InjectsMethods {
-
   public var foo:String;
   public var bar:String;
   public var bin:String;
@@ -32,5 +31,4 @@ class InjectsMethods {
     this.plain = plain;
     this.bax = bax;
   }
-
 }

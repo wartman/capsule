@@ -2,7 +2,6 @@ package capsule;
 
 @:allow(capsule.Container)
 class Mapping<T> {
-  
   final identifier:Identifier;
   var provider:Provider<T>;
   var closure:Container;
@@ -78,7 +77,7 @@ class Mapping<T> {
   public function asShared() {
     switch provider {
       case ProvideNone:
-        throw new ProviderDoesNotExistError(identifier, 'You cannot share a mapping that does not have a provider.');
+        throw new ProviderDoesNotExistException(identifier, 'You cannot share a mapping that does not have a provider.');
       case ProvideAlias(id):
         provider = ProvideShared(c -> c.getValueByIdentifier(id));
       case ProvideFactory(factory):
@@ -118,7 +117,7 @@ class Mapping<T> {
   public function extend(ext:(v:T)->T) {
     switch provider {
       case ProvideNone:
-        throw new ProviderDoesNotExistError(identifier, 'You cannot extend a mapping that does not have a provider');
+        throw new ProviderDoesNotExistException(identifier, 'You cannot extend a mapping that does not have a provider');
       case ProvideValue(value):
         provider = ProvideValue(ext(value));
       case ProvideFactory(factory):
@@ -133,8 +132,7 @@ class Mapping<T> {
 
   function checkProvider() {
     if (provider != ProvideNone) {
-      throw new ProviderAlreadyExistsError(identifier);
+      throw new ProviderAlreadyExistsException(identifier);
     }
   }
-
 }

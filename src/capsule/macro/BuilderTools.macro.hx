@@ -1,4 +1,3 @@
-#if macro
 package capsule.macro;
 
 import haxe.macro.Context;
@@ -8,7 +7,6 @@ import haxe.macro.Type;
 using haxe.macro.Tools;
 
 class BuilderTools {
-
   static public function isNullable(type:Type):Bool {
     switch type {
       case TAbstract(t, inst):
@@ -47,6 +45,4 @@ class BuilderTools {
       }
     }
   }
-
 }
-#end

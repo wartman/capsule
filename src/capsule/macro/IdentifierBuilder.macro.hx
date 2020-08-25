@@ -1,8 +1,6 @@
-#if macro
 package capsule.macro;
 
 import haxe.ds.Map;
-import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
@@ -10,7 +8,6 @@ using haxe.macro.Tools;
 using capsule.macro.BuilderTools;
 
 class IdentifierBuilder {
-
   public static function create(
     type:Type,
     pos:Position,
@@ -109,6 +106,4 @@ class IdentifierBuilder {
       default: type;
     }
   }
-
 }
-#end

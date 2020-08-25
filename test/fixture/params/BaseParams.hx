@@ -1,7 +1,6 @@
 package fixture.params;
 
 class BaseParams<T, M> {
-
   public var foo:T;
   public var bar:M;
 
@@ -9,5 +8,4 @@ class BaseParams<T, M> {
     this.foo = foo;
     this.bar = bar;
   }
-
 }

@@ -6,7 +6,6 @@ import haxe.ds.Map;
 using Type;
 
 class Container {
-  
   final parent:Container;
   final mappings:Map<Identifier, Mapping<Dynamic>>;
 
@@ -104,7 +103,7 @@ class Container {
     var m = mappings.get(id);
     if (m == null) {
       if (parent != null) return parent.getMappingByIdentifier(id);
-      throw new MappingNotFoundError(id #if debug , pos #end);
+      throw new MappingNotFoundException(id #if debug , pos #end);
     }
     return cast m;
   }
@@ -112,5 +111,4 @@ class Container {
   public function getValueByIdentifier<T>(id:Identifier):T {
     return getMappingByIdentifier(id).getValue(this);
   }
-
 }

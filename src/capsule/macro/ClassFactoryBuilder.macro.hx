@@ -1,4 +1,3 @@
-#if macro
 package capsule.macro;
 
 import haxe.ds.Map;
@@ -191,4 +190,3 @@ class ClassFactoryBuilder {
   }
 
 }
-#end

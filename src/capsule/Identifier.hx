@@ -3,7 +3,6 @@ package capsule;
 using StringTools;
 
 abstract Identifier(String) {
-  
   public inline function new(type:String, ?tag:String) {
     this = tag == null ? type : '${type}#${tag}';
   }
@@ -42,5 +41,4 @@ abstract Identifier(String) {
   public inline function eq(b:Identifier) {
     return toString() == b.toString();
   }
-
 }

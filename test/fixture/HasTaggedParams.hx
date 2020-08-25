@@ -1,7 +1,6 @@
 package fixture;
 
 class HasTaggedParams<T> {
-
   public var foo:T;
 
   public function new(
@@ -9,5 +8,4 @@ class HasTaggedParams<T> {
   ) {
     this.foo = foo;
   }
-
 }

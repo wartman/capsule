@@ -8,9 +8,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Updated to use latest Medic",
+    "releasenote": "Updated to use haxe.Exception",
     "classPath": "src",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "url": "https://github.com/wartman/capsule",
     "dependencies": {}
 }

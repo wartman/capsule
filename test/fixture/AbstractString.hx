@@ -1,7 +1,6 @@
 package fixture;
 
 abstract AbstractString(String) {
-  
   public function new(value:String) {
     this = value;
   }
@@ -9,5 +8,4 @@ abstract AbstractString(String) {
   @:to public function unBox():String {
     return this;
   }
-
 }

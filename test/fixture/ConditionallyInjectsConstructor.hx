@@ -1,7 +1,6 @@
 package fixture;
 
 class ConditionallyInjectsConstructor {
-
   public var foo:String;
   public var bar:String;
   public var bax:String;
@@ -15,5 +14,4 @@ class ConditionallyInjectsConstructor {
     this.bar = bar;
     this.bax = bax == null ? 'default' : bax; 
   }
-
 }

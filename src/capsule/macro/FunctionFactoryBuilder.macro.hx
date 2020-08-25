@@ -1,4 +1,3 @@
-#if macro
 package capsule.macro;
 
 import haxe.macro.Expr;
@@ -9,8 +8,7 @@ using Lambda;
 using haxe.macro.Tools;
 using capsule.macro.BuilderTools;
 
-class FunctionFactoryBuilder {
-  
+class FunctionFactoryBuilder { 
   static final container:String = 'c';
 
   public static function create(func:Expr) {
@@ -51,6 +49,4 @@ class FunctionFactoryBuilder {
     }
     return args;
   }
-
 }
-#end

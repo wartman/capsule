@@ -1,7 +1,6 @@
 package fixture;
 
 class PostInject {
-
   @:inject('foo') public var foo:String;
   public var ran:String = '';
 
@@ -24,5 +23,4 @@ class PostInject {
   @:inject.post(1) public function three() {
     ran += ':three';
   }
-
 }

@@ -7,7 +7,6 @@ import fixture.params.*;
 using Medic;
 
 class ContainerTest implements TestCase {
-
   public function new() {}
 
   @:test
@@ -291,12 +290,12 @@ class ContainerTest implements TestCase {
   }
 
   @:test
-  public function throwsUsefulError() {
+  public function throwsUsefulException() {
     var container = new Container();
     try {
       container.get(String, 'foo');
-      Assert.fail('Should have thrown a MappingNotFoundError');  
-    } catch (e:MappingNotFoundError) {
+      Assert.fail('Should have thrown a MappingNotFoundException');  
+    } catch (e:MappingNotFoundException) {
       Assert.pass();
     }
   }
@@ -319,5 +318,4 @@ class ContainerTest implements TestCase {
     id = 'bar';
     container.get(String, id).equals('bar');
   }
-
 }

@@ -6,7 +6,6 @@ using Medic;
 using Type;
 
 class MappingTest implements TestCase {
-
   public function new() {}
 
   @:test('Classes can be automatically injected')
@@ -51,5 +50,4 @@ class MappingTest implements TestCase {
   }
   
   // todo: test other extensions
-
 }
