@@ -10,7 +10,6 @@ using haxe.macro.Tools;
 using capsule.macro.BuilderTools;
 
 class ClassFactoryBuilder {
-
   static final container:String = 'c';
   static final inject:String = ':inject';
   static final skip:String = ':inject.skip';
@@ -188,5 +187,4 @@ class ClassFactoryBuilder {
     }
     return args;
   }
-
 }
