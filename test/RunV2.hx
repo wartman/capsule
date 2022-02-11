@@ -6,7 +6,7 @@ function main() {
   var container = new Container();
   container.map(AbstractString).to(new AbstractString('foo'));
   container.map(Simple).to(Simple).with(c -> c.map(String).to('foo'));
-  container.map(Stuff).to([ 'a' => 'b' ]);
+  container.map(Stuff).to(stuffProvider).share();
   container.map(FooService).to(Foo);
   container.map(FooBarService).to(FooBar).share();
   container.map(OtherThing).to(function (foobar:FooBarService, bin:Map<String, String>) {
@@ -15,6 +15,11 @@ function main() {
 }
 
 typedef Stuff = Map<String, String>; 
+
+// We can use functions to provide things now!
+function stuffProvider(foo:FooService, str:AbstractString):Stuff {
+  return [ 'a' => 'stuff', 'b' => foo.getFoo(), 'c' => str.unBox() ];
+}
 
 interface FooService {
   public function getFoo():String;
