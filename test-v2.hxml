@@ -10,3 +10,4 @@
 # -dce full
 
 -js dist/js/test-v2.js
+-cmd node dist/js/test-v2

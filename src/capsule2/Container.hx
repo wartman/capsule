@@ -29,6 +29,12 @@ class Container {
     );
   }
 
+  public macro function get(self:Expr, target:Expr) {
+    var identifier = MappingBuilder.createIdentifier(target);
+    var type = MappingBuilder.getComplexType(target);
+    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule2.Mapping<$type>).resolve();
+  }
+
   function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
     mappings.push(mapping);
     return mapping;

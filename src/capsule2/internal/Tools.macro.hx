@@ -21,7 +21,7 @@ class Tools {
         case TType(_, _):
           parseAsType(expr.toString());
         default:
-          Context.error('Invalid expression: expected a string or type', expr.pos);
+          Context.error('Invalid expression', expr.pos);
           null;
       }
     }
