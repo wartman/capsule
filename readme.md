@@ -1,3 +1,11 @@
+> Note:
+>
+> This branch is working on Capsule 2, a simplified version of Capsule that will
+> (hopefully) add some compile-time checks for dependencies. Right now
+> the new code can be found in `src/capsule2`.
+>
+> The documentation below is only for the original version of Capsule. 
+
 Capsule
 =======
 

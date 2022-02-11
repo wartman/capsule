@@ -1,0 +1,12 @@
+-cp src
+-cp test
+-lib medic
+-main RunV2
+
+# analyzer-optimize makes generated code way better
+-D debug
+-D js-es=6
+-D analyzer-optimize
+# -dce full
+
+-js dist/js/test-v2.js
