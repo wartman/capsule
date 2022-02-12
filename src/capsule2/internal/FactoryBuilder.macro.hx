@@ -8,16 +8,27 @@ using haxe.macro.Tools;
 using capsule2.internal.Tools;
 
 class FactoryBuilder {
-  public static function createFactory(expr:Expr, ret:ComplexType, pos:Position) {
-    var body:Array<Expr> = [];
-
+  public static function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
     switch expr.expr {
+      case EFunction(_, _) | ECall(_, _): // continue
+      default: switch Context.typeof(expr) {
+        case TType(_, _) | TFun(_, _): // continue
+        default:
+          // If not a function or type, default to using a ValueProvider.
+          return macro new capsule2.provider.ValueProvider<$ret>(${expr}); 
+      }
+    }
+
+    var factory = createFactory(expr, pos);
+    return macro new capsule2.provider.FactoryProvider<$ret>(${factory});
+  }
+
+  public static function createFactory(expr:Expr, pos:Position) {
+    return switch expr.expr {
       case EFunction(_, f):
         var deps = compileArgs(f.args.map(a -> a.type.toType()), pos);
-        body.push(macro ${expr}($a{deps}));
+        macro (container:capsule2.Container) -> ${expr}($a{deps});
       case ECall(e, params):
-        // @todo: This is probably a bit messy.
-        
         var ct = expr.resolveComplexType();
         var path = e.toString().split('.');
         var expr = macro @:pos(pos) $p{path}.new;
@@ -35,7 +46,7 @@ class FactoryBuilder {
             throw 'assert';
         }
         
-        return createFactory(macro @:pos(pos) $expr, ret, pos);
+        return createFactory(macro @:pos(pos) $expr, pos);
       default: switch Context.typeof(expr) {
         case TType(_, _):
           var ct = expr.resolveComplexType();
@@ -45,19 +56,17 @@ class FactoryBuilder {
           // found, which is all we want.
           Context.resolveType(ct, pos);
 
-          return createFactory(macro @:pos(pos) $p{path}.new, ret, pos);
+          return createFactory(macro @:pos(pos) $p{path}.new, pos);
         case TFun(args, _):
           var deps = compileArgs(args.map(a -> a.t), pos);
-          body.push(macro var factory = ${expr});
-          body.push(macro factory($a{deps}));
+          macro (container:capsule2.Container) -> {
+            var factory = ${expr};
+            return factory($a{deps});
+          };
         default:
-          return macro new capsule2.provider.ValueProvider<$ret>(${expr});
+          return macro (container:capsule2.Container) -> $expr;
       }
     }
-
-    return macro new capsule2.provider.FactoryProvider(@:pos(pos) function (container:capsule2.Container):$ret {
-      return $b{body};
-    });
   }
 
   static function compileArgs(args:Array<Type>, pos:Position):Array<Expr> {

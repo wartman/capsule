@@ -102,4 +102,28 @@ class ContainerTest implements TestCase {
     container.get(HasParamsService(HasParamsService(String)))
       .getValue().getValue().equals('foo');
   }
+
+  @:test('Container.build can inject dependencies')
+  public function testSimpleBuild() {
+    var container = new Container();
+    container.map(String).to('foo');
+    
+    var test = container.build(HasParams(String));
+    test.getValue().equals('foo');
+  }
+
+  @:test('Can extend mappings')
+  public function testExtendsMappings() {
+    var container = new Container();
+
+    container.map(String).to('foo');
+    container.map(Int).to(1);
+    
+    container
+      .getMapping(String)
+      .extend((value, container) -> container.build((i:Int) -> value + i))
+      .share();
+    
+    container.get(String).equals('foo1');
+  }
 }

@@ -1,5 +1,6 @@
 package capsule2;
 
+import capsule2.provider.FactoryProvider;
 import capsule2.provider.SharedProvider;
 import capsule2.provider.NullProvider;
 
@@ -27,13 +28,18 @@ class Mapping<T> {
     return this;
   }
 
-  public macro function to(ethis:haxe.macro.Expr, factory:haxe.macro.Expr) {
-    var t = switch haxe.macro.Context.typeof(ethis) {
+  public macro function to(self:haxe.macro.Expr, factory:haxe.macro.Expr) {
+    var t = switch haxe.macro.Context.typeof(self) {
       case TInst(_, [ t ]): haxe.macro.TypeTools.toComplexType(t);
       default: macro:Dynamic;
     }
-    var factory = capsule2.internal.FactoryBuilder.createFactory(factory, t, factory.pos);
-    return macro @:pos(ethis.pos) $ethis.toProvider($factory);
+    var factory = capsule2.internal.FactoryBuilder.createProvider(factory, t, factory.pos);
+    return macro @:pos(self.pos) $self.toProvider($factory);
+  }
+
+  public function extend(transform:(value:T, container:Container)->T) {
+    var prev = provider;
+    return toProvider(new FactoryProvider(container -> transform(prev.resolve(container), container)));
   }
 
   public function toProvider(provider:Provider<T>):Mapping<T> {
