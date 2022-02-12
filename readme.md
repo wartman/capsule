@@ -50,7 +50,7 @@ container.map(String).to(stringProvider);
 container.map(DatabaseService).to(Database.createFromConfig).share();
 ```
 - Compile-time dependency tracking (hopefully). Ideally, you shouldn't be able to compile an app if some services aren't provided. Still figuring out how to do this one.
-- A hack of the call syntax to allow us to use generics:
+- A hack of the call syntax to allow us to use generics, since Haxe doesn't like angle brackets:
 ```haxe
 container.map(Map(String, String)).to(['foo' => 'bar']);
 ```

@@ -87,7 +87,7 @@ class ContainerTest implements TestCase {
   public function testSimpleGenericClass() {
     var container = new Container();
     container.map(String).to('foo');
-    container.map(HasParams(String)).to(HasParams);
-    container.get(HasParams(String)).value.equals('foo');
+    container.map(HasParamsService(String)).to(HasParams(String));
+    container.get(HasParamsService(String)).getValue().equals('foo');
   }
 }

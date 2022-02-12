@@ -13,14 +13,41 @@ class FactoryBuilder {
 
     switch expr.expr {
       case EFunction(_, f):
-        var deps = compileArgs(f.args.map(a -> a.type.toType()));
+        var deps = compileArgs(f.args.map(a -> a.type.toType()), pos);
         body.push(macro ${expr}($a{deps}));
+      case ECall(e, params):
+        // @todo: This is probably a bit messy.
+        
+        var ct = expr.resolveComplexType();
+        var path = e.toString().split('.');
+        var expr = macro @:pos(pos) $p{path}.new;
+
+        switch ct.toType() {
+          case TInst(t, params):
+            var conType = t.get().constructor.get().type.applyTypeParameters(t.get().params, params).toComplexType();
+            var t:ComplexType = switch conType {
+              case TFunction(args, _): TFunction(args, ct);
+              default: throw 'assert';
+            }
+            expr = macro (${expr}:$t);
+          default:
+            // ??
+            throw 'assert';
+        }
+        
+        return createFactory(macro @:pos(pos) $expr, ret, pos);
       default: switch Context.typeof(expr) {
         case TType(_, _):
-          var path = expr.toString().split('.').concat([ 'new' ]);
-          return createFactory(macro @:pos(pos) $p{path}, ret, pos);
+          var ct = expr.resolveComplexType();
+          var path = expr.toString().split('.');
+
+          // This will throw an error if the correct number of params are not
+          // found, which is all we want.
+          Context.resolveType(ct, pos);
+
+          return createFactory(macro @:pos(pos) $p{path}.new, ret, pos);
         case TFun(args, _):
-          var deps = compileArgs(args.map(a -> a.t));
+          var deps = compileArgs(args.map(a -> a.t), pos);
           body.push(macro var factory = ${expr});
           body.push(macro factory($a{deps}));
         default:
@@ -33,14 +60,16 @@ class FactoryBuilder {
     });
   }
 
-  static function compileArgs(args:Array<Type>):Array<Expr> {
+  static function compileArgs(args:Array<Type>, pos:Position):Array<Expr> {
     var exprs:Array<Expr> = [];
     for (arg in args) {
       switch arg {
         case TMono(t):
-          // @todo: This is just temporary while I think on the best way
-          //        to handle this.
-          Context.error('Unresolved argument', Context.currentPos());
+          Context.error(
+            'Could not resolve an argument type. Ensure that you are mapping '
+            + 'to a concrete type with no unresolved type parameters.',
+            pos
+          );
         default:
       }
       var id = arg.toString();
