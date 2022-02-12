@@ -20,6 +20,12 @@ class Mapping<T> {
     return container;
   }
 
+  public function withContainer(container:Container) {
+    var mapping = new Mapping(id, container);
+    mapping.toProvider(provider);
+    return mapping;
+  }
+
   public function with(cb:(container:Container)->Void) {
     if (closure == null) {
       closure = container.getChild();

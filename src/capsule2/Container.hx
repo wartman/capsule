@@ -49,7 +49,12 @@ class Container {
 
   public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-    if (mapping == null) throw new MappingNotFoundException(id #if debug , pos #end);
+    if (mapping == null) {
+      if (parent == null) throw new MappingNotFoundException(id #if debug , pos #end);
+      return parent
+        .getMappingById(id #if debug , pos #end)
+        .withContainer(this);
+    }
     return mapping;
   }
 

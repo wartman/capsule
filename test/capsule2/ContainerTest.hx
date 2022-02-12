@@ -126,4 +126,25 @@ class ContainerTest implements TestCase {
     
     container.get(String).equals('foo1');
   }
+  
+  @:test('Child can override parent')
+  public function testChildOverrides() {
+    var container = new Container();
+    container.map(String).to('foo');
+    container.map(FooIdentifier).to('bar');
+    container.map(Map(String, String)).to(function (one:String, two:FooIdentifier) {
+      return [ 'one' => one, 'two' => two ];
+    });
+
+    var expected1 = container.get(Map(String, String));
+    expected1.get('one').equals('foo');
+    expected1.get('two').equals('bar');
+
+    var child = container.getChild();
+    child.map(String).to('changed');
+    
+    var expected2 = child.get(Map(String, String));
+    expected2.get('one').equals('changed');
+    expected2.get('two').equals('bar');
+  }
 }
