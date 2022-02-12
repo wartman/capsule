@@ -75,4 +75,19 @@ class ContainerTest implements TestCase {
     container.map(FooIdentifier).to('foo');
     container.get(FooIdentifier).equals('foo');
   }
+
+  @:test('Can handle params with a hacky syntax')
+  public function testSimpleParams() {
+    var container = new Container();
+    container.map(Map(String, String)).to([ 'foo' => 'foo' ]);
+    container.get(Map(String, String)).get('foo').equals('foo');
+  }
+
+  @:test('Can handle generic classes')
+  public function testSimpleGenericClass() {
+    var container = new Container();
+    container.map(String).to('foo');
+    container.map(HasParams(String)).to(HasParams);
+    container.get(HasParams(String)).value.equals('foo');
+  }
 }

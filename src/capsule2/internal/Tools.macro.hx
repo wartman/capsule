@@ -17,6 +17,9 @@ class Tools {
     return switch expr.expr {
       case EConst(CString(s)):
         parseAsType(s);
+      case ECall(e, params):
+        var tParams = params.map(param -> resolveComplexType(param).toString()).join(',');
+        parseAsType(resolveComplexType(e).toString() + '<' + tParams + '>');
       default: switch Context.typeof(expr) {
         case TType(_, _):
           parseAsType(expr.toString());

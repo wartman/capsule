@@ -15,19 +15,17 @@ class FactoryBuilder {
       case EFunction(_, f):
         var deps = compileArgs(f.args.map(a -> a.type.toType()));
         body.push(macro ${expr}($a{deps}));
-      default: 
-        var type = Context.typeof(expr);
-        switch type {
-          case TType(_, _):
-            var path = expr.toString().split('.').concat([ 'new' ]);
-            return createFactory(macro @:pos(pos) $p{path}, ret, pos);
-          case TFun(args, _):
-            var deps = compileArgs(args.map(a -> a.t));
-            body.push(macro var factory = ${expr});
-            body.push(macro factory($a{deps}));
-          default:
-            return macro new capsule2.provider.ValueProvider<$ret>(${expr});
-        }
+      default: switch Context.typeof(expr) {
+        case TType(_, _):
+          var path = expr.toString().split('.').concat([ 'new' ]);
+          return createFactory(macro @:pos(pos) $p{path}, ret, pos);
+        case TFun(args, _):
+          var deps = compileArgs(args.map(a -> a.t));
+          body.push(macro var factory = ${expr});
+          body.push(macro factory($a{deps}));
+        default:
+          return macro new capsule2.provider.ValueProvider<$ret>(${expr});
+      }
     }
 
     return macro new capsule2.provider.FactoryProvider(@:pos(pos) function (container:capsule2.Container):$ret {
@@ -38,6 +36,13 @@ class FactoryBuilder {
   static function compileArgs(args:Array<Type>):Array<Expr> {
     var exprs:Array<Expr> = [];
     for (arg in args) {
+      switch arg {
+        case TMono(t):
+          // @todo: This is just temporary while I think on the best way
+          //        to handle this.
+          Context.error('Unresolved argument', Context.currentPos());
+        default:
+      }
       var id = arg.toString();
       exprs.push(macro container.getMappingById($v{id}).resolve());
     }
