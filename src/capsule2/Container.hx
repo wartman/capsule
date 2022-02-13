@@ -4,13 +4,16 @@ import capsule2.exception.MappingNotFoundException;
 
 #if macro
   import haxe.macro.Expr;
-  import capsule2.internal.FactoryBuilder;
-  import capsule2.internal.MappingBuilder;
+  import capsule2.internal.Builder;
 #end
 
 using Lambda;
 
 class Container {
+  public static macro function create(...modules:ExprOf<Module>) {
+    return ContainerBuilder.createContainer(modules.toArray());
+  }
+
   final parent:Null<Container>;
   final mappings:Array<Mapping<Dynamic>> = [];
 
@@ -23,27 +26,27 @@ class Container {
   }
 
   public macro function map(self:Expr, target:Expr) {
-    var identifier = MappingBuilder.createIdentifier(target);
-    var type = MappingBuilder.getComplexType(target);
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
     return macro @:pos(self.pos) @:privateAccess $self.addMapping(
       (new capsule2.Mapping($v{identifier}, ${self}):capsule2.Mapping<$type>)
     );
   }
 
   public macro function get(self:Expr, target:Expr) {
-    var identifier = MappingBuilder.createIdentifier(target);
-    var type = MappingBuilder.getComplexType(target);
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
     return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule2.Mapping<$type>).resolve();
   }
   
   public macro function getMapping(self:Expr, target:Expr) {
-    var identifier = MappingBuilder.createIdentifier(target);
-    var type = MappingBuilder.getComplexType(target);
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
     return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule2.Mapping<$type>);
   }
 
   public macro function build(self:Expr, target:Expr) {
-    var factory = FactoryBuilder.createFactory(target, target.pos);
+    var factory = Builder.createFactory(target, target.pos);
     return macro @:pos(target.pos) ${factory}($self);
   }
 

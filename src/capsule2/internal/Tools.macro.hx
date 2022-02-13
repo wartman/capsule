@@ -15,8 +15,6 @@ class Tools {
   
   static public function resolveComplexType(expr:Expr):ComplexType {
     return switch expr.expr {
-      case EConst(CString(s)):
-        parseAsType(s);
       case ECall(e, params):
         var tParams = params.map(param -> resolveComplexType(param).toString()).join(',');
         parseAsType(resolveComplexType(e).toString() + '<' + tParams + '>');

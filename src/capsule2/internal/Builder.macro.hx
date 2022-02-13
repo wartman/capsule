@@ -7,7 +7,15 @@ import haxe.macro.Context;
 using haxe.macro.Tools;
 using capsule2.internal.Tools;
 
-class FactoryBuilder {
+class Builder {
+  public static function getComplexType(target:Expr) {
+    return target.resolveComplexType();
+  }
+
+  public static function createIdentifier(expr:Expr) {
+    return expr.resolveComplexType().toType().toString();
+  }
+
   public static function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
     switch expr.expr {
       case EFunction(_, _) | ECall(_, _): // continue

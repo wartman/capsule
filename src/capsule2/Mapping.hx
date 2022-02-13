@@ -39,7 +39,7 @@ class Mapping<T> {
       case TInst(_, [ t ]): haxe.macro.TypeTools.toComplexType(t);
       default: macro:Dynamic;
     }
-    var factory = capsule2.internal.FactoryBuilder.createProvider(factory, t, factory.pos);
+    var factory = capsule2.internal.Builder.createProvider(factory, t, factory.pos);
     return macro @:pos(self.pos) $self.toProvider($factory);
   }
 

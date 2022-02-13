@@ -4,7 +4,7 @@
 -main RunV2
 
 # analyzer-optimize makes generated code way better
--D debug
+# -D debug
 -D js-es=6
 -D analyzer-optimize
 # -dce full

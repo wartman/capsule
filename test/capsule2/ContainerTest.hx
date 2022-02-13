@@ -91,7 +91,6 @@ class ContainerTest implements TestCase {
     container.get(HasParamsService(String)).getValue().equals('foo');
   }
   
-
   @:test('Can handle nested generic classes')
   public function testNestedGenericClass() {
     var container = new Container();
@@ -142,7 +141,7 @@ class ContainerTest implements TestCase {
 
     var child = container.getChild();
     child.map(String).to('changed');
-    
+
     var expected2 = child.get(Map(String, String));
     expected2.get('one').equals('changed');
     expected2.get('two').equals('bar');
