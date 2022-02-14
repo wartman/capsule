@@ -15,4 +15,8 @@ class FactoryProvider<T> implements Provider<T> {
     var prev = factory;
     factory = container -> transform(prev(container));
   }
+
+  public function asShared():Provider<T> {
+    return new SharedProvider(this);
+  }
 }

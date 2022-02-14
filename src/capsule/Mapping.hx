@@ -54,7 +54,8 @@ class Mapping<T> {
   }
 
   public function share():Mapping<T> {
-    return toProvider(new SharedProvider(provider));
+    this.provider = provider.asShared();
+    return this;
   }
 
   public function resolve():T {

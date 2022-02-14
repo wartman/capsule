@@ -149,7 +149,7 @@ container.map(FooBarService).to(function (bar:BarService) {
 Function params will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
 
 ```haxe
-container.map(FooBarService).to(FooBar.createWithCustomeFooService);
+container.map(FooBarService).to(FooBar.createWithCustomFooService);
 ```
 
 You can also just map a type to a value, like we did with `Map<String, String>`.
@@ -166,3 +166,5 @@ container.map(FooBarService).to(FooBar).share();
 ```
 
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter. 
+
+

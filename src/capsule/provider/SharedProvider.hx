@@ -22,4 +22,8 @@ class SharedProvider<T> implements Provider<T> {
     }
     provider.extend(transform);
   }
+  
+  public function asShared():Provider<T> {
+    return this;
+  }
 }

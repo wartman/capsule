@@ -14,4 +14,8 @@ class ValueProvider<T> implements Provider<T> {
   public function extend(transform:(value:T)->T) {
     value = transform(value);
   }
+
+  public function asShared():Provider<T> {
+    return this;
+  }
 }

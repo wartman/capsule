@@ -16,4 +16,8 @@ class NullProvider<T> implements Provider<T> {
   public function extend(transform:(value:T)->T) {
     throw new ProviderDoesNotExistException(id, 'Cannot extend a null provider');
   }
+
+  public function asShared():Provider<T> {
+    throw new ProviderDoesNotExistException(id, 'Cannot share a null provider');
+  }
 }
