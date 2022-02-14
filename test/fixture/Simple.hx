@@ -1,9 +1,9 @@
 package fixture;
 
-class Simple {
-  public final a:String;
-
-  public function new(a) {
-    this.a = a;
+class Simple implements SimpleService {
+  public function new() {}
+  
+  public function getValue():String {
+    return 'value';
   }
 }

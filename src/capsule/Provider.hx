@@ -1,9 +1,6 @@
 package capsule;
 
-enum Provider<T> {
-  ProvideNone;
-  ProvideValue(value:T);
-  ProvideFactory(factory:Factory<T>);
-  ProvideShared(factory:Factory<T>);
-  ProvideAlias(id:Identifier);
+interface Provider<T> {
+  public function resolve(container:Container):T;
+  public function extend(transform:(value:T)->T):Void;
 }

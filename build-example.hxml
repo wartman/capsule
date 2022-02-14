@@ -1,0 +1,6 @@
+-cp src
+-cp example
+
+-main Main
+
+-js dist/example/index.js

@@ -1,321 +1,157 @@
 package capsule;
 
-import haxe.ds.Map;
 import fixture.*;
-import fixture.params.*;
 
 using Medic;
 
 class ContainerTest implements TestCase {
   public function new() {}
 
-  @:test
-  public function testSimpleValue() {
+  @:test('Simple values')
+  public function testSimple() {
     var container = new Container();
-    container.map(String, 'str').toValue('foo');
-    container.map(Int, 'one').toValue(1);
+    container.map(String).to('foo');
+    container.map(Int).to(1);
 
-    container.get(String, 'str').equals('foo');
-    container.get(Int, 'one').equals(1);
+    container.get(String).equals('foo');
+    container.get(Int).equals(1);
   }
 
-  @:test
-  public function testFactory() {
+  @:test('Maps classes without dependencies')
+  public function testBasicClassMapping() {
     var container = new Container();
-    container.map(String, 'foo').toFactory(() -> 'foo');
-    container.get(String, 'foo').equals('foo');
+    container.map(SimpleService).to(Simple);
+    container.get(SimpleService).getValue().equals('value');
   }
 
-  @:test
-  public function testFactoryAutoInjection() {
+  @:test('Maps classes to instances if provided')
+  public function testClassInstanceMapping() {
     var container = new Container();
-    container.map(String).toValue('bar');
-    container
-      .map(String, 'foo')
-      .toFactory((bar:String) -> 'foo' + bar);
-    container.get(String, 'foo').equals('foobar');
+    
+    container.map(ValueService).to(new Value('foo'));
+
+    container.get(ValueService).get().equals('foo');
   }
 
-  @:test
-  public function testFactoryWithParams() {
+  @:test('Classes can have dependencies')
+  public function testBasicClassDeps() {
     var container = new Container();
-    container.map('Array<String>').toValue([ 'bar', 'bin' ]);
-    container
-      .map(String, 'foo')
-      .toFactory((bar:Array<String>) -> 'foo' + bar.join(''));
-    container.get(String, 'foo').equals('foobarbin');
+
+    container.map(ValueService).to(new Value('dep'));
+    container.map(SimpleService).to(SimpleWithDep);
+    
+    container.get(SimpleService).getValue().equals('dep');
   }
 
-  @:test
-  public function testTaggedFactory() {
+  @:test('Inline functions can be used as providers')
+  public function testBasicInlineFunctionProvider() {
     var container = new Container();
-    container.map(String, 'bar').toValue('bar');
-    container
-      .map(String, 'foo')
-      .toFactory(function (@:inject.tag('bar') bar:String) return 'foo' + bar);
-    container.get(String, 'foo').equals('foobar');
+
+    container.map(ValueService).to(new Value('dep'));
+    container.map(String).to(function (value:ValueService) {
+      return value.get();
+    });
+
+    container.get(String).equals('dep');
   }
 
-  @:test
-  public function testAlias() {
+  function namedFunctionProvider(value:ValueService) {
+    return value.get();
+  }
+
+  @:test('Named functions can be used as providers')
+  public function testBasicNamedFunctionProvider() {
     var container = new Container();
-    container.map(Int).toValue(1);
-    container.map(Int, 'foo').toAlias(Int);
-    container.get(Int, 'foo').equals(1);
-    container.getMapping(Int).extend(i -> i + 2);
-    container.get(Int, 'foo').equals(3);
+
+    container.map(ValueService).to(new Value('dep'));
+    container.map(String).to(namedFunctionProvider);
+
+    container.get(String).equals('dep');
+  }
+
+  @:test('Typedefs can be used as identifiers')
+  public function testBasicTypedefAsId() {
+    var container = new Container();
+    container.map(FooIdentifier).to('foo');
+    container.get(FooIdentifier).equals('foo');
+  }
+
+  @:test('Can handle type params with a hacky syntax')
+  public function testSimpleParams() {
+    var container = new Container();
+    container.map(Map(String, String)).to([ 'foo' => 'foo' ]);
+    container.get(Map(String, String)).get('foo').equals('foo');
+  }
+
+  @:test('Can handle generic classes')
+  public function testSimpleGenericClass() {
+    var container = new Container();
+    container.map(String).to('foo');
+    container.map(HasParamsService(String)).to(HasParams(String));
+    container.get(HasParamsService(String)).getValue().equals('foo');
+  }
+
+  @:test('Can figure out when a function is being called instead of the hacky generic syntax')
+  public function testFunctionCall() {
+    var fun = () -> 'foo';
+    var container = new Container();
+    container.map(String).to(fun());
+    container.get(String).equals('foo');
   }
   
-  @:test
-  public function testClosure() {
+  @:test('Can handle nested generic classes')
+  public function testNestedGenericClass() {
     var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.map(String, 'bar').toValue('bar');
-    container.map(InjectsValues, 'default').toClass(InjectsValues);
+    container.map(String).to('foo');
+    container.map(HasParamsService(String)).to(HasParams(String));
+    container.map(HasParamsService(HasParamsService(String)))
+      .to(HasParams(HasParamsService(String)));
+    container.get(HasParamsService(HasParamsService(String)))
+      .getValue().getValue().equals('foo');
+  }
+
+  @:test('Container.instantiate can inject dependencies')
+  public function testSimpleBuild() {
+    var container = new Container();
+    container.map(String).to('foo');
     
-    var mapping = container.map(InjectsValues, 'local').toClass(InjectsValues);
-    mapping.with(c -> c.map(String, 'foo').toValue('changed'));
+    var test = container.instantiate(HasParams(String));
+    test.getValue().equals('foo');
+  }
 
-    var expectedLocal = container.get(InjectsValues, 'local');
-    expectedLocal.foo.equals('changed');
+  @:test('Can extend mappings')
+  public function testExtendsMappings() {
+    var container = new Container();
+
+    container.map(String).to('foo');
+    container.map(Int).to(1);
     
-    var expectedDefault = container.get(InjectsValues, 'default');
-    expectedDefault.foo.equals('foo'); 
-  }
-
-  @:test
-  public function testConstructorInjecton() {
-    var container = new Container();
-    container.map(Plain).toClass(Plain);
-    container.map(InjectsConstructor).toClass(InjectsConstructor);
-    var expected = container.get(InjectsConstructor).one.value;
-    expected.equals('one');
-  }
-
-  @:test
-  public function testBuild() {
-    var container = new Container();
-    container.map(String).toValue('one');
-    container.build('HasParams<String>').foo.equals('one');
-  }
-
-  @:test
-  public function testParams() {
-    var container = new Container();
-    container.map(String).toValue('one');
-    container.map('HasParams<String>').toClass(HasParams);
+    container
+      .getMapping(String)
+      .extend(value -> container.instantiate((i:Int) -> value + i))
+      .share();
     
-    container.map(Int).toValue(1);
-    container.map('HasParams<Int>').toClass(HasParams);
-    
-    var expected = container.get('HasParams<String>');
-    expected.foo.equals('one');
-    var expected = container.get('HasParams<Int>');
-    expected.foo.equals(1);
-
-    // Typing should work here!
-    container.map('Map<String, String>', 'things').toValue([
-      'foo' => 'bar',
-      'bar' => 'bin'
-    ]);
-    var things = container.get('Map<String, String>', 'things');
-    things.get('foo').equals('bar');
+    container.get(String).equals('foo1');
   }
-
-  @:test
-  public function testParamsInProps() {
-    var container = new Container();
-    container.map(String).toValue('one');
-    container.map(Int).toValue(1);
-    container.map('InjectsPropWithParam<String>').toClass(InjectsPropWithParam);
-    container.map('InjectsPropWithParam<Int>').toClass(InjectsPropWithParam);
-
-    container.get('InjectsPropWithParam<String>').foo.equals('one');
-    container.get('InjectsPropWithParam<Int>').foo.equals(1);
-  }
-
-  @:test
-  public function testTaggedParams() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('mapped');
-    container.map('HasTaggedParams<String>').toClass(HasTaggedParams);
-    container.get('HasTaggedParams<String>').foo.equals('mapped');
-  }
-
-  @:test
-  public function testComplexParams() {
-    var container = new Container();
-    container.map(Int).toValue(2);
-    container.map(String).toValue('bar');
-    container.map('BaseParams<Int, String>').toClass(HasComplexParams);
-    var expected = container.get('BaseParams<Int, String>');
-    expected.foo.equals(2);
-    expected.bar.equals('bar');
-  }
-
-  @:test('Interfaces are correctly resolved')
-  public function testWorksOnInterfaces() {
-    var container = new Container();
-    container.map(Int).toValue(2);
-    container.map(String).toValue('bar');
-    container.map('BaseParams<Int, String>').toClass(HasComplexParams);
-    container.map('UsesBaseParams<Int, String>').toClass(CorrectlyFollowsComplexParams);
-    var expected = container.get('UsesBaseParams<Int, String>');
-    expected.baseParams.foo.equals(2);
-    expected.baseParams.bar.equals('bar');
-  }
-
-  @:test
-  public function testDeepParams() {
-    var container = new Container();
-    container.map('Map<String, String>').toValue([ 'foo' => 'foo' ]);
-    container.map('String').toValue('foo');
-    container.map('HasDeepParams<String, String>').toClass(HasDeepParams);
-    var expected = container.get('HasDeepParams<String, String>');
-    expected.map.get('foo').equals('foo');
-    expected.foo.equals('foo');
-  }
-
-  @:test
-  public function testConditionalConstructor() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.map(String, 'bar').toValue('bar');
-    container.map(ConditionallyInjectsConstructor).toClass(ConditionallyInjectsConstructor);
-    var expected = container.get(ConditionallyInjectsConstructor);
-    expected.foo.equals('foo');
-    expected.bar.equals('bar');
-    expected.bax.equals('default');
-  }
-
-  @:test
+  
+  @:test('Child can override parent')
   public function testChildOverrides() {
     var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.map(String, 'bar').toValue('bar');
-    container.map(InjectsValues).toClass(InjectsValues);
-    var expected1 = container.get(InjectsValues);
-    expected1.foo.equals('foo');
-    expected1.bar.equals('bar');
+    container.map(String).to('foo');
+    container.map(FooIdentifier).to('bar');
+    container.map(Map(String, String)).to(function (one:String, two:FooIdentifier) {
+      return [ 'one' => one, 'two' => two ];
+    });
+
+    var expected1 = container.get(Map(String, String));
+    expected1.get('one').equals('foo');
+    expected1.get('two').equals('bar');
 
     var child = container.getChild();
-    child.map(String, 'foo').toValue('changed');
-    var expected2 = child.get(InjectsValues);
-    expected2.foo.equals('changed');
-    expected2.bar.equals('bar');
-  }
+    child.map(String).to('changed');
 
-  @:test
-  public function testExtend() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.map(String, 'bar').toValue('bar');
-    container.map(InjectsValues).toClass(InjectsValues);
-    var expected1 = container.get(InjectsValues);
-    expected1.foo.equals('foo');
-    expected1.bar.equals('bar');
-
-    var container2 = new Container();
-    container2.map(String, 'foo').toValue('changed');
-    var container3 = container2.extend(container);
-    var expected2 = container3.get(InjectsValues);
-    expected2.foo.equals('changed');
-    expected2.bar.equals('bar');
-  }
-
-  @:test
-  public function testMethodInjection() {
-    var container = new Container();
-    container.map(String).toValue('foo');
-    container.map(String, 'bar').toValue('bar');
-    container.map(String, 'bin').toValue('bin');
-    container.map(String, 'bax').toValue('bax');
-    container.map(Plain).toClass(Plain);
-    container.map(InjectsMethods).toClass(InjectsMethods);
-    var expected = container.get(InjectsMethods);
-    expected.foo.equals('foo');
-    expected.bar.equals('bar');
-    expected.bin.equals('bin');
-    expected.bax.equals('bax');
-    expected.plain.value.equals('one');
-  }
-
-  @:test
-  public function testPostInjection() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.map(PostInject).toClass(PostInject);
-    var expected = container.get(PostInject);
-    expected.ran.equals('foo:one:two:three:four');
-  }
-
-  @:test
-  public function testServiceProviderInstance() {
-    var container = new Container();
-    container.use(new SimpleServiceProvider());
-    var expected = container.get(String, 'foo');
-    expected.equals('foo');
-  }
-
-  @:test
-  public function testServiceProvider() {
-    var container = new Container();
-    container.use(SimpleServiceProvider);
-    var expected = container.get(String, 'foo');
-    expected.equals('foo');
-  }
-
-  @:test
-  public function testHas() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.has(String, 'foo').isTrue();
-    container.has(String, 'nope').isFalse();
-  }
-
-  @:test
-  public function testAbstractsAreHandledRight() {
-    var container = new Container();
-    container.map(AbstractString).toValue(new AbstractString('foo'));
-    container.get(AbstractString).unBox().equals('foo');
-  }
-
-  @:test
-  public function testResolvesTypedefsCorrectly() {
-    var container = new Container();
-    container.map(StringArray).toValue([ 'foo', 'bar' ]);
-    container.has('Array<String>').isFalse();
-    container.get(StringArray)[0].equals('foo');
-    container.get(StringArray)[1].equals('bar');
-  }
-
-  @:test
-  public function throwsUsefulException() {
-    var container = new Container();
-    try {
-      container.get(String, 'foo');
-      Assert.fail('Should have thrown a MappingNotFoundException');  
-    } catch (e:MappingNotFoundException) {
-      Assert.pass();
-    }
-  }
-
-  @:test
-  public function canGetMappings() {
-    var container = new Container();
-    container.map(String, 'foo').toValue('foo');
-    container.getMapping(String, 'foo').extend(v -> v += 'bar');
-    container.get(String, 'foo').equals('foobar');
-  }
-
-  @:test
-  public function idsCanBeVars() {
-    var container = new Container();
-    var id = 'foo';
-    container.map(String, id).to('foo');
-    container.map(String, 'bar').to('bar');
-    container.get(String, id).equals('foo');
-    id = 'bar';
-    container.get(String, id).equals('bar');
+    var expected2 = child.get(Map(String, String));
+    expected2.get('one').equals('changed');
+    expected2.get('two').equals('bar');
   }
 }

@@ -1,9 +1,13 @@
 package fixture;
 
-class HasParams<T> {
-  public var foo:T;
-
-  public function new(foo:T) {
-    this.foo = foo;
+class HasParams<T> implements HasParamsService<T> {
+  final value:T;
+  
+  public function new(value:T) {
+    this.value = value;
+  }
+  
+  public function getValue():T {
+    return value;
   }
 }

@@ -1,114 +1,68 @@
 package capsule;
 
-import haxe.PosInfos;
-import haxe.ds.Map;
+import capsule.exception.MappingNotFoundException;
 
-using Type;
+#if macro
+  import haxe.macro.Expr;
+  import capsule.internal.Builder;
+#end
+
+using Lambda;
 
 class Container {
-  final parent:Container;
-  final mappings:Map<Identifier, Mapping<Dynamic>>;
-
-  public function new(?parent:Container, ?mappings:Map<Identifier, Mapping<Dynamic>>) {
-    this.parent = parent;
-    this.mappings = mappings != null ? mappings : [];
-    addMapping(new Mapping(
-      new Identifier(this.getClass().getClassName()),
-      ProvideValue(this)
-    ));
+  public static macro function build(...modules:ExprOf<Module>) {
+    return ContainerBuilder.buildFromModules(modules.toArray());
   }
 
-  public function extend(container:Container) {
-    return new Container(container, mappings);
+  final parent:Null<Container>;
+  final mappings:Array<Mapping<Dynamic>> = [];
+
+  public function new(?parent) {
+    this.parent = parent;
   }
 
   public function getChild() {
     return new Container(this);
   }
 
-  public macro function use(ethis:haxe.macro.Expr, service:haxe.macro.Expr) {
-    var e:haxe.macro.Expr = if (haxe.macro.Context.unify(haxe.macro.Context.typeof(service), haxe.macro.Context.getType('capsule.ServiceProvider'))) {
-      service;
-    } else {
-      macro @:pos(service.pos) $ethis.build(${service});
+  public macro function map(self:Expr, target:Expr) {
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
+    return macro @:pos(self.pos) @:privateAccess $self.addMapping(
+      (new capsule.Mapping($v{identifier}, ${self}):capsule.Mapping<$type>)
+    );
+  }
+
+  public macro function get(self:Expr, target:Expr) {
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
+    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>).resolve();
+  }
+  
+  public macro function getMapping(self:Expr, target:Expr) {
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
+    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>);
+  }
+
+  public macro function instantiate(self:Expr, target:Expr) {
+    var factory = Builder.createFactory(target, target.pos);
+    return macro @:pos(target.pos) ${factory}($self);
+  }
+
+  public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
+    var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
+    if (mapping == null) {
+      if (parent == null) throw new MappingNotFoundException(id #if debug , pos #end);
+      return parent
+        .getMappingById(id #if debug , pos #end)
+        .withContainer(this);
     }
-    return macro @:pos(ethis.pos) $ethis.useServiceProvider(${e});
-  }
-
-  public macro function map(
-    ethis:haxe.macro.Expr,
-    def:haxe.macro.Expr,
-    ?tag:haxe.macro.Expr.ExprOf<String>
-  ) {
-    var mapping = capsule.macro.MappingBuilder.create(def, tag);
-    return macro @:pos(ethis.pos) $ethis.addMapping(${mapping});
-  }
-
-  public macro function get(
-    ethis:haxe.macro.Expr,
-    def:haxe.macro.Expr,
-    ?tag:haxe.macro.Expr.ExprOf<String>
-  ):haxe.macro.Expr {
-    var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep}).getValue(${ethis});
-  }
-
-  public macro function getMapping(
-    ethis:haxe.macro.Expr,
-    def:haxe.macro.Expr,
-    ?tag:haxe.macro.Expr.ExprOf<String>
-  ):haxe.macro.Expr {
-    var dep = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(ethis.pos) $ethis.getMappingByDependency(${dep});
-  }
-
-  public macro function has(
-    ethis:haxe.macro.Expr,
-    def:haxe.macro.Expr,
-    ?tag:haxe.macro.Expr.ExprOf<String>
-  ) {
-    var id = capsule.macro.IdentifierBuilder.createDependency(def, tag);
-    return macro @:pos(ethis.pos) $ethis.hasMappingByIdentifier(${id});
-  }
-
-  public macro function build(
-    ethis:haxe.macro.Expr.ExprOf<Class<Dynamic>>,
-    def:haxe.macro.Expr
-  ) {
-    var mapping = capsule.macro.MappingBuilder.create(def, macro null);
-    return macro @:pos(ethis.pos) ${mapping}.toClass(${def}).getValue(${ethis});
-  }
-
-  public function useServiceProvider(service:ServiceProvider):Void {
-    service.register(this);
-  }
-
-  public function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
-    if (mappings.exists(mapping.identifier)) {
-      return getMappingByIdentifier(mapping.identifier);
-    }
-    mappings.set(mapping.identifier, mapping);
     return mapping;
   }
 
-  public inline function getMappingByDependency<T>(dep:Dependency<T> #if debug , ?pos:PosInfos #end):Mapping<T> {
-    return getMappingByIdentifier(dep #if debug , pos #end);
-  }
-
-  public function hasMappingByIdentifier(id:Identifier) {
-    return mappings.exists(id);
-  }
-
-  public function getMappingByIdentifier<T>(id:Identifier #if debug , ?pos:PosInfos #end):Mapping<T> {
-    var m = mappings.get(id);
-    if (m == null) {
-      if (parent != null) return parent.getMappingByIdentifier(id);
-      throw new MappingNotFoundException(id #if debug , pos #end);
-    }
-    return cast m;
-  }
-
-  public function getValueByIdentifier<T>(id:Identifier):T {
-    return getMappingByIdentifier(id).getValue(this);
+  function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
+    mappings.push(mapping);
+    return mapping;
   }
 }

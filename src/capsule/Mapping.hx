@@ -1,138 +1,63 @@
 package capsule;
 
-@:allow(capsule.Container)
-class Mapping<T> {
-  final identifier:Identifier;
-  var provider:Provider<T>;
-  var closure:Container;
+import capsule.provider.SharedProvider;
+import capsule.provider.NullProvider;
 
-  public function new(identifier:Identifier, ?provider:Provider<T>) {
-    this.identifier = identifier;
-    this.provider = provider == null ? ProvideNone : provider;
+class Mapping<T> {
+  public final id:Identifier;
+  final container:Container;
+  var closure:Null<Container> = null;
+  var provider:Provider<T>;
+
+  public function new(id, container) {
+    this.id = id;
+    this.container = container;
+    this.provider = new NullProvider(this.id);
   }
 
-  public function with(cb:(closure:Container)->Void) {
-    if (closure == null) closure = new Container();
+  public function getContainer() {
+    if (closure != null) return closure;
+    return container;
+  }
+
+  public function withContainer(container:Container) {
+    var mapping = new Mapping(id, container);
+    mapping.toProvider(provider);
+    return mapping;
+  }
+
+  public function with(cb:(container:Container)->Void) {
+    if (closure == null) {
+      closure = container.getChild();
+    }
     cb(closure);
     return this;
   }
 
-  public macro function to(
-    ethis:haxe.macro.Expr,
-    expr:haxe.macro.Expr
-  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
-    var t = haxe.macro.Context.typeof(expr);
-    return switch t {
-      case TFun(_, _): macro @:pos(ethis.pos) $ethis.toFactory(${expr});
-      case TType(_, _): macro @:pos(ethis.pos) $ethis.toClass(${expr});
-      default: macro @:pos(ethis.pos) $ethis.toValue(${expr});
+  public macro function to(self:haxe.macro.Expr, factory:haxe.macro.Expr) {
+    var t = switch haxe.macro.Context.typeof(self) {
+      case TInst(_, [ t ]): haxe.macro.TypeTools.toComplexType(t);
+      default: macro:Dynamic;
     }
+    var factory = capsule.internal.Builder.createProvider(factory, t, factory.pos);
+    return macro @:pos(self.pos) $self.toProvider($factory);
   }
 
-  public macro function toAlias(
-    ethis:haxe.macro.Expr, 
-    expr:haxe.macro.Expr,
-    ?tag:haxe.macro.Expr.ExprOf<String>
-  ) {
-    if (tag == null) tag = macro null;
-    var id = capsule.macro.IdentifierBuilder.createDependency(expr, tag, []);
-    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideAlias(${id}));
-  }
-
-  public macro function toShared(
-    ethis:haxe.macro.Expr, 
-    expr:haxe.macro.Expr
-  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
-    return macro @:pos(ethis.pos) $ethis.to(${expr}).asShared();
-  }
-
-  public macro function toClass(
-    ethis:haxe.macro.Expr,
-    cls:haxe.macro.Expr.ExprOf<Class<T>>
-  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
-    var mappingType = haxe.macro.Context.typeof(ethis);
-    var factory = capsule.macro.ClassFactoryBuilder.create(cls, mappingType);
-    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
-  }
-
-  public macro function toFactory(
-    ethis:haxe.macro.Expr,
-    factory:haxe.macro.Expr
-  ):haxe.macro.Expr.ExprOf<capsule.Mapping<T>> {
-    var factory = capsule.macro.FunctionFactoryBuilder.create(factory);
-    return macro @:pos(ethis.pos) $ethis.toProvider(ProvideFactory(${factory}));
-  }
-
-  public function toValue(value:T) {
-    toProvider(ProvideValue(value));
+  public function extend(transform:(value:T)->T) {
+    provider.extend(transform);
     return this;
   }
 
   public function toProvider(provider:Provider<T>):Mapping<T> {
-    checkProvider();
     this.provider = provider;
     return this;
   }
 
-  public function asShared() {
-    switch provider {
-      case ProvideNone:
-        throw new ProviderDoesNotExistException(identifier, 'You cannot share a mapping that does not have a provider.');
-      case ProvideAlias(id):
-        provider = ProvideShared(c -> c.getValueByIdentifier(id));
-      case ProvideFactory(factory):
-        provider = ProvideShared(factory);
-      case ProvideValue(_) | ProvideShared(_):
-        // noop
-    }
-    return this;
+  public function share():Mapping<T> {
+    return toProvider(new SharedProvider(provider));
   }
 
-  public function getValue(container:Container):T {
-    return switch provider {
-      case ProvideNone: 
-        null;
-      case ProvideValue(value):
-        value;
-      case ProvideFactory(factory): 
-        resolve(container, factory);
-      case ProvideShared(factory):
-        var value = resolve(container, factory);
-        provider = ProvideValue(value);
-        value;
-      case ProvideAlias(id): 
-        handleLocalMappings(container).getValueByIdentifier(id);
-    }
-  }
-
-  inline function resolve(container:Container, factory:(c:Container)->T) {
-    return factory(handleLocalMappings(container));
-  }
-
-  function handleLocalMappings(container:Container):Container {
-    if (closure != null) return closure.extend(container);
-    return container;
-  }
-
-  public function extend(ext:(v:T)->T) {
-    switch provider {
-      case ProvideNone:
-        throw new ProviderDoesNotExistException(identifier, 'You cannot extend a mapping that does not have a provider');
-      case ProvideValue(value):
-        provider = ProvideValue(ext(value));
-      case ProvideFactory(factory):
-        provider = ProvideFactory(c -> ext(factory(c)));
-      case ProvideShared(factory):
-        provider = ProvideShared(c -> ext(factory(c)));
-      case ProvideAlias(id): 
-        provider = ProvideFactory(c -> ext(c.getValueByIdentifier(id)));
-    }
-    return this;
-  }
-
-  function checkProvider() {
-    if (provider != ProvideNone) {
-      throw new ProviderAlreadyExistsException(identifier);
-    }
+  public function resolve():T {
+    return provider.resolve(getContainer());
   }
 }
