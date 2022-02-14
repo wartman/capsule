@@ -15,11 +15,25 @@ typedef TrackedMapping = {
 class ModuleBuilder {
   public static function build() {
     var fields = Context.getBuildFields();
-    var cls = Context.getLocalClass();
+    var cls = Context.getLocalClass().get();
     var provider = fields.find(f -> f.name == 'provide');
     var containerName = 'container';
     var mappings:Array<TrackedMapping> = [];
     var currentMapping:Null<TrackedMapping> = null;
+
+    if (cls.superClass != null) {
+      Context.error(
+        'Modules are currently not allowed to extend other classes.',
+        cls.pos
+      );
+    }
+
+    if (cls.params.length > 0) {
+      Context.error(
+        'Modules are currently not allowed to be generic/use type params.',
+        cls.pos
+      );
+    }
 
     // If `provide` doesn't exist yet, let Haxe complain.
     if (provider == null) return fields;
@@ -44,6 +58,8 @@ class ModuleBuilder {
       }
     }
 
+    // @todo: We need some way of ensuring that mapping ONLY happens in the
+    //        `provide` function, as we don't track it anywhere else.
     switch provider.kind {
       case FFun(f):
         var expr = f.expr;

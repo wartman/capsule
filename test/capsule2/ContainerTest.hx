@@ -76,7 +76,7 @@ class ContainerTest implements TestCase {
     container.get(FooIdentifier).equals('foo');
   }
 
-  @:test('Can handle params with a hacky syntax')
+  @:test('Can handle type params with a hacky syntax')
   public function testSimpleParams() {
     var container = new Container();
     container.map(Map(String, String)).to([ 'foo' => 'foo' ]);
@@ -90,6 +90,14 @@ class ContainerTest implements TestCase {
     container.map(HasParamsService(String)).to(HasParams(String));
     container.get(HasParamsService(String)).getValue().equals('foo');
   }
+
+  @:test('Can figure out when a function is being called instead of the hacky generic syntax')
+  public function testFunctionCall() {
+    var fun = () -> 'foo';
+    var container = new Container();
+    container.map(String).to(fun());
+    container.get(String).equals('foo');
+  }
   
   @:test('Can handle nested generic classes')
   public function testNestedGenericClass() {
@@ -102,12 +110,12 @@ class ContainerTest implements TestCase {
       .getValue().getValue().equals('foo');
   }
 
-  @:test('Container.build can inject dependencies')
+  @:test('Container.instantiate can inject dependencies')
   public function testSimpleBuild() {
     var container = new Container();
     container.map(String).to('foo');
     
-    var test = container.build(HasParams(String));
+    var test = container.instantiate(HasParams(String));
     test.getValue().equals('foo');
   }
 
@@ -120,7 +128,7 @@ class ContainerTest implements TestCase {
     
     container
       .getMapping(String)
-      .extend((value, container) -> container.build((i:Int) -> value + i))
+      .extend(value -> container.instantiate((i:Int) -> value + i))
       .share();
     
     container.get(String).equals('foo1');

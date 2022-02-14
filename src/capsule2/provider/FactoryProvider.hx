@@ -1,7 +1,7 @@
 package capsule2.provider;
 
 class FactoryProvider<T> implements Provider<T> {
-  final factory:(container:Container)->T;
+  var factory:(container:Container)->T;
 
   public function new(factory) {
     this.factory = factory;
@@ -9,5 +9,10 @@ class FactoryProvider<T> implements Provider<T> {
   
   public function resolve(container:Container):T {
     return this.factory(container);
+  }
+  
+  public function extend(transform:(value:T)->T) {
+    var prev = factory;
+    factory = container -> transform(prev(container));
   }
 }

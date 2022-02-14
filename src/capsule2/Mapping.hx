@@ -1,6 +1,5 @@
 package capsule2;
 
-import capsule2.provider.FactoryProvider;
 import capsule2.provider.SharedProvider;
 import capsule2.provider.NullProvider;
 
@@ -8,11 +7,12 @@ class Mapping<T> {
   public final id:Identifier;
   final container:Container;
   var closure:Null<Container> = null;
-  var provider:Provider<T> = new NullProvider();
+  var provider:Provider<T>;
 
   public function new(id, container) {
     this.id = id;
     this.container = container;
+    this.provider = new NullProvider(this.id);
   }
 
   public function getContainer() {
@@ -43,9 +43,9 @@ class Mapping<T> {
     return macro @:pos(self.pos) $self.toProvider($factory);
   }
 
-  public function extend(transform:(value:T, container:Container)->T) {
-    var prev = provider;
-    return toProvider(new FactoryProvider(container -> transform(prev.resolve(container), container)));
+  public function extend(transform:(value:T)->T) {
+    provider.extend(transform);
+    return this;
   }
 
   public function toProvider(provider:Provider<T>):Mapping<T> {

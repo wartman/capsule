@@ -14,4 +14,12 @@ class SharedProvider<T> implements Provider<T> {
     }
     return value;
   }
+  
+  public function extend(transform:(value:T)->T) {
+    if (value != null) {
+      value = transform(value);
+      return;
+    }
+    provider.extend(transform);
+  }
 }

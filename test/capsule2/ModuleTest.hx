@@ -9,7 +9,7 @@ class ModuleTest implements TestCase {
 
   @:test('Modules work')
   public function testSimpleModules() {
-    var container = Container.create(
+    var container = Container.build(
       new ValueModule('value'),
       new SimpleModule()
     );
@@ -18,7 +18,7 @@ class ModuleTest implements TestCase {
 
   @:test('Modules track params')
   public function testParamModule() {
-    var container = Container.create(
+    var container = Container.build(
       new ValueModule('value'),
       new ParamModule()
     );

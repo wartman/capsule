@@ -13,7 +13,7 @@ typedef ModuleInfo = {
 } 
 
 class ContainerBuilder {
-  public static function createContainer(values:Array<ExprOf<Module>>) {
+  public static function buildFromModules(values:Array<ExprOf<Module>>) {
     var modules = values.map(parseModule);
     var body:Array<Expr> = values.map(module -> macro ($module).provide(container));
     var exports = modules.map(m -> m.exports).flatten();

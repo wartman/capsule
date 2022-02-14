@@ -10,8 +10,8 @@ import capsule2.exception.MappingNotFoundException;
 using Lambda;
 
 class Container {
-  public static macro function create(...modules:ExprOf<Module>) {
-    return ContainerBuilder.createContainer(modules.toArray());
+  public static macro function build(...modules:ExprOf<Module>) {
+    return ContainerBuilder.buildFromModules(modules.toArray());
   }
 
   final parent:Null<Container>;
@@ -45,7 +45,7 @@ class Container {
     return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule2.Mapping<$type>);
   }
 
-  public macro function build(self:Expr, target:Expr) {
+  public macro function instantiate(self:Expr, target:Expr) {
     var factory = Builder.createFactory(target, target.pos);
     return macro @:pos(target.pos) ${factory}($self);
   }
