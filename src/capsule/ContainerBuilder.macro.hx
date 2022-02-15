@@ -2,6 +2,7 @@ package capsule;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 
 using Lambda;
 using haxe.macro.Tools;
@@ -14,8 +15,8 @@ typedef ModuleInfo = {
 
 class ContainerBuilder {
   public static function buildFromModules(values:Array<ExprOf<Module>>) {
-    var modules = values.map(parseModule);
-    var body:Array<Expr> = values.map(module -> macro ($module).provide(container));
+    var modules = values.map(parseModuleExpr);
+    var body:Array<Expr> = values.map(module -> macro @:privateAccess container.useModule($module));
     var exports = modules.map(m -> m.exports).flatten();
     var deps = modules.map(m -> m.requires).flatten();
     var uniqueDeps = [];
@@ -45,18 +46,31 @@ class ContainerBuilder {
     };
   }
 
-  static function parseModule(e:ExprOf<Module>):ModuleInfo {
+  static function parseModuleExpr(e:ExprOf<Module>):ModuleInfo {
     var type = Context.typeof(e);
     if (!Context.unify(type, Context.getType('capsule.Module'))) {
       Context.error('${type.toString()} should be capsule.Module', e.pos);
       return null;
     }
+    var info = parseModule(type);
+    return if (info != null) {
+      requires: info.requires,
+      exports: info.exports,
+      expr: e
+    } else {
+      Context.error('Not a module', e.pos);
+      null;
+    };
+  }
+
+  static function parseModule(type:Type):Null<{ exports:Array<String>, requires:Array<String> }> {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
         var fields = cls.fields.get();
         var exports = fields.find(f -> f.name == '__exports').expr();
         var requires = fields.find(f -> f.name == '__requires').expr();
+        var composes = fields.find(f -> f.name == '__composes').expr();
 
         var exported:Array<String> = [];
         var required:Array<String> = [];
@@ -84,13 +98,32 @@ class ContainerBuilder {
           default:
         }
 
+        switch composes.expr {
+          case TArrayDecl(el): 
+            for (e in el) switch e.expr {
+              case TConst(TString(s)):
+                var type = Context.getType(s);
+                var info = parseModule(type);
+                for (item in info.exports) {
+                  if (!exported.contains(item)) 
+                    exported.push(item);
+                }
+                for (item in info.requires) {
+                  if (!exported.contains(item) && !required.contains(item)) 
+                    required.push(item);
+                }
+              default:
+            }
+          default:
+        }
+
+        required = required.filter(item -> !exported.contains(item));
+
         return {
           requires: required,
           exports: exported,
-          expr: e
         };
       default:
-        Context.error('Not a module', e.pos);
         null;
     }
   }

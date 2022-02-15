@@ -3,4 +3,10 @@
 
 -main Main
 
+--each
+
 -js dist/example/index.js
+
+--next
+
+-php dist/example/php

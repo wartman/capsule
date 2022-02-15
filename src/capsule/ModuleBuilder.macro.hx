@@ -20,6 +20,7 @@ class ModuleBuilder {
     var containerName = 'container';
     var mappings:Array<TrackedMapping> = [];
     var currentMapping:Null<TrackedMapping> = null;
+    var composes:Array<Expr> = [];
 
     if (cls.superClass != null) {
       Context.error(
@@ -41,6 +42,9 @@ class ModuleBuilder {
     function findMappings(e:Expr) {
       switch e.expr {
         case ECall(e, params): switch e.expr {
+          case EField(e, 'use'):
+            composes = composes.concat(params);
+            for (param in params) mappings.push({ id: null, concrete: param });
           case EField(e, 'to'):
             currentMapping = { concrete: params[0] };
             findMappings(e);
@@ -68,10 +72,13 @@ class ModuleBuilder {
         findMappings(expr);
         fields = fields.concat((macro class {
           public final __exports:Array<capsule.Identifier> = [ 
-            $a{mappings.map(m -> macro capsule.Tools.getIdentifier(${m.id}))}
+            $a{mappings.filter(m -> m.id != null).map(m -> macro capsule.Tools.getIdentifier(${m.id}))}
           ];
           public final __requires:Array<Array<capsule.Identifier>> = [
             $a{mappings.map(m -> macro capsule.Tools.getDependencies(${m.concrete}))}
+          ];
+          public final __composes:Array<String> = [
+            $a{composes.map(m -> macro capsule.Tools.getIdentifier(${m}))}
           ];
         }).fields);
       default:

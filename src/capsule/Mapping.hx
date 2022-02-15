@@ -1,6 +1,5 @@
 package capsule;
 
-import capsule.provider.SharedProvider;
 import capsule.provider.NullProvider;
 
 class Mapping<T> {

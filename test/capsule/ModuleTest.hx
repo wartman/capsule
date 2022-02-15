@@ -24,4 +24,13 @@ class ModuleTest implements TestCase {
     );
     container.get(HasParamsService(ValueService)).getValue().get().equals('value');
   }
+
+  @:test('Modules track composed modules and track their constructor\'s dependencies')
+  public function testComposedModules() {
+    var container = Container.build(
+      new StringModule('foo'),
+      new ComposedModule()
+    );
+    container.get(HasParamsService(ValueService)).getValue().get().equals('foo');
+  }
 }

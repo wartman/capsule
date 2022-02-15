@@ -50,6 +50,14 @@ class Container {
     return macro @:pos(target.pos) ${factory}($self);
   }
 
+  public macro function use(self:Expr, ...modules:ExprOf<Module>) {
+    var body = [ for (m in modules) macro @:pos(m.pos) @:privateAccess $self.useModule($self.instantiate(${m})) ];
+    return macro {
+      $b{body};
+      $self;
+    }
+  }
+
   public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
     if (mapping == null) {
@@ -64,5 +72,10 @@ class Container {
   function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
     mappings.push(mapping);
     return mapping;
+  }
+
+  function useModule(module:Module) {
+    module.provide(this);
+    return this;
   }
 }
