@@ -72,13 +72,13 @@ class ModuleBuilder {
         findMappings(expr);
         fields = fields.concat((macro class {
           public final __exports:Array<capsule.Identifier> = [ 
-            $a{mappings.filter(m -> m.id != null).map(m -> macro capsule.Tools.getIdentifier(${m.id}))}
+            $a{mappings.filter(m -> m.id != null).map(m -> macro @:pos(m.id.pos) capsule.Tools.getIdentifier(${m.id}))}
           ];
           public final __requires:Array<Array<capsule.Identifier>> = [
-            $a{mappings.map(m -> macro capsule.Tools.getDependencies(${m.concrete}))}
+            $a{mappings.map(m -> macro @:pos(m.concrete.pos) capsule.Tools.getDependencies(${m.concrete}))}
           ];
           public final __composes:Array<String> = [
-            $a{composes.map(m -> macro capsule.Tools.getIdentifier(${m}))}
+            $a{composes.map(m ->  macro @:pos(m.pos) capsule.Tools.getIdentifier(${m}))}
           ];
         }).fields);
       default:
