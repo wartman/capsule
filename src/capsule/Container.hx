@@ -65,7 +65,7 @@ class Container {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
     if (mapping == null) {
       if (parent == null) return null;
-      var mapping = parent.getMappingById(id #if debug , pos #end);  
+      var mapping = parent.recursiveGetMappingById(id #if debug , pos #end);  
       if (mapping != null) return mapping.withContainer(this);
     }
     return mapping;
