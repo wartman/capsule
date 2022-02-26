@@ -1,5 +1,7 @@
 package capsule.provider;
 
+import capsule.exception.ProviderAlreadyExistsException;
+
 class SharedProvider<T> implements Provider<T> {
   final provider:Provider<T>;
   var value:Null<T> = null;
@@ -25,5 +27,9 @@ class SharedProvider<T> implements Provider<T> {
   
   public function asShared():Provider<T> {
     return this;
+  }
+  
+  public function transitionTo(other:Provider<T>):Provider<T> {
+    throw new ProviderAlreadyExistsException();
   }
 }

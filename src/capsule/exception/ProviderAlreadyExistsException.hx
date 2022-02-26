@@ -3,9 +3,9 @@ package capsule.exception;
 import haxe.Exception;
 
 class ProviderAlreadyExistsException extends Exception {
-  public function new(id:Identifier, ?previous) {
+  public function new(?previous) {
     super(
-      'A provider already exists for this mapping: ${id.toString()}',
+      'A provider already exists.',
       previous
     );
   }

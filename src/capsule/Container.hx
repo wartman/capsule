@@ -28,9 +28,7 @@ class Container {
   public macro function map(self:Expr, target:Expr) {
     var identifier = Builder.createIdentifier(target);
     var type = Builder.getComplexType(target);
-    return macro @:pos(self.pos) @:privateAccess $self.addMapping(
-      (new capsule.Mapping($v{identifier}, ${self}):capsule.Mapping<$type>)
-    );
+    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetMappingForId($v{identifier}):capsule.Mapping<$type>);
   }
 
   public macro function get(self:Expr, target:Expr) {
@@ -58,14 +56,26 @@ class Container {
   }
 
   public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
+    var mapping:Null<Mapping<T>> = recursiveGetMappingById(id #if debug , pos #end);
+    if (mapping == null) return addMapping(new Mapping(id, this));
+    return mapping;
+  }
+
+  function recursiveGetMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
     if (mapping == null) {
-      if (parent == null) throw new MappingNotFoundException(id #if debug , pos #end);
-      return parent
-        .getMappingById(id #if debug , pos #end)
-        .withContainer(this);
+      if (parent == null) return null;
+      var mapping = parent.getMappingById(id #if debug , pos #end);  
+      if (mapping != null) return mapping.withContainer(this);
     }
     return mapping;
+  }
+
+  function addOrGetMappingForId<T>(id:String):Mapping<T> {
+    if (mappings.exists(m -> m.id == id)) {
+      return getMappingById(id);
+    }
+    return addMapping(new Mapping(id, this));
   }
 
   function addMapping<T>(mapping:Mapping<T>):Mapping<T> {

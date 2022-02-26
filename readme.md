@@ -130,7 +130,7 @@ Something that the example doesn't cover is how to handle generic types. Haxe on
 capsule.map(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
 ```
 
-If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.to(...)`.
+If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.map(...).to(...)`.
 
 Another thing not covered in the example are the different kinds of values you can map to. The simplest is mapping to a Class, which automatically injects its constructor:
 

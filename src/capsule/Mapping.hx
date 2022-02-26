@@ -48,7 +48,7 @@ class Mapping<T> {
   }
 
   public function toProvider(provider:Provider<T>):Mapping<T> {
-    this.provider = provider;
+    this.provider = this.provider.transitionTo(provider);
     return this;
   }
 

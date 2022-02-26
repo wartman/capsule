@@ -1,5 +1,6 @@
 package capsule;
 
+import capsule.exception.ProviderAlreadyExistsException;
 import fixture.*;
 
 using Medic;
@@ -170,5 +171,25 @@ class ContainerTest implements TestCase {
     var expected2 = child.get(Map(String, String));
     expected2.get('one').equals('changed');
     expected2.get('two').equals('bar');
+  }
+
+  @:test('Mappings can be extended before they\'re resolved')
+  public function testMappingExtensionsToNullProvider() {
+    var container = new Container();
+    container.getMapping(String).extend(str -> str + 'bar');
+    container.map(String).to('foo');
+    container.get(String).equals('foobar');
+  }
+
+  @:test('Mappings that have been resolved will throw an error if you try to remap them')
+  public function testMappingToAlreadyResolvedMapping() {
+    var container = new Container();
+    try {
+      container.map(String).to('foo');
+      container.getMapping(String).to('bar');
+      Assert.fail('Should have thrown an exception');
+    } catch (e:ProviderAlreadyExistsException) {
+      Assert.pass();
+    }
   }
 }
