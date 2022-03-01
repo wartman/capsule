@@ -98,7 +98,7 @@ class ContainerBuilder {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
-        var imports = cls.findField('__imports', true).expr();
+        var imports = cls.findField('__imports', false).expr();
         return exprToArray(imports);
       default:
         [];
@@ -109,7 +109,7 @@ class ContainerBuilder {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
-        var exports = cls.findField('__exports', true).expr();
+        var exports = cls.findField('__exports', false).expr();
         var out:Array<ModuleMapping> = [];
         
         switch exports.expr {

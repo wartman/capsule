@@ -71,13 +71,13 @@ class ModuleBuilder {
 
         findMappings(expr);
         fields = fields.concat((macro class {
-          @:keep public static final __exports:Array<capsule.ModuleMapping> = [
+          @:keep public final __exports:Array<capsule.ModuleMapping> = [
             $a{exports.filter(m -> m.id != null).map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
           ];
-          public static final __imports:Array<String> = [
+          @:keep public final __imports:Array<String> = [
             $a{imports.map(m ->  macro @:pos(m.pos) capsule.Tools.getIdentifier(${m}))}
           ];
         }).fields);
