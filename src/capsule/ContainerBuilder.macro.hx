@@ -10,9 +10,8 @@ using haxe.macro.Tools;
 
 typedef ModuleInfo = {
   public final id:String;
-  public final imports:Array<String>;
   public final exports:Array<ModuleMapping>;
-  public final composes:Array<ModuleMapping>;
+  public final imports:Array<ModuleMapping>;
   public final pos:Position;
 }
 
@@ -40,7 +39,7 @@ class ContainerBuilder {
           errors.push('${export.id} requires ${dependency} in the module ${module.id}');
         }
       }
-      for (child in module.composes) for (dependency in child.dependencies) {
+      for (child in module.imports) for (dependency in child.dependencies) {
         if (!satisfied.contains(dependency)) {
           errors.push('The module ${child.id} requires ${dependency} in the module ${module.id}');
         }
@@ -63,12 +62,12 @@ class ContainerBuilder {
   }
 
   static function processModule(module:ModuleInfo, modules:Array<ModuleInfo>, pos:Position) {
-    for (id in module.imports) {
-      if (modules.exists(m -> m.id == id)) {
-        Context.error('The module [${id}] was already added.', pos);
+    for (child in module.imports) {
+      if (modules.exists(m -> m.id == child.id)) {
+        Context.error('The module [${child.id}] was already added.', pos);
       }
 
-      var type = Context.getType(id);
+      var type = Context.getType(child.id);
       var info = parseModuleInfo(type, pos);
 
       modules.push(info);
@@ -87,28 +86,15 @@ class ContainerBuilder {
       Context.error('${type.toString()} should be capsule.Module', pos);
     }
 
-    var imports = parseModuleImports(type);
-    var composes = parseModuleMappings(type, '__composes');
     var exports = parseModuleMappings(type, '__exports');
+    var imports = parseModuleMappings(type, '__imports');
 
     return {
       id: type.toString(),
-      composes: composes,
       exports: exports,
       imports: imports,
       pos: pos
     };
-  }
-
-  static function parseModuleImports(type:Type):Array<String> {
-    return switch type {
-      case TInst(t, params):
-        var cls = t.get();
-        var imports = cls.findField('__imports', false).expr();
-        return exprToArray(imports);
-      default:
-        [];
-    }
   }
 
   static function parseModuleMappings(type:Type, field:String):Array<ModuleMapping> {

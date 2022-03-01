@@ -19,8 +19,7 @@ class ModuleBuilder {
     var provider = fields.find(f -> f.name == 'provide');
     var containerName = 'container';
     var exports:Array<TrackedMapping> = [];
-    var composes:Array<TrackedMapping> = [];
-    var imports:Array<Expr> = [];
+    var imports:Array<TrackedMapping> = [];
     var currentMapping:Null<TrackedMapping> = null;
 
     if (cls.superClass != null) {
@@ -44,8 +43,7 @@ class ModuleBuilder {
       switch e.expr {
         case ECall(e, params): switch e.expr {
           case EField(e, 'use'):
-            imports = imports.concat(params);
-            for (param in params) composes.push({ id: param, concrete: param });
+            for (param in params) imports.push({ id: param, concrete: param });
           case EField(e, 'to'):
             currentMapping = { concrete: params[0] };
             findMappings(e);
@@ -72,8 +70,8 @@ class ModuleBuilder {
 
         findMappings(expr);
         fields = fields.concat((macro class {
-          @:keep public final __composes:Array<capsule.ModuleMapping> = [
-            $a{composes.map(m -> macro {
+          @:keep public final __imports:Array<capsule.ModuleMapping> = [
+            $a{imports.map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
@@ -83,9 +81,6 @@ class ModuleBuilder {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
-          ];
-          @:keep public final __imports:Array<String> = [
-            $a{imports.map(m ->  macro @:pos(m.pos) capsule.Tools.getIdentifier(${m}))}
           ];
         }).fields);
       default:
