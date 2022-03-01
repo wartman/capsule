@@ -26,6 +26,7 @@ class ContainerBuilder {
     for (module in rootModules) processModule(module, modules, module.pos);
 
     for (module in modules) for (export in module.exports) {
+      if (export.id == null) continue;
       if (satisfied.contains(export.id)) {
         errors.push('The mapping ${export.id} in the module ${module.id} was already provided');
       } else {
@@ -35,7 +36,10 @@ class ContainerBuilder {
 
     for (module in modules) for (export in module.exports) for (dependency in export.dependencies) {
       if (!satisfied.contains(dependency)) {
-        errors.push('${export.id} requires ${dependency} in the module ${module.id}');
+        if (export.id != null)
+          errors.push('${export.id} requires ${dependency} in the module ${module.id}');
+        else 
+          errors.push('the module ${module.id} must satisfy the dependency ${dependency}');
       }
     }
 
@@ -54,11 +58,7 @@ class ContainerBuilder {
     };
   }
 
-  static function processModule(
-    module:ModuleInfo,
-    modules:Array<ModuleInfo>,
-    pos:Position
-  ) {
+  static function processModule(module:ModuleInfo, modules:Array<ModuleInfo>, pos:Position) {
     for (id in module.imports) {
       if (modules.exists(m -> m.id == id)) {
         Context.error('The module [${id}] was already added.', pos);
@@ -149,6 +149,7 @@ class ContainerBuilder {
   static function exprToString(expr:TypedExpr):String {
     return switch expr.expr {
       case TConst(TString(s)): s;
+      case TConst(TNull): null;
       default: throw 'assert';
     }
   }

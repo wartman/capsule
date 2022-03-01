@@ -19,8 +19,8 @@ class ModuleBuilder {
     var provider = fields.find(f -> f.name == 'provide');
     var containerName = 'container';
     var exports:Array<TrackedMapping> = [];
-    var currentMapping:Null<TrackedMapping> = null;
     var imports:Array<Expr> = [];
+    var currentMapping:Null<TrackedMapping> = null;
 
     if (cls.superClass != null) {
       Context.error(
@@ -72,8 +72,8 @@ class ModuleBuilder {
         findMappings(expr);
         fields = fields.concat((macro class {
           @:keep public final __exports:Array<capsule.ModuleMapping> = [
-            $a{exports.filter(m -> m.id != null).map(m -> macro {
-              id: capsule.Tools.getIdentifier(${m.id}),
+            $a{exports.map(m -> macro {
+              id: ${m.id != null ? macro capsule.Tools.getIdentifier(${m.id}) : macro null},
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
           ];
