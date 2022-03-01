@@ -12,6 +12,7 @@ typedef ModuleInfo = {
   public final id:String;
   public final imports:Array<String>;
   public final exports:Array<ModuleMapping>;
+  public final composes:Array<ModuleMapping>;
   public final pos:Position;
 }
 
@@ -26,7 +27,6 @@ class ContainerBuilder {
     for (module in rootModules) processModule(module, modules, module.pos);
 
     for (module in modules) for (export in module.exports) {
-      if (export.id == null) continue;
       if (satisfied.contains(export.id)) {
         errors.push('The mapping ${export.id} in the module ${module.id} was already provided');
       } else {
@@ -34,12 +34,16 @@ class ContainerBuilder {
       }
     }
 
-    for (module in modules) for (export in module.exports) for (dependency in export.dependencies) {
-      if (!satisfied.contains(dependency)) {
-        if (export.id != null)
+    for (module in modules) {
+      for (export in module.exports) for (dependency in export.dependencies) {
+        if (!satisfied.contains(dependency)) {
           errors.push('${export.id} requires ${dependency} in the module ${module.id}');
-        else 
-          errors.push('the module ${module.id} must satisfy the dependency ${dependency}');
+        }
+      }
+      for (child in module.composes) for (dependency in child.dependencies) {
+        if (!satisfied.contains(dependency)) {
+          errors.push('The module ${child.id} requires ${dependency} in the module ${module.id}');
+        }
       }
     }
 
@@ -83,11 +87,13 @@ class ContainerBuilder {
       Context.error('${type.toString()} should be capsule.Module', pos);
     }
 
-    var exports = parseModuleExports(type);
     var imports = parseModuleImports(type);
+    var composes = parseModuleMappings(type, '__composes');
+    var exports = parseModuleMappings(type, '__exports');
 
     return {
       id: type.toString(),
+      composes: composes,
       exports: exports,
       imports: imports,
       pos: pos
@@ -105,11 +111,11 @@ class ContainerBuilder {
     }
   }
 
-  static function parseModuleExports(type:Type):Array<ModuleMapping> {
+  static function parseModuleMappings(type:Type, field:String):Array<ModuleMapping> {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
-        var exports = cls.findField('__exports', false).expr();
+        var exports = cls.findField(field, false).expr();
         var out:Array<ModuleMapping> = [];
         
         switch exports.expr {
