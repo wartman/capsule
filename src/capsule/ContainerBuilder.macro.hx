@@ -1,5 +1,6 @@
 package capsule;
 
+import capsule.ModuleMapping;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -8,33 +9,40 @@ using Lambda;
 using haxe.macro.Tools;
 
 typedef ModuleInfo = {
-  public final exports:Array<String>;
-  public final requires:Array<String>;
-  public final expr:Expr;
-} 
+  public final id:String;
+  public final imports:Array<String>;
+  public final exports:Array<ModuleMapping>;
+  public final pos:Position;
+}
 
 class ContainerBuilder {
   public static function buildFromModules(values:Array<ExprOf<Module>>) {
     var modules = values.map(parseModuleExpr);
+    var rootModules = modules.copy();
     var body:Array<Expr> = values.map(module -> macro @:privateAccess container.useModule($module));
-    var exports = modules.map(m -> m.exports).flatten();
-    var deps = modules.map(m -> m.requires).flatten();
-    var uniqueDeps = [];
-    var uniqueExports = [];
-    var notSatisfied = [];
+    var satisfied:Array<String> = [];
+    var errors:Array<String> = [];
 
-    for (dep in deps) {
-      if (!uniqueDeps.contains(dep)) uniqueDeps.push(dep);
+    for (module in rootModules) processModule(module, modules, module.pos);
+
+    for (module in modules) for (export in module.exports) {
+      if (satisfied.contains(export.id)) {
+        errors.push('The mapping ${export.id} in the module ${module.id} was already provided');
+      } else {
+        satisfied.push(export.id);
+      }
     }
 
-    for (dep in uniqueDeps) {
-      if (!exports.contains(dep)) notSatisfied.push(dep);
+    for (module in modules) for (export in module.exports) for (dependency in export.dependencies) {
+      if (!satisfied.contains(dependency)) {
+        errors.push('${export.id} requires ${dependency} in the module ${module.id}');
+      }
     }
 
-    if (notSatisfied.length > 0) {
+    if (errors.length > 0) {
       Context.error(
         'Some dependencies were not satisfied and a Container could not be built. '
-        + 'Add Modules that provide the following: [${notSatisfied.join(', ')}]',
+        + 'Fix the following problems: [ ${errors.join(', ')} ]',
         Context.currentPos()
       );
     }
@@ -46,85 +54,102 @@ class ContainerBuilder {
     };
   }
 
+  static function processModule(
+    module:ModuleInfo,
+    modules:Array<ModuleInfo>,
+    pos:Position
+  ) {
+    for (id in module.imports) {
+      if (modules.exists(m -> m.id == id)) {
+        Context.error('The module [${id}] was already added.', pos);
+      }
+
+      var type = Context.getType(id);
+      var info = parseModuleInfo(type, pos);
+
+      modules.push(info);
+
+      processModule(info, modules, pos);
+    }
+  }
+
   static function parseModuleExpr(e:ExprOf<Module>):ModuleInfo {
     var type = Context.typeof(e);
+    return parseModuleInfo(type, e.pos);
+  }
+
+  static function parseModuleInfo(type:Type, pos:Position):ModuleInfo {
     if (!Context.unify(type, Context.getType('capsule.Module'))) {
-      Context.error('${type.toString()} should be capsule.Module', e.pos);
-      return null;
+      Context.error('${type.toString()} should be capsule.Module', pos);
     }
-    var info = parseModule(type);
-    return if (info != null) {
-      requires: info.requires,
-      exports: info.exports,
-      expr: e
-    } else {
-      Context.error('Not a module', e.pos);
-      null;
+
+    var exports = parseModuleExports(type);
+    var imports = parseModuleImports(type);
+
+    return {
+      id: type.toString(),
+      exports: exports,
+      imports: imports,
+      pos: pos
     };
   }
 
-  static function parseModule(type:Type):Null<{ exports:Array<String>, requires:Array<String> }> {
+  static function parseModuleImports(type:Type):Array<String> {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
-        var fields = cls.fields.get();
-        var exports = fields.find(f -> f.name == '__exports').expr();
-        var requires = fields.find(f -> f.name == '__requires').expr();
-        var composes = fields.find(f -> f.name == '__composes').expr();
+        var imports = cls.findField('__imports', true).expr();
+        return exprToArray(imports);
+      default:
+        [];
+    }
+  }
 
-        var exported:Array<String> = [];
-        var required:Array<String> = [];
-
+  static function parseModuleExports(type:Type):Array<ModuleMapping> {
+    return switch type {
+      case TInst(t, params):
+        var cls = t.get();
+        var exports = cls.findField('__exports', true).expr();
+        var out:Array<ModuleMapping> = [];
+        
         switch exports.expr {
-          case TArrayDecl(el): 
-            for (e in el) switch e.expr {
-              case TConst(TString(s)) if (!exported.contains(s)): 
-                exported.push(s);
-              default:
-            }
-          default:
+          case TArrayDecl(el): for (expr in el) {
+            out.push(exprToModuleMapping(expr));
+          }
+          default: throw 'assert';
         }
 
-        switch requires.expr {
-          case TArrayDecl(el): 
-            for (e in el) switch e.expr {
-              case TArrayDecl(el): for (e in el) switch e.expr {
-                case TConst(TString(s)) if (!exported.contains(s) && !required.contains(s)):
-                  required.push(s);
-                default:
-              }
-              default:
-            }
-          default:
-        }
+        out;
+      default:
+        [];
+    }
+  }
 
-        switch composes.expr {
-          case TArrayDecl(el): 
-            for (e in el) switch e.expr {
-              case TConst(TString(s)):
-                var type = Context.getType(s);
-                var info = parseModule(type);
-                for (item in info.exports) {
-                  if (!exported.contains(item)) 
-                    exported.push(item);
-                }
-                for (item in info.requires) {
-                  if (!exported.contains(item) && !required.contains(item)) 
-                    required.push(item);
-                }
-              default:
-            }
-          default:
-        }
-
-        required = required.filter(item -> !exported.contains(item));
-
+  static function exprToModuleMapping(expr:TypedExpr):ModuleMapping {
+    return switch expr.expr {
+      case TObjectDecl(fields): 
+        var id = fields.find(f -> f.name == 'id').expr;
+        var deps = fields.find(f -> f.name == 'dependencies').expr;
         return {
-          requires: required,
-          exports: exported,
+          id: exprToString(id),
+          dependencies: exprToArray(deps)
         };
       default:
-        null;
+        throw 'assert';
+    }
+  }
+
+  static function exprToArray(expr:TypedExpr):Array<String> {
+    return switch expr.expr {
+      case TArrayDecl(el): el.map(exprToString);
+      default: throw 'assert';
+    }
+  }
+
+  static function exprToString(expr:TypedExpr):String {
+    return switch expr.expr {
+      case TConst(TString(s)): s;
+      default: throw 'assert';
     }
   }
 }

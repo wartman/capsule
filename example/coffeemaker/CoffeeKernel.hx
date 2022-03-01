@@ -11,6 +11,9 @@ class CoffeeKernel implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.use(HeaterModule, PumpModule);
+    container.use(
+      HeaterModule,
+      PumpModule
+    );
   }
 }

@@ -18,9 +18,9 @@ class ModuleBuilder {
     var cls = Context.getLocalClass().get();
     var provider = fields.find(f -> f.name == 'provide');
     var containerName = 'container';
-    var mappings:Array<TrackedMapping> = [];
+    var exports:Array<TrackedMapping> = [];
     var currentMapping:Null<TrackedMapping> = null;
-    var composes:Array<Expr> = [];
+    var imports:Array<Expr> = [];
 
     if (cls.superClass != null) {
       Context.error(
@@ -43,8 +43,8 @@ class ModuleBuilder {
       switch e.expr {
         case ECall(e, params): switch e.expr {
           case EField(e, 'use'):
-            composes = composes.concat(params);
-            for (param in params) mappings.push({ id: null, concrete: param });
+            imports = imports.concat(params);
+            for (param in params) exports.push({ id: null, concrete: param });
           case EField(e, 'to'):
             currentMapping = { concrete: params[0] };
             findMappings(e);
@@ -55,7 +55,7 @@ class ModuleBuilder {
             findMappings(e);
         }
         case EConst(CIdent(c)) if (c == containerName && currentMapping != null):
-          mappings.push(currentMapping);
+          exports.push(currentMapping);
           currentMapping = null;
         default:
           e.iter(findMappings);
@@ -71,14 +71,14 @@ class ModuleBuilder {
 
         findMappings(expr);
         fields = fields.concat((macro class {
-          public final __exports:Array<capsule.Identifier> = [ 
-            $a{mappings.filter(m -> m.id != null).map(m -> macro @:pos(m.id.pos) capsule.Tools.getIdentifier(${m.id}))}
+          @:keep public static final __exports:Array<capsule.ModuleMapping> = [
+            $a{exports.filter(m -> m.id != null).map(m -> macro {
+              id: capsule.Tools.getIdentifier(${m.id}),
+              dependencies: capsule.Tools.getDependencies(${m.concrete})
+            })}
           ];
-          public final __requires:Array<Array<capsule.Identifier>> = [
-            $a{mappings.map(m -> macro @:pos(m.concrete.pos) capsule.Tools.getDependencies(${m.concrete}))}
-          ];
-          public final __composes:Array<String> = [
-            $a{composes.map(m ->  macro @:pos(m.pos) capsule.Tools.getIdentifier(${m}))}
+          public static final __imports:Array<String> = [
+            $a{imports.map(m ->  macro @:pos(m.pos) capsule.Tools.getIdentifier(${m}))}
           ];
         }).fields);
       default:
