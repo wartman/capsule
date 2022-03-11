@@ -18,7 +18,8 @@ class Builder {
 
   public static function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
     switch expr.expr {
-      case EFunction(_, _): // continue
+      case EFunction(_, _): 
+        // continue
       case ECall(e, _): switch Context.typeof(e) {
         case TFun(_, _):
           // Is an actual function call (hopefully)
@@ -27,7 +28,8 @@ class Builder {
           // Is a generic type -- continue.
       }
       default: switch Context.typeof(expr) {
-        case TType(_, _) | TFun(_, _): // continue
+        case TType(_, _) | TFun(_, _): 
+          // continue
         default:
           // If not a function or type, default to using a ValueProvider.
           return macro new capsule.provider.ValueProvider<$ret>(${expr}); 
@@ -92,7 +94,7 @@ class Builder {
       case TType(_, _):
         var ct = expr.resolveComplexType();
         // Will throw an error if we don't have the right number of
-        // type params.
+        // type params, which is all we're looking for.
         Context.resolveType(ct, pos);
       default:
     }

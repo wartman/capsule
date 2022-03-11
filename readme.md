@@ -11,8 +11,7 @@ Features
 
 - Simple, opinionated API. Capsule makes it easier to manage dependencies, but you should be able to use the same code without it. 
 - All the complicated stuff is handled by macros -- at runtime Capsule is just a few simple classes.
-- Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget a class, and you'll be warned if any changes to your code requires a new dependency to be added.
-  > Note: This feature is still a bit fragile and experimental.
+- Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget a class, and you'll be warned if any changes to your code requires a new dependency.
 
 Getting Started
 ---------------
@@ -108,7 +107,7 @@ function main() {
 
 This should all be pretty straightforward, but there are some important things to call out.
 
-The first is that `Container.build` is a macro that checks the `capsule.Module`s passed to it to make sure that all dependencies are satisfied. If, for example, we omitted the `FooAndBarModule` from the above example:
+The first is that `Container.build` is a macro that ensures the dependencies of all `capsule.Module`s passed to it are satisfied. If, for example, we omitted the `FooAndBarModule` from the above example:
 
 ```haxe
 function main() {
@@ -120,7 +119,7 @@ function main() {
 }
 ```
 
-...our could **wouldn't compile**. Instead, we'd get an error telling us that the `FooService` and `BarService` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
+...our code **wouldn't compile**. Instead, we'd get an error telling us that the `FooService` and `BarService` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
 
 > Importantly, if you map dependencies outside a `Module.provide` method Capsule currently **cannot** track the dependency. This will hopefully change in the future.
 
@@ -130,7 +129,7 @@ Something that the example doesn't cover is how to handle generic types. Haxe on
 capsule.map(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
 ```
 
-If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.map(...).to(...)`.
+> If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.map(...).to(...)`.
 
 Another thing not covered in the example are the different kinds of values you can map to. The simplest is mapping to a Class, which automatically injects its constructor:
 

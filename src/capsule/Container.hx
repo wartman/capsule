@@ -1,7 +1,5 @@
 package capsule;
 
-import capsule.exception.MappingNotFoundException;
-
 #if macro
   import haxe.macro.Expr;
   import capsule.internal.Builder;
