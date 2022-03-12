@@ -9,7 +9,7 @@ Capsule is a minimal, easy to use dependency injection library.
 Features
 --------
 
-- Simple, opinionated API. Capsule makes it easier to manage dependencies, but you should be able to use the same code without it. 
+- Simple, opinionated API. Capsule makes it easier to manage dependencies without tying your code to it. 
 - All the complicated stuff is handled by macros -- at runtime Capsule is just a few simple classes.
 - Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget a class, and you'll be warned if any changes to your code requires a new dependency.
 
@@ -37,19 +37,19 @@ Here's a quick look at the API in action:
 import capsule.Container;
 import capsule.Module;
 
-interface FooService {
+interface Foo {
   public function getFoo():String;
 }
 
-interface BarService {
+interface Bar {
   public function getBar():String;
 }
 
-interface FooBarService {
+interface FooBar {
   public function getFooBar():String;
 }
 
-class Foo implements FooService {
+class DefaultFoo implements Foo {
   public function new() {}
 
   public function getFoo() {
@@ -57,7 +57,7 @@ class Foo implements FooService {
   }
 }
 
-class Bar implements BarService {
+class DefaultBar implements Bar {
   public function new() {}
 
   public function getBar() {
@@ -65,9 +65,9 @@ class Bar implements BarService {
   }
 }
 
-class FooBar implements FooBarService {
-  final foo:FooService;
-  final bar:BarService;
+class DefaultFooBar implements FooBar {
+  final foo:Foo;
+  final bar:Bar;
 
   public function new(foo, bar) {
     this.foo = foo;
@@ -83,8 +83,8 @@ class FooAndBarModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(FooService).to(Foo);
-    container.map(BarServce).to(Bar);
+    container.map(Foo).to(DefaultFoo);
+    container.map(Bar).to(DefaultBar);
   }
 }
 
@@ -92,7 +92,7 @@ class FooBarModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(FooBarService).to(FooBar);
+    container.map(FooBar).to(DefaultFooBar);
   }
 }
 
@@ -101,7 +101,7 @@ function main() {
     new FooAndBarModule(),
     new FooBarModule()
   );
-  trace(container.get(FooBarService).getFooBar()); // => "foobar"
+  trace(container.get(FooBar).getFooBar()); // => "foobar"
 }
 ```
 
@@ -115,11 +115,11 @@ function main() {
     // new FooAndBarModule(),
     new FooBarModule()
   );
-  trace(container.get(FooBarService).getFooBar());
+  trace(container.get(FooBar).getFooBar());
 }
 ```
 
-...our code **wouldn't compile**. Instead, we'd get an error telling us that the `FooService` and `BarService` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
+...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
 
 > Importantly, if you map dependencies outside a `Module.provide` method Capsule currently **cannot** track the dependency. This will hopefully change in the future.
 
@@ -134,21 +134,21 @@ capsule.map(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
 Another thing not covered in the example are the different kinds of values you can map to. The simplest is mapping to a Class, which automatically injects its constructor:
 
 ```haxe
-container.map(FooBarService).to(FooBar);
+container.map(FooBar).to(FooBar);
 ```
 
-However, say we wanted to provide a different implementation of `FooService` _only_ for `FooBarService`. We could map to a function instead:
+However, say we wanted to provide a different implementation of `Foo` _only_ for `FooBar`. We could map to a function instead:
 
 ```haxe
-container.map(FooBarService).to(function (bar:BarService) {
-  return new FooBar(new SomeOtherFooService(), bar);
+container.map(FooBar).to(function (bar:Bar) {
+  return new FooBar(new SomeOtherFoo(), bar);
 });
 ```
 
 Function params will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
 
 ```haxe
-container.map(FooBarService).to(FooBar.createWithCustomFooService);
+container.map(FooBar).to(FooBar.createWithCustomFoo);
 ```
 
 You can also just map a type to a value, like we did with `Map<String, String>`.
@@ -161,7 +161,7 @@ container.map(String).to('foo');
 Unlike the other mappings, value mappings will **always** return the same value. Function and Class mappings will be called every time, returning a new instance/value. This isn't always what we want, so you can mark a mapping as shared with the `share` method:
 
 ```haxe
-container.map(FooBarService).to(FooBar).share();
+container.map(FooBar).to(DefaultFooBar).share();
 ```
 
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.

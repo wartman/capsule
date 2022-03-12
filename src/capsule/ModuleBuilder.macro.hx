@@ -36,7 +36,6 @@ class ModuleBuilder {
       );
     }
 
-    // If `provide` doesn't exist yet, let Haxe complain.
     if (provider == null) return fields;
     
     function findMappings(e:Expr) {
@@ -70,13 +69,13 @@ class ModuleBuilder {
 
         findMappings(expr);
         fields = fields.concat((macro class {
-          @:keep public final __imports:Array<capsule.ModuleMapping> = [
+          @:keep public final __imports:Array<capsule.MappingInfo> = [
             $a{imports.map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
           ];
-          @:keep public final __exports:Array<capsule.ModuleMapping> = [
+          @:keep public final __exports:Array<capsule.MappingInfo> = [
             $a{exports.map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})

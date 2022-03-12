@@ -1,6 +1,6 @@
 package capsule;
 
-import capsule.ModuleMapping;
+import capsule.MappingInfo;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -10,8 +10,8 @@ using haxe.macro.Tools;
 
 typedef ModuleInfo = {
   public final id:String;
-  public final exports:Array<ModuleMapping>;
-  public final imports:Array<ModuleMapping>;
+  public final exports:Array<MappingInfo>;
+  public final imports:Array<MappingInfo>;
   public final pos:Position;
 }
 
@@ -97,12 +97,12 @@ class ContainerBuilder {
     };
   }
 
-  static function parseModuleMappings(type:Type, field:String):Array<ModuleMapping> {
+  static function parseModuleMappings(type:Type, field:String):Array<MappingInfo> {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
         var exports = cls.findField(field, false).expr();
-        var out:Array<ModuleMapping> = [];
+        var out:Array<MappingInfo> = [];
         
         switch exports.expr {
           case TArrayDecl(el): for (expr in el) {
@@ -117,7 +117,7 @@ class ContainerBuilder {
     }
   }
 
-  static function exprToModuleMapping(expr:TypedExpr):ModuleMapping {
+  static function exprToModuleMapping(expr:TypedExpr):MappingInfo {
     return switch expr.expr {
       case TObjectDecl(fields): 
         var id = fields.find(f -> f.name == 'id').expr;
