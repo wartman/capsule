@@ -151,6 +151,18 @@ class ContainerTest implements TestCase {
     container.get(String).equals('foo3');
     container.get(String).equals('foo3');
   }
+  
+  @:test('toShared is available as a shortcut.')
+  public function testToShared() {
+    var container = new Container();
+    var iter = 1;
+    
+    container.map(String).to(() -> 'foo' + container.get(Int));
+    container.map(Int).toShared(() -> iter++);
+
+    container.get(String).equals('foo1');
+    container.get(String).equals('foo1');
+  }
 
   @:test('Child can override parent')
   public function testChildOverrides() {

@@ -42,6 +42,10 @@ class Mapping<T> {
     return macro @:pos(self.pos) $self.toProvider($factory);
   }
 
+  public macro function toShared(self, factory) {
+    return macro @:pos(self.pos) $self.to($factory).share();
+  }
+
   public function extend(transform:(value:T)->T) {
     provider.extend(transform);
     return this;

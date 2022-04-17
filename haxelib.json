@@ -8,9 +8,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Updated to use haxe.Exception",
+    "releasenote": "New Api",
     "classPath": "src",
-    "version": "0.2.6",
+    "version": "0.3.0",
     "url": "https://github.com/wartman/capsule",
     "dependencies": {}
 }

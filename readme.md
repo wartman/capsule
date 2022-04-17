@@ -3,15 +3,14 @@ Capsule
 
 [![Build Status](https://travis-ci.com/wartman/capsule.svg?branch=master)](https://travis-ci.com/wartman/capsule)
 
-
 Capsule is a minimal, easy to use dependency injection library.
 
 Features
 --------
 
-- Simple, opinionated API. Capsule makes it easier to manage dependencies without tying your code to it. 
+- Simple, opinionated API.
 - All the complicated stuff is handled by macros -- at runtime Capsule is just a few simple classes.
-- Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget a class, and you'll be warned if any changes to your code requires a new dependency.
+- Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget to add something, and you'll be warned if any changes to your code requires a new dependency.
 
 Getting Started
 ---------------
@@ -121,7 +120,7 @@ function main() {
 
 ...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
 
-> Importantly, if you map dependencies outside a `Module.provide` method Capsule currently **cannot** track the dependency. This will hopefully change in the future.
+> Importantly, if you map dependencies outside a `Module.provide` method Capsule currently **cannot** track them. This will hopefully change in the future.
 
 Something that the example doesn't cover is how to handle generic types. Haxe only lets us use the angle bracket syntax (e.g. `Map<String, String>`) in a few places, so Capsule hacks the function-call syntax to get around this:
 
@@ -151,6 +150,8 @@ Function params will all be injected by the container and tracked by `Module`s, 
 container.map(FooBar).to(FooBar.createWithCustomFoo);
 ```
 
+> Internally Capsule is actually mapping **everything** to functions -- `container.map(FooBar).to(FooBar)` is the same as `container.map(FooBar).to(FooBar.new)`, and if you poke around in the source code you'll see that's exactly what's happening.
+
 You can also just map a type to a value, like we did with `Map<String, String>`.
 
 ```haxe
@@ -164,4 +165,47 @@ Unlike the other mappings, value mappings will **always** return the same value.
 container.map(FooBar).to(DefaultFooBar).share();
 ```
 
+Because this is such a common pattern, you can also use the `toShared` shortcut to do the same thing:
+
+```haxe
+container.map(FooBar).toShared(DefaultFooBar);
+```
+
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.
+
+If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `getMapping` from your Container and `extend` it:
+
+```haxe
+conatiner.getMapping(Router).extend(router -> {
+  router.add(new Route('/foo/bar'));
+  // You MUST return a Router from this function. Note that this means
+  // you're also able to change the value of a mapping using `extend`.
+  return router;
+});
+```
+
+Importantly, you can `extend` a mapping that **does not exist yet**. The following code will work just fine:
+
+```haxe
+conatiner.getMapping(Router).extend(router -> {
+  router.add(new Route('/foo/bar'));
+  // You MUST return a Router from this function. Note that this means
+  // you're also able to change the value of a mapping using `extend`.
+  return router;
+});
+container.map(Router).toShared(Router);
+```
+
+> Internally, calling `getMapping(Router)` will map `Router` to a `NullProvider` if no existing mapping can be found. `NullProvider` *cannot* be resolved -- calling `container.get(Router)` would throw an exception -- but it *can* be replaced by another provider and will transfer over all it's `extend` callbacks.
+
+This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
+
+Changelog
+---------
+
+### 0.3.0
+- Breaks anything that used the old version of Capsule. Is that a feature?
+  - It's for the best I promise.
+- Removed all `@:inject.*` meta. Instead, dependencies are only injected into constructors (or derived from any function's arguments). This is to simplify the API and ensure that code doesn't require Capsule to work.
+- All functions passed to the `Mapping.to(...)` macro are injectable now, not just lambdas.
+- `capsule.Module` replaces `capsule.ServiceProvider` and tracks dependencies at compile time.
