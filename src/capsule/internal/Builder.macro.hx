@@ -13,7 +13,7 @@ class Builder {
   }
 
   public static function createIdentifier(expr:Expr) {
-    return expr.resolveComplexType().toType().toString();
+    return expr.resolveComplexType().complexTypeToIdentifier();
   }
 
   public static function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
@@ -72,7 +72,7 @@ class Builder {
   public static function getDependencies(expr:Expr, pos:Position):Array<String> {
     return switch expr.expr {
       case EFunction(_, f):
-        return typesToIdentifiers(f.args.map(a -> a.type.toType()), pos);
+        return f.args.map(a -> a.type.toType()).typesToIdentifiers(pos);
       case ECall(e, params):
         var expr = getConstructorFromCallExpr(expr, pos);
         return getDependencies(macro @:pos(pos) $expr, pos);
@@ -82,7 +82,7 @@ class Builder {
           checkExprForCorrectTypeParams(expr, pos);
           return getDependencies(macro @:pos(pos) $p{path}.new, pos);
         case TFun(args, _):
-          return typesToIdentifiers(args.map(a -> a.t), pos);
+          return args.map(a -> a.t).typesToIdentifiers(pos);
         default:
           return [];
       }
@@ -121,23 +121,5 @@ class Builder {
       default: 
         throw 'assert';
     }
-  }
-
-  static function typesToIdentifiers(args:Array<Type>, pos:Position):Array<String> {
-    var exprs:Array<String> = [];
-    for (arg in args) {
-      switch arg {
-        case TMono(t):
-          Context.error(
-            'Could not resolve an argument type. Ensure that you are mapping '
-            + 'to a concrete type with no unresolved type parameters.',
-            pos
-          );
-        default:
-      }
-      var id = arg.toString();
-      exprs.push(id);
-    }
-    return exprs;
   }
 }

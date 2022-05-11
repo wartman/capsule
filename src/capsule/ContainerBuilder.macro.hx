@@ -1,12 +1,13 @@
 package capsule;
 
-import capsule.MappingInfo;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import capsule.MappingInfo;
 
 using Lambda;
 using haxe.macro.Tools;
+using capsule.internal.Tools;
 
 typedef ModuleInfo = {
   public final id:String;
@@ -90,7 +91,7 @@ class ContainerBuilder {
     var imports = parseModuleMappings(type, '__imports');
 
     return {
-      id: type.toString(),
+      id: type.toComplexType().toString(),
       exports: exports,
       imports: imports,
       pos: pos
