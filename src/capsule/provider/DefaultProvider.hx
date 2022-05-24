@@ -27,7 +27,7 @@ class DefaultProvider<T> implements Provider<T> {
   }
 
   public function asShared():Provider<T> {
-    provider = new SharedProvider(provider);
+    provider = provider.asShared();
     return this;
   }
 }
