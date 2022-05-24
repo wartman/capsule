@@ -33,4 +33,12 @@ class ModuleTest implements TestCase {
     );
     container.get(HasParamsService(ValueService)).getValue().get().equals('foo');
   }
+
+  @:test('Modules can track methods outside provide')
+  public function testMultiMethods() {
+    var container = Container.build(
+      new SeveralMethodsModule()
+    );
+    container.get(SimpleService).getValue().equals('foo');
+  }
 }

@@ -10,7 +10,7 @@ class ValueModule implements Module {
     this.value = value;
   }
 
-	public function provide(container:Container) {
+  public function provide(container:Container) {
     container.map(ValueService).to(new Value(value));
   }
 }

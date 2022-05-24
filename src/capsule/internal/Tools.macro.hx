@@ -12,8 +12,8 @@ class Tools {
   }
 
   static public function complexTypeToIdentifier(complexType:ComplexType) {
-    // @note: We need to convert ComplexTypes to Types first and then back, as
-    //        we need to ensure that we have the FULL type path.
+    // note: We need to convert ComplexTypes to Types first and then
+    // back, as we need to ensure that we have the FULL type path.
     return typeToIdentifier(complexType.toType());
   }
   
@@ -50,7 +50,7 @@ class Tools {
         case TType(_, _):
           parseAsType(expr.toString());
         default:
-          Context.error('Invalid expression', expr.pos);
+          Context.error('Invalid expression: ${expr.toString()}', expr.pos);
           null;
       }
     }

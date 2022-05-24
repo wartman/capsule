@@ -93,7 +93,7 @@ class Builder {
     switch Context.typeof(expr) {
       case TType(_, _):
         var ct = expr.resolveComplexType();
-        // Will throw an error if we don't have the right number of
+        // @note: Will throw an error if we don't have the right number of
         // type params, which is all we're looking for.
         Context.resolveType(ct, pos);
       default:

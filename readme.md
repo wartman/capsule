@@ -120,8 +120,6 @@ function main() {
 
 ...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
 
-> Importantly, if you map dependencies outside a `Module.provide` method Capsule currently **cannot** track them. This will hopefully change in the future.
-
 Something that the example doesn't cover is how to handle generic types. Haxe only lets us use the angle bracket syntax (e.g. `Map<String, String>`) in a few places, so Capsule hacks the function-call syntax to get around this:
 
 ```haxe
