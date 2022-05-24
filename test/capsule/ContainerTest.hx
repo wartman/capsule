@@ -204,4 +204,31 @@ class ContainerTest implements TestCase {
       Assert.pass();
     }
   }
+
+  @:test('Default mappings can be overriden')
+  public function testDefaultMapping() {
+    var container = new Container();
+    container.map(String).toDefault('foo');
+    container.get(String).equals('foo');
+    container.map(String).to('bar');
+    container.get(String).equals('bar');
+  }
+
+  @:test('Default mappings will not override existing ones')
+  public function testNotOverridingDefaultMapping() {
+    var container = new Container();
+    container.map(String).to('bar');
+    container.get(String).equals('bar');
+    container.map(String).toDefault('foo');
+    container.get(String).equals('bar');
+  }
+
+  @:test('Default mappings will forward their extensions')
+  public function testDefaultMappingExtensions() {
+    var container = new Container();
+    container.map(String).toDefault('foo').extend(value -> value + '_bar');
+    container.get(String).equals('foo_bar');
+    container.map(String).to('bar');
+    container.get(String).equals('bar_bar');
+  }
 }

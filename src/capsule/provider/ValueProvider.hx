@@ -9,6 +9,10 @@ class ValueProvider<T> implements Provider<T> {
     this.value = value;
   }
   
+  public function resolvable() {
+    return true;
+  }
+
   public function resolve(container:Container):T {
     return value;
   }

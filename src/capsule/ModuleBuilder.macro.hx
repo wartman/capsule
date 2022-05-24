@@ -81,7 +81,7 @@ class ModuleBuilder {
         case ECall(e, params): switch e.expr {
           case EField(e, 'use'):
             for (param in params) imports.push({ id: param, concrete: param });
-          case EField(e, 'to') | EField(e, 'toShared'):
+          case EField(e, 'to') | EField(e, 'toShared') | EField(e, 'toDefault'):
             currentMapping = { concrete: params[0] };
             findMappings(e, containerName);
           case EField(e, 'map') if (currentMapping != null):

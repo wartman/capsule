@@ -19,6 +19,11 @@ class Mapping<T> {
     return container;
   }
 
+  public function resolvable() {
+    if (provider == null) return false;
+    return provider.resolvable();
+  }
+
   public function withContainer(container:Container) {
     var mapping = new Mapping(id, container);
     mapping.toProvider(provider);
@@ -38,12 +43,27 @@ class Mapping<T> {
       case TInst(_, [ t ]): haxe.macro.TypeTools.toComplexType(t);
       default: macro:Dynamic;
     }
-    var factory = capsule.internal.Builder.createProvider(factory, t, factory.pos);
-    return macro @:pos(self.pos) $self.toProvider($factory);
+    var provider = capsule.internal.Builder.createProvider(factory, t, factory.pos);
+    return macro @:pos(self.pos) $self.toProvider($provider);
   }
 
   public macro function toShared(self, factory) {
     return macro @:pos(self.pos) $self.to($factory).share();
+  }
+
+  public macro function toDefault(self, factory) {
+    var t = switch haxe.macro.Context.typeof(self) {
+      case TInst(_, [ t ]): haxe.macro.TypeTools.toComplexType(t);
+      default: macro:Dynamic;
+    }
+    var provider = capsule.internal.Builder.createProvider(factory, t, factory.pos);
+    return macro @:pos(self.pos) {
+      var mapping = $self;
+      if (!mapping.resolvable()) {
+        mapping.toProvider(new capsule.provider.DefaultProvider($provider));
+      }
+      mapping;
+    }
   }
 
   public function extend(transform:(value:T)->T) {

@@ -36,9 +36,13 @@ class ModuleTest implements TestCase {
 
   @:test('Modules can track methods outside provide')
   public function testMultiMethods() {
-    var container = Container.build(
-      new SeveralMethodsModule()
-    );
+    var container = Container.build(new SeveralMethodsModule());
+    container.get(SimpleService).getValue().equals('foo');
+  }
+
+  @:test('Modules track default mappings')
+  public function testDefaultMappings() {
+    var container = Container.build(new SimpleWithDefaultsModule());
     container.get(SimpleService).getValue().equals('foo');
   }
 }

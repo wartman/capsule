@@ -7,7 +7,11 @@ class FactoryProvider<T> implements Provider<T> {
 
   public function new(factory) {
     this.factory = factory;
-  } 
+  }
+  
+  public function resolvable() {
+    return true;
+  }
   
   public function resolve(container:Container):T {
     return this.factory(container);

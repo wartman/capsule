@@ -10,6 +10,10 @@ class SharedProvider<T> implements Provider<T> {
     this.provider = provider;
   }
   
+  public function resolvable() {
+    return true;
+  }
+  
   public function resolve(container:Container):T {
     if (value == null) {
       value = provider.resolve(container);

@@ -10,6 +10,10 @@ class NullProvider<T> implements Provider<T> {
     this.id = id;
   }
   
+  public function resolvable() {
+    return false;
+  }
+  
   public function resolve(container:Container):T {
     throw new ProviderDoesNotExistException(id);
   }
