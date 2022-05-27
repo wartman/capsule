@@ -5,6 +5,8 @@ Capsule
 
 Capsule is a minimal, easy to use dependency injection library.
 
+> Note: The previous version can be found [here](https://github.com/wartman/capsule/releases/tag/v0.2.6).
+
 Features
 --------
 
@@ -142,7 +144,7 @@ container.map(FooBar).to(function (bar:Bar) {
 });
 ```
 
-Function params will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
+Function parameters will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
 
 ```haxe
 container.map(FooBar).to(FooBar.createWithCustomFoo);
@@ -194,8 +196,6 @@ conatiner.getMapping(Router).extend(router -> {
 container.map(Router).toShared(Router);
 ```
 
-> Internally, calling `getMapping(Router)` will map `Router` to a `NullProvider` if no existing mapping can be found. `NullProvider` *cannot* be resolved -- calling `container.get(Router)` would throw an exception -- but it *can* be replaced by another provider and will transfer over all it's `extend` callbacks.
-
 This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
 
 Changelog
@@ -203,7 +203,7 @@ Changelog
 
 ### 0.3.0
 - Breaks anything that used the old version of Capsule. Is that a feature?
-  - It's for the best I promise.
+  - I promise it's for the best.
 - Removed all `@:inject.*` meta. Instead, dependencies are only injected into constructors (or derived from any function's arguments). This is to simplify the API and ensure that code doesn't require Capsule to work.
 - All functions passed to the `Mapping.to(...)` macro are injectable now, not just lambdas.
 - `capsule.Module` replaces `capsule.ServiceProvider` and tracks dependencies at compile time.
