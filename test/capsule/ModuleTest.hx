@@ -41,7 +41,7 @@ class ModuleTest implements TestCase {
   }
 
   @:test('Modules track default mappings')
-  public function testDefaultMappings() {
+  public function testDefaultBindings() {
     var container = Container.build(new SimpleWithDefaultsModule());
     container.get(SimpleService).getValue().equals('foo');
   }

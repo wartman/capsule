@@ -3,7 +3,7 @@ package capsule;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
-import capsule.MappingInfo;
+import capsule.BindingInfo;
 
 using Lambda;
 using haxe.macro.Tools;
@@ -11,8 +11,8 @@ using capsule.internal.Tools;
 
 typedef ModuleInfo = {
   public final id:String;
-  public final exports:Array<MappingInfo>;
-  public final imports:Array<MappingInfo>;
+  public final exports:Array<BindingInfo>;
+  public final imports:Array<BindingInfo>;
   public final pos:Position;
 }
 
@@ -28,7 +28,7 @@ class ContainerBuilder {
 
     for (module in modules) for (export in module.exports) {
       if (satisfied.contains(export.id)) {
-        errors.push('The mapping ${export.id} in the module ${module.id} was already provided');
+        errors.push('The binding ${export.id} in the module ${module.id} was already provided');
       } else {
         satisfied.push(export.id);
       }
@@ -87,8 +87,8 @@ class ContainerBuilder {
       Context.error('${type.toString()} should be capsule.Module', pos);
     }
 
-    var exports = parseModuleMappings(type, '__exports');
-    var imports = parseModuleMappings(type, '__imports');
+    var exports = parseModuleBindings(type, '__exports');
+    var imports = parseModuleBindings(type, '__imports');
 
     return {
       id: type.toComplexType().toString(),
@@ -98,16 +98,16 @@ class ContainerBuilder {
     };
   }
 
-  static function parseModuleMappings(type:Type, field:String):Array<MappingInfo> {
+  static function parseModuleBindings(type:Type, field:String):Array<BindingInfo> {
     return switch type {
       case TInst(t, params):
         var cls = t.get();
         var exports = cls.findField(field, false).expr();
-        var out:Array<MappingInfo> = [];
+        var out:Array<BindingInfo> = [];
         
         switch exports.expr {
           case TArrayDecl(el): for (expr in el) {
-            out.push(exprToModuleMapping(expr));
+            out.push(exprToModuleBinding(expr));
           }
           default: throw 'assert';
         }
@@ -118,7 +118,7 @@ class ContainerBuilder {
     }
   }
 
-  static function exprToModuleMapping(expr:TypedExpr):MappingInfo {
+  static function exprToModuleBinding(expr:TypedExpr):BindingInfo {
     return switch expr.expr {
       case TObjectDecl(fields): 
         var id = fields.find(f -> f.name == 'id').expr;

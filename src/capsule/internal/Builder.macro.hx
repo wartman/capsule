@@ -1,7 +1,6 @@
 package capsule.internal;
 
 import haxe.macro.Expr;
-import haxe.macro.Type;
 import haxe.macro.Context;
 
 using haxe.macro.Tools;
@@ -42,7 +41,7 @@ class Builder {
 
   public static function createFactory(expr:Expr, pos:Position) {
     function argsToExpr(id:String) {
-      return macro container.getMappingById($v{id}).resolve();
+      return macro container.getBindingById($v{id}).resolve();
     }
 
     return switch expr.expr {

@@ -84,8 +84,8 @@ class FooAndBarModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(Foo).to(DefaultFoo);
-    container.map(Bar).to(DefaultBar);
+    container.bind(Foo).to(DefaultFoo);
+    container.bind(Bar).to(DefaultBar);
   }
 }
 
@@ -93,7 +93,7 @@ class FooBarModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(FooBar).to(DefaultFooBar);
+    container.bind(FooBar).to(DefaultFooBar);
   }
 }
 
@@ -125,85 +125,88 @@ function main() {
 Something that the example doesn't cover is how to handle generic types. Haxe only lets us use the angle bracket syntax (e.g. `Map<String, String>`) in a few places, so Capsule hacks the function-call syntax to get around this:
 
 ```haxe
-capsule.map(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
+capsule.bind(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
 ```
 
-> If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.map(...).to(...)`.
+> If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.bind(...)`, `capsule.get(...)` and `capsule.bind(...).to(...)`.
 
-Another thing not covered in the example are the different kinds of values you can map to. The simplest is mapping to a Class, which automatically injects its constructor:
+Another thing not covered in the example are the different kinds of values you can bind. The simplest is binding a Class, which automatically injects its constructor:
 
 ```haxe
-container.map(FooBar).to(FooBar);
+container.bind(FooBar).to(FooBar);
 ```
 
-However, say we wanted to provide a different implementation of `Foo` _only_ for `FooBar`. We could map to a function instead:
+However, say we wanted to provide a different implementation of `Foo` _only_ for `FooBar`. We could bind a function instead:
 
 ```haxe
-container.map(FooBar).to(function (bar:Bar) {
+container.bind(FooBar).to(function (bar:Bar) {
   return new FooBar(new SomeOtherFoo(), bar);
 });
 ```
 
-Function parameters will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
+Function parameters will all be injected by the container and tracked by `Module`s, just like binding a class. Note that any function will work here, so something like this is fine:
 
 ```haxe
-container.map(FooBar).to(FooBar.createWithCustomFoo);
+container.bind(FooBar).to(FooBar.createWithCustomFoo);
 ```
 
-> Internally Capsule is actually mapping **everything** to functions -- `container.map(FooBar).to(FooBar)` is the same as `container.map(FooBar).to(FooBar.new)`, and if you poke around in the source code you'll see that's exactly what's happening.
+> Internally Capsule is actually binding **everything** to functions -- `container.bind(FooBar).to(FooBar)` is the same as `container.bind(FooBar).to(FooBar.new)`, and if you poke around in the source code you'll see that's exactly what's happening.
 
-You can also just map a type to a value, like we did with `Map<String, String>`.
+You can also just bind a type to a value, like we did with `Map<String, String>`.
 
 ```haxe
 // This will work:
-container.map(String).to('foo');
+container.bind(String).to('foo');
 ```
 
-Unlike the other mappings, value mappings will **always** return the same value. Function and Class mappings will be called every time, returning a new instance/value. This isn't always what we want, so you can mark a mapping as shared with the `share` method:
+Unlike the other bindings, value bindings will **always** return the same value. Function and Class bindings will be called every time, returning a new instance/value. This isn't always what we want, so you can mark a binding as shared with the `share` method:
 
 ```haxe
-container.map(FooBar).to(DefaultFooBar).share();
+container.bind(FooBar).to(DefaultFooBar).share();
 ```
 
 Because this is such a common pattern, you can also use the `toShared` shortcut to do the same thing:
 
 ```haxe
-container.map(FooBar).toShared(DefaultFooBar);
+container.bind(FooBar).toShared(DefaultFooBar);
 ```
 
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.
 
-If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `getMapping` from your Container and `extend` it:
+If you need to extend a binding -- say you need to register a route to a router in some notional web app -- you can call `getBinding` from your Container and `extend` it:
 
 ```haxe
-conatiner.getMapping(Router).extend(router -> {
+conatiner.getBinding(Router).extend(router -> {
   router.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
-  // you're also able to change the value of a mapping using `extend`.
+  // you're also able to change the value of a binding using `extend`.
   return router;
 });
 ```
 
-Importantly, you can `extend` a mapping that **does not exist yet**. The following code will work just fine:
+Importantly, you can `extend` a binding that **does not exist yet**. The following code will work just fine:
 
 ```haxe
-conatiner.getMapping(Router).extend(router -> {
+conatiner.getBinding(Router).extend(router -> {
   router.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
-  // you're also able to change the value of a mapping using `extend`.
+  // you're also able to change the value of a binding using `extend`.
   return router;
 });
-container.map(Router).toShared(Router);
+container.bind(Router).toShared(Router);
 ```
 
-This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
+This is done to ensure that you don't need to worry about the order you bind things in -- everything should just work.
 
 Changelog
 ---------
+
+### 0.4.0
+- Changed `Mapping` to `Binding`, `container.map` to `container.bind`, and any other reference to `map`. This was done entirely because `map` is generally used in Haxe to mean the same thing it does in functional programming -- that is, to map one value into another. That's pretty close to what it means in capsule, but `binding` is more explicit.
 
 ### 0.3.0
 - Breaks anything that used the old version of Capsule. Is that a feature?
   - I promise it's for the best.
 - Removed all `@:inject.*` meta. Instead, dependencies are only injected into constructors (or derived from any function's arguments). This is to simplify the API and ensure that code doesn't require Capsule to work.
-- All functions passed to the `Mapping.to(...)` macro are injectable now, not just lambdas.
+- All functions passed to the `Binding.to(...)` macro are injectable now, not just lambdas.
 - `capsule.Module` replaces `capsule.ServiceProvider` and tracks dependencies at compile time.

@@ -2,7 +2,7 @@ package capsule;
 
 import capsule.provider.NullProvider;
 
-class Mapping<T> {
+class Binding<T> {
   public final id:Identifier;
   final container:Container;
   var closure:Null<Container> = null;
@@ -25,7 +25,7 @@ class Mapping<T> {
   }
 
   public function withContainer(container:Container) {
-    var mapping = new Mapping(id, container);
+    var mapping = new Binding(id, container);
     mapping.toProvider(provider);
     return mapping;
   }
@@ -71,12 +71,12 @@ class Mapping<T> {
     return this;
   }
 
-  public function toProvider(provider:Provider<T>):Mapping<T> {
+  public function toProvider(provider:Provider<T>):Binding<T> {
     this.provider = this.provider.transitionTo(provider);
     return this;
   }
 
-  public function share():Mapping<T> {
+  public function share():Binding<T> {
     this.provider = provider.asShared();
     return this;
   }

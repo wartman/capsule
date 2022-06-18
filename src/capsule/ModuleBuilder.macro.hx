@@ -7,7 +7,7 @@ using Lambda;
 using haxe.macro.Tools;
 using capsule.internal.Tools;
 
-typedef TrackedMapping = {
+typedef TrackedBinding = {
   public var ?id:Expr;
   public var ?concrete:Expr;
 }; 
@@ -19,9 +19,9 @@ class ModuleBuilder {
     var cls = Context.getLocalClass().get();
     var provider = fields.find(f -> f.name == 'provide');
     var containerName = 'container';
-    var exports:Array<TrackedMapping> = [];
-    var imports:Array<TrackedMapping> = [];
-    var currentMapping:Null<TrackedMapping> = null;
+    var exports:Array<TrackedBinding> = [];
+    var imports:Array<TrackedBinding> = [];
+    var currentBinding:Null<TrackedBinding> = null;
 
     if (cls.superClass != null) {
       Context.error(
@@ -39,7 +39,7 @@ class ModuleBuilder {
 
     if (provider == null) return fields;
 
-    function findMappings(e:Expr, containerName:String) {
+    function findBindings(e:Expr, containerName:String) {
       function warn() {
         if (isDebug) {
           Context.warning(
@@ -63,7 +63,7 @@ class ModuleBuilder {
         switch field.kind {
           case FFun(f):
             var subContainerName = f.args[0].name; // Ensure we have the right identifier.    
-            findMappings(f.expr, subContainerName);
+            findBindings(f.expr, subContainerName);
           default:
         }
       }
@@ -82,11 +82,11 @@ class ModuleBuilder {
           case EField(e, 'use'):
             for (param in params) imports.push({ id: param, concrete: param });
           case EField(e, 'to') | EField(e, 'toShared') | EField(e, 'toDefault'):
-            currentMapping = { concrete: params[0] };
-            findMappings(e, containerName);
-          case EField(e, 'map') if (currentMapping != null):
-            currentMapping.id = params[0];
-            findMappings(e, containerName);
+            currentBinding = { concrete: params[0] };
+            findBindings(e, containerName);
+          case EField(e, 'bind') | EField(e, 'map') if (currentBinding != null):
+            currentBinding.id = params[0];
+            findBindings(e, containerName);
           case EField({ expr: EConst(CIdent('this')), pos: _ }, field) if (usesContainer(params)):
             followMethod(field);
           case EConst(CIdent(s)) if (usesContainer(params)):
@@ -94,13 +94,13 @@ class ModuleBuilder {
           case _ if (usesContainer(params) && isDebug):
             warn();
           default:
-            findMappings(e, containerName);
+            findBindings(e, containerName);
         }
-        case EConst(CIdent(c)) if (c == containerName && currentMapping != null):
-          exports.push(currentMapping);
-          currentMapping = null;
+        case EConst(CIdent(c)) if (c == containerName && currentBinding != null):
+          exports.push(currentBinding);
+          currentBinding = null;
         default:
-          e.iter(e -> findMappings(e, containerName));
+          e.iter(e -> findBindings(e, containerName));
       }
     }
 
@@ -109,15 +109,15 @@ class ModuleBuilder {
         var expr = f.expr;
         containerName = f.args[0].name; // Ensure we have the right identifier.
 
-        findMappings(expr, containerName);
+        findBindings(expr, containerName);
         fields = fields.concat((macro class {
-          @:keep public final __imports:Array<capsule.MappingInfo> = [
+          @:keep public final __imports:Array<capsule.BindingInfo> = [
             $a{imports.map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})
             })}
           ];
-          @:keep public final __exports:Array<capsule.MappingInfo> = [
+          @:keep public final __exports:Array<capsule.BindingInfo> = [
             $a{exports.map(m -> macro {
               id: capsule.Tools.getIdentifier(${m.id}),
               dependencies: capsule.Tools.getDependencies(${m.concrete})

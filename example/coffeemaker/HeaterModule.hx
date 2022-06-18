@@ -7,6 +7,6 @@ class HeaterModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(Heater).to(ElectricHeater).share();
+    container.bind(Heater).to(ElectricHeater).share();
   }
 }

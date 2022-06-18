@@ -20,7 +20,7 @@ class Tools {
   ):haxe.macro.Expr.ExprOf<Container> {
     return macro {
       var container = $container;
-      container.map($target).toShared($factory);
+      container.bind($target).toShared($factory);
       container;
     }
   }
@@ -32,7 +32,7 @@ class Tools {
   ):haxe.macro.Expr.ExprOf<Container> {
     return macro {
       var container = $container;
-      container.map($target).to($factory);
+      container.bind($target).to($factory);
       container;
     }
   }

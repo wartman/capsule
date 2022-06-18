@@ -7,6 +7,6 @@ class ParamModule implements Module {
   public function new() {}
   
   public function provide(container:Container) {
-    container.map(HasParamsService(ValueService)).to(HasParams(ValueService));
+    container.bind(HasParamsService(ValueService)).to(HasParams(ValueService));
   }
 }

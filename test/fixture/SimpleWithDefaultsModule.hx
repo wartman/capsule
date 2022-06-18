@@ -8,10 +8,10 @@ class SimpleWithDefaultsModule implements Module {
   
   public function provide(container:Container) {
     provideDefaults(container);
-    container.map(SimpleService).to(SimpleWithDep).share();
+    container.bind(SimpleService).to(SimpleWithDep).share();
   }
 
   function provideDefaults(container:Container) {
-    container.map(ValueService).toDefault(new Value('foo'));
+    container.bind(ValueService).toDefault(new Value('foo'));
   }
 }

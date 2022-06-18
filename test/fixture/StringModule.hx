@@ -11,6 +11,6 @@ class StringModule implements Module {
   }
 
   public function provide(container:Container) {
-    container.map(String).to(value);
+    container.bind(String).to(value);
   }
 }

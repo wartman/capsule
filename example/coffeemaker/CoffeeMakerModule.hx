@@ -7,6 +7,6 @@ class CoffeeMakerModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(CoffeeMaker).to(DefaultCoffeeMaker);
+    container.bind(CoffeeMaker).to(DefaultCoffeeMaker);
   }
 }

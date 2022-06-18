@@ -7,6 +7,6 @@ class CoffeeLoggerModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(CoffeeLogger).to(DefaultCoffeeLogger).share();
+    container.bind(CoffeeLogger).to(DefaultCoffeeLogger).share();
   }
 }

@@ -11,6 +11,6 @@ class ValueModule implements Module {
   }
 
   public function provide(container:Container) {
-    container.map(ValueService).to(new Value(value));
+    container.bind(ValueService).to(new Value(value));
   }
 }

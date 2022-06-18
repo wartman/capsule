@@ -11,25 +11,25 @@ class ContainerTest implements TestCase {
   @:test('Simple values')
   public function testSimple() {
     var container = new Container();
-    container.map(String).to('foo');
-    container.map(Int).to(1);
+    container.bind(String).to('foo');
+    container.bind(Int).to(1);
 
     container.get(String).equals('foo');
     container.get(Int).equals(1);
   }
 
   @:test('Maps classes without dependencies')
-  public function testBasicClassMapping() {
+  public function testBasicClassBinding() {
     var container = new Container();
-    container.map(SimpleService).to(Simple);
+    container.bind(SimpleService).to(Simple);
     container.get(SimpleService).getValue().equals('value');
   }
 
   @:test('Maps classes to instances if provided')
-  public function testClassInstanceMapping() {
+  public function testClassInstanceBinding() {
     var container = new Container();
     
-    container.map(ValueService).to(new Value('foo'));
+    container.bind(ValueService).to(new Value('foo'));
 
     container.get(ValueService).get().equals('foo');
   }
@@ -38,8 +38,8 @@ class ContainerTest implements TestCase {
   public function testBasicClassDeps() {
     var container = new Container();
 
-    container.map(ValueService).to(new Value('dep'));
-    container.map(SimpleService).to(SimpleWithDep);
+    container.bind(ValueService).to(new Value('dep'));
+    container.bind(SimpleService).to(SimpleWithDep);
     
     container.get(SimpleService).getValue().equals('dep');
   }
@@ -48,8 +48,8 @@ class ContainerTest implements TestCase {
   public function testBasicInlineFunctionProvider() {
     var container = new Container();
 
-    container.map(ValueService).to(new Value('dep'));
-    container.map(String).to(function (value:ValueService) {
+    container.bind(ValueService).to(new Value('dep'));
+    container.bind(String).to(function (value:ValueService) {
       return value.get();
     });
 
@@ -64,8 +64,8 @@ class ContainerTest implements TestCase {
   public function testBasicNamedFunctionProvider() {
     var container = new Container();
 
-    container.map(ValueService).to(new Value('dep'));
-    container.map(String).to(namedFunctionProvider);
+    container.bind(ValueService).to(new Value('dep'));
+    container.bind(String).to(namedFunctionProvider);
 
     container.get(String).equals('dep');
   }
@@ -73,22 +73,22 @@ class ContainerTest implements TestCase {
   @:test('Typedefs can be used as identifiers')
   public function testBasicTypedefAsId() {
     var container = new Container();
-    container.map(FooIdentifier).to('foo');
+    container.bind(FooIdentifier).to('foo');
     container.get(FooIdentifier).equals('foo');
   }
 
   @:test('Can handle type params with a hacky syntax')
   public function testSimpleParams() {
     var container = new Container();
-    container.map(Map(String, String)).to([ 'foo' => 'foo' ]);
+    container.bind(Map(String, String)).to([ 'foo' => 'foo' ]);
     container.get(Map(String, String)).get('foo').equals('foo');
   }
 
   @:test('Can handle generic classes')
   public function testSimpleGenericClass() {
     var container = new Container();
-    container.map(String).to('foo');
-    container.map(HasParamsService(String)).to(HasParams(String));
+    container.bind(String).to('foo');
+    container.bind(HasParamsService(String)).to(HasParams(String));
     container.get(HasParamsService(String)).getValue().equals('foo');
   }
 
@@ -96,16 +96,16 @@ class ContainerTest implements TestCase {
   public function testFunctionCall() {
     var fun = () -> 'foo';
     var container = new Container();
-    container.map(String).to(fun());
+    container.bind(String).to(fun());
     container.get(String).equals('foo');
   }
   
   @:test('Can handle nested generic classes')
   public function testNestedGenericClass() {
     var container = new Container();
-    container.map(String).to('foo');
-    container.map(HasParamsService(String)).to(HasParams(String));
-    container.map(HasParamsService(HasParamsService(String)))
+    container.bind(String).to('foo');
+    container.bind(HasParamsService(String)).to(HasParams(String));
+    container.bind(HasParamsService(HasParamsService(String)))
       .to(HasParams(HasParamsService(String)));
     container.get(HasParamsService(HasParamsService(String)))
       .getValue().getValue().equals('foo');
@@ -114,21 +114,21 @@ class ContainerTest implements TestCase {
   @:test('Container.instantiate can inject dependencies')
   public function testSimpleBuild() {
     var container = new Container();
-    container.map(String).to('foo');
+    container.bind(String).to('foo');
     
     var test = container.instantiate(HasParams(String));
     test.getValue().equals('foo');
   }
 
   @:test('Can extend mappings')
-  public function testExtendsMappings() {
+  public function testExtendsBindings() {
     var container = new Container();
 
-    container.map(String).to('foo');
-    container.map(Int).to(1);
+    container.bind(String).to('foo');
+    container.bind(Int).to(1);
     
     container
-      .getMapping(String)
+      .getBinding(String)
       .extend(value -> container.instantiate((i:Int) -> value + i))
       .share();
     
@@ -140,13 +140,13 @@ class ContainerTest implements TestCase {
     var container = new Container();
     var iter = 1;
     
-    container.map(String).to(() -> 'foo' + container.get(Int));
-    container.map(Int).to(() -> iter++);
+    container.bind(String).to(() -> 'foo' + container.get(Int));
+    container.bind(Int).to(() -> iter++);
 
     container.get(String).equals('foo1');
     container.get(String).equals('foo2');
 
-    container.getMapping(Int).share();
+    container.getBinding(Int).share();
 
     container.get(String).equals('foo3');
     container.get(String).equals('foo3');
@@ -157,8 +157,8 @@ class ContainerTest implements TestCase {
     var container = new Container();
     var iter = 1;
     
-    container.map(String).to(() -> 'foo' + container.get(Int));
-    container.map(Int).toShared(() -> iter++);
+    container.bind(String).to(() -> 'foo' + container.get(Int));
+    container.bind(Int).toShared(() -> iter++);
 
     container.get(String).equals('foo1');
     container.get(String).equals('foo1');
@@ -167,9 +167,9 @@ class ContainerTest implements TestCase {
   @:test('Child can override parent')
   public function testChildOverrides() {
     var container = new Container();
-    container.map(String).to('foo');
-    container.map(FooIdentifier).to('bar');
-    container.map(Map(String, String)).to(function (one:String, two:FooIdentifier) {
+    container.bind(String).to('foo');
+    container.bind(FooIdentifier).to('bar');
+    container.bind(Map(String, String)).to(function (one:String, two:FooIdentifier) {
       return [ 'one' => one, 'two' => two ];
     });
 
@@ -178,27 +178,27 @@ class ContainerTest implements TestCase {
     expected1.get('two').equals('bar');
 
     var child = container.getChild();
-    child.map(String).to('changed');
+    child.bind(String).to('changed');
 
     var expected2 = child.get(Map(String, String));
     expected2.get('one').equals('changed');
     expected2.get('two').equals('bar');
   }
 
-  @:test('Mappings can be extended before they\'re resolved')
-  public function testMappingExtensionsToNullProvider() {
+  @:test('Bindings can be extended before they\'re resolved')
+  public function testBindingExtensionsToNullProvider() {
     var container = new Container();
-    container.getMapping(String).extend(str -> str + 'bar');
-    container.map(String).to('foo');
+    container.getBinding(String).extend(str -> str + 'bar');
+    container.bind(String).to('foo');
     container.get(String).equals('foobar');
   }
 
-  @:test('Mappings that have been resolved will throw an error if you try to remap them')
-  public function testMappingToAlreadyResolvedMapping() {
+  @:test('Bindings that have been resolved will throw an error if you try to remap them')
+  public function testBindingToAlreadyResolvedBinding() {
     var container = new Container();
     try {
-      container.map(String).to('foo');
-      container.getMapping(String).to('bar');
+      container.bind(String).to('foo');
+      container.getBinding(String).to('bar');
       Assert.fail('Should have thrown an exception');
     } catch (e:ProviderAlreadyExistsException) {
       Assert.pass();
@@ -206,29 +206,29 @@ class ContainerTest implements TestCase {
   }
 
   @:test('Default mappings can be overriden')
-  public function testDefaultMapping() {
+  public function testDefaultBinding() {
     var container = new Container();
-    container.map(String).toDefault('foo');
+    container.bind(String).toDefault('foo');
     container.get(String).equals('foo');
-    container.map(String).to('bar');
+    container.bind(String).to('bar');
     container.get(String).equals('bar');
   }
 
   @:test('Default mappings will not override existing ones')
-  public function testNotOverridingDefaultMapping() {
+  public function testNotOverridingDefaultBinding() {
     var container = new Container();
-    container.map(String).to('bar');
+    container.bind(String).to('bar');
     container.get(String).equals('bar');
-    container.map(String).toDefault('foo');
+    container.bind(String).toDefault('foo');
     container.get(String).equals('bar');
   }
 
   @:test('Default mappings will forward their extensions')
-  public function testDefaultMappingExtensions() {
+  public function testDefaultBindingExtensions() {
     var container = new Container();
-    container.map(String).toDefault('foo').extend(value -> value + '_bar');
+    container.bind(String).toDefault('foo').extend(value -> value + '_bar');
     container.get(String).equals('foo_bar');
-    container.map(String).to('bar');
+    container.bind(String).to('bar');
     container.get(String).equals('bar_bar');
   }
 }

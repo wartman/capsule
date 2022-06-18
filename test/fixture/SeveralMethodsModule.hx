@@ -14,11 +14,11 @@ class SeveralMethodsModule implements Module {
   }
 
   function provideString(container:Container) {
-    container.map(String).to('foo');
+    container.bind(String).to('foo');
   }
 
   function provideSimpleService(c:Container) {
-    c.map(SimpleService).to(SimpleWithDep).share();
+    c.bind(SimpleService).to(SimpleWithDep).share();
   }
 
   function thisWillNotBeTracked() {

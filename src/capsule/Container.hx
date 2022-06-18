@@ -13,7 +13,7 @@ class Container {
   }
 
   final parent:Null<Container>;
-  final mappings:Array<Mapping<Dynamic>> = [];
+  final bindings:Array<Binding<Dynamic>> = [];
 
   public function new(?parent) {
     this.parent = parent;
@@ -24,21 +24,37 @@ class Container {
   }
 
   public macro function map(self:Expr, target:Expr) {
+    haxe.macro.Context.warning('Use `container.bind` instead. This warning will be removed in version 0.4.1.', self.pos);
+
     var identifier = Builder.createIdentifier(target);
     var type = Builder.getComplexType(target);
-    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetMappingForId($v{identifier}):capsule.Mapping<$type>);
+    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetBindingForId($v{identifier}):capsule.Binding<$type>);
+  }
+
+  public macro function bind(self:Expr, target:Expr) {
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
+    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetBindingForId($v{identifier}):capsule.Binding<$type>);
   }
 
   public macro function get(self:Expr, target:Expr) {
     var identifier = Builder.createIdentifier(target);
     var type = Builder.getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>).resolve();
+    return macro @:pos(target.pos) ($self.getBindingById($v{identifier}):capsule.Binding<$type>).resolve();
   }
-  
+
   public macro function getMapping(self:Expr, target:Expr) {
+    haxe.macro.Context.warning('Use `container.getBinding` instead. This warning will be removed in version 0.4.1.', self.pos);
+    
     var identifier = Builder.createIdentifier(target);
     var type = Builder.getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>);
+    return macro @:pos(target.pos) ($self.getBindingById($v{identifier}):capsule.Binding<$type>);
+  }
+  
+  public macro function getBinding(self:Expr, target:Expr) {
+    var identifier = Builder.createIdentifier(target);
+    var type = Builder.getComplexType(target);
+    return macro @:pos(target.pos) ($self.getBindingById($v{identifier}):capsule.Binding<$type>);
   }
 
   public macro function instantiate(self:Expr, target:Expr) {
@@ -53,32 +69,32 @@ class Container {
     }
   }
 
-  public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
-    var mapping:Null<Mapping<T>> = recursiveGetMappingById(id #if debug , pos #end);
-    if (mapping == null) return addMapping(new Mapping(id, this));
-    return mapping;
+  public function getBindingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Binding<T> {
+    var binding:Null<Binding<T>> = recursiveGetBindingById(id #if debug , pos #end);
+    if (binding == null) return addBinding(new Binding(id, this));
+    return binding;
   }
 
-  function recursiveGetMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
-    var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-    if (mapping == null) {
+  function recursiveGetBindingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Binding<T> {
+    var binding:Null<Binding<T>> = cast bindings.find(binding -> binding.id == id);
+    if (binding == null) {
       if (parent == null) return null;
-      var mapping = parent.recursiveGetMappingById(id #if debug , pos #end);  
-      if (mapping != null) return mapping.withContainer(this);
+      var binding = parent.recursiveGetBindingById(id #if debug , pos #end);  
+      if (binding != null) return binding.withContainer(this);
     }
-    return mapping;
+    return binding;
   }
 
-  function addOrGetMappingForId<T>(id:String):Mapping<T> {
-    if (mappings.exists(m -> m.id == id)) {
-      return getMappingById(id);
+  function addOrGetBindingForId<T>(id:String):Binding<T> {
+    if (bindings.exists(m -> m.id == id)) {
+      return getBindingById(id);
     }
-    return addMapping(new Mapping(id, this));
+    return addBinding(new Binding(id, this));
   }
 
-  function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
-    mappings.push(mapping);
-    return mapping;
+  function addBinding<T>(binding:Binding<T>):Binding<T> {
+    bindings.push(binding);
+    return binding;
   }
 
   function useModule(module:Module) {
