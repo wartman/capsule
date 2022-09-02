@@ -24,25 +24,25 @@ class Container {
   }
 
   public macro function map(self:Expr, target:Expr) {
-    var identifier = Builder.createIdentifier(target);
-    var type = Builder.getComplexType(target);
+    var identifier = createIdentifier(target);
+    var type = getComplexType(target);
     return macro @:pos(self.pos) @:privateAccess ($self.addOrGetMappingForId($v{identifier}):capsule.Mapping<$type>);
   }
 
   public macro function get(self:Expr, target:Expr) {
-    var identifier = Builder.createIdentifier(target);
-    var type = Builder.getComplexType(target);
+    var identifier = createIdentifier(target);
+    var type = getComplexType(target);
     return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>).resolve();
   }
   
   public macro function getMapping(self:Expr, target:Expr) {
-    var identifier = Builder.createIdentifier(target);
-    var type = Builder.getComplexType(target);
+    var identifier = createIdentifier(target);
+    var type = getComplexType(target);
     return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>);
   }
 
   public macro function instantiate(self:Expr, target:Expr) {
-    var factory = Builder.createFactory(target, target.pos);
+    var factory = createFactory(target, target.pos);
     return macro @:pos(target.pos) ${factory}($self);
   }
 

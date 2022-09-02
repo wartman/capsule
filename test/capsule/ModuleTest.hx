@@ -45,4 +45,13 @@ class ModuleTest implements TestCase {
     var container = Container.build(new SimpleWithDefaultsModule());
     container.get(SimpleService).getValue().equals('foo');
   }
+
+  @:test('Modules can override default mappings')
+  public function testOverrideDefaultMappings() {
+    var container = Container.build(
+      new SimpleWithDefaultsModule(),
+      new SimpleOverridesDefaultsModule()
+    );
+    container.get(SimpleService).getValue().equals('override');
+  }
 }
