@@ -11,19 +11,19 @@ class Container {
   public static function map(self:Expr, target:Expr) {
     var identifier = createIdentifier(target);
     var type = getComplexType(target);
-    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetMappingForId($v{identifier}):capsule.Mapping<$type>);
+    return macro @:pos(self.pos) @:privateAccess ($self.ensureMapping($v{identifier}):capsule.Mapping<$type>);
   }
 
   public static function get(self:Expr, target:Expr) {
     var identifier = createIdentifier(target);
     var type = getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>).resolve();
+    return macro @:pos(target.pos) ($self.ensureMapping($v{identifier}):capsule.Mapping<$type>).resolve();
   }
   
   public static function getMapping(self:Expr, target:Expr) {
     var identifier = createIdentifier(target);
     var type = getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>);
+    return macro @:pos(target.pos) ($self.ensureMapping($v{identifier}):capsule.Mapping<$type>);
   }
 
   public static function instantiate(self:Expr, target:Expr) {

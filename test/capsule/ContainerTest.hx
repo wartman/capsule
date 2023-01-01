@@ -190,13 +190,34 @@ class ContainerTest implements TestCase {
     var container = new Container();
     container.map(Array(Int)).to(() -> [ 1, 2, 3 ]).share();
     
-    var parent = container.get(Array(Int));
-    parent.length.equals(3);
-    parent.push(4);
+    var value = container.get(Array(Int));
+    value.length.equals(3);
+    value.push(4);
     container.get(Array(Int)).length.equals(4);
     
     var child = container.getChild();
     child.get(Array(Int)).length.equals(3);
+
+    container.getMapping(Array(Int)).extend(value -> {
+      value.push(4);
+      return value;
+    });
+    container.get(Array(Int)).length.equals(5);
+    container.getChild().get(Array(Int)).length.equals(4);
+  }
+
+  @:test('Shared mappings on a parent will get used by a child if the scope is Parent')
+  public function testChildDoesShareWithParentGivenParentScope() {
+    var container = new Container();
+    container.map(Array(Int)).to(() -> [ 1, 2, 3 ]).share({ scope: Parent });
+    
+    var value = container.get(Array(Int));
+    value.length.equals(3);
+    value.push(4);
+    container.get(Array(Int)).length.equals(4);
+    
+    var child = container.getChild();
+    child.get(Array(Int)).length.equals(4);
   }
 
   @:test('Mappings can be extended before they\'re resolved')

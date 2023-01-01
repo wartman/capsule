@@ -17,7 +17,9 @@ class Mapping {
   }
 
   public static function toShared(self, factory) {
-    return macro @:pos(self.pos) $self.to($factory).share();
+    return macro @:pos(self.pos) $self.to($factory).share({
+      scope: Parent
+    });
   }
 
   public static function toDefault(self, factory) {
@@ -29,7 +31,7 @@ class Mapping {
     return macro @:pos(self.pos) {
       var mapping = $self;
       if (!mapping.resolvable()) {
-        mapping.toProvider(new capsule.provider.DefaultProvider($provider));
+        mapping.toProvider(new capsule.provider.OverridableProvider($provider));
       }
       mapping;
     }

@@ -1,6 +1,6 @@
 package capsule.provider;
 
-class DefaultProvider<T> implements Provider<T> {
+class OverridableProvider<T> implements Provider<T> {
   var provider:Provider<T>;
   final extensions:Array<(value:T)->T> = [];
 
@@ -26,12 +26,12 @@ class DefaultProvider<T> implements Provider<T> {
     return other;
   }
 
-  public function asShared():Provider<T> {
-    provider = provider.asShared();
+  public function asShared(options:ProviderSharingOptions):Provider<T> {
+    provider = provider.asShared(options);
     return this;
   }
 
-  public function clone():Provider<T> {
-    return new DefaultProvider(provider.clone());
-  }
+	public function asOverridable():Provider<T> {
+    return provider.asOverridable();
+	}
 }

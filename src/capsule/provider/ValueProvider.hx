@@ -21,7 +21,7 @@ class ValueProvider<T> implements Provider<T> {
     value = transform(value);
   }
 
-  public function asShared():Provider<T> {
+  public function asShared(options:ProviderSharingOptions):Provider<T> {
     return this;
   }
   
@@ -29,7 +29,7 @@ class ValueProvider<T> implements Provider<T> {
     throw new ProviderAlreadyExistsException();
   }
 
-  public function clone():Provider<T> {
-    return this;
+  public function asOverridable():Provider<T> {
+    return new OverridableProvider(this);
   }
 }

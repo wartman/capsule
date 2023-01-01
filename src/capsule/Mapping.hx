@@ -24,9 +24,9 @@ class Mapping<T> {
     return provider.resolvable();
   }
 
-  public function clone(container:Container) {
+  public function getChild(container:Container) {
     var mapping = new Mapping(id, container);
-    mapping.toProvider(provider.clone());
+    mapping.toProvider(provider.asOverridable());
     return mapping;
   }
 
@@ -54,8 +54,9 @@ class Mapping<T> {
     return this;
   }
 
-  public function share():Mapping<T> {
-    this.provider = provider.asShared();
+  public function share(?options:ProviderSharingOptions):Mapping<T> {
+    if (options == null) options = ProviderSharingOptions.defaultSharingOptions;
+    this.provider = provider.asShared(options);
     return this;
   }
 

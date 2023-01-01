@@ -26,26 +26,15 @@ class Container {
     return new Container(this);
   }
 
-  public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
-    var mapping:Null<Mapping<T>> = recursiveGetMappingById(id #if debug , pos #end);
-    if (mapping == null) return addMapping(new Mapping(id, this));
-    return mapping;
-  }
-
-  function recursiveGetMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
+  @:noCompletion
+  public function ensureMapping<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-    if (mapping == null && parent != null) {
-      var mapping = parent.recursiveGetMappingById(id #if debug , pos #end);  
-      if (mapping != null) return addMapping(mapping.clone(this));
+    if (mapping == null) {
+      if (parent == null) return addMapping(new Mapping(id, this));
+      var mapping = parent.ensureMapping(id #if debug , pos #end);  
+      return addMapping(mapping.getChild(this));
     }
     return mapping;
-  }
-
-  function addOrGetMappingForId<T>(id:String):Mapping<T> {
-    if (mappings.exists(m -> m.id == id)) {
-      return getMappingById(id);
-    }
-    return addMapping(new Mapping(id, this));
   }
 
   function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
