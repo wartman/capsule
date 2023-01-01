@@ -30,4 +30,8 @@ class DefaultProvider<T> implements Provider<T> {
     provider = provider.asShared();
     return this;
   }
+
+  public function clone():Provider<T> {
+    return new DefaultProvider(provider.clone());
+  }
 }

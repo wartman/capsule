@@ -176,7 +176,7 @@ This will ensure that an instance is only created once, and is returned whenever
 If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `getMapping` from your Container and `extend` it:
 
 ```haxe
-conatiner.getMapping(Router).extend(router -> {
+container.getMapping(Router).extend(router -> {
   router.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
   // you're also able to change the value of a mapping using `extend`.
@@ -187,7 +187,7 @@ conatiner.getMapping(Router).extend(router -> {
 Importantly, you can `extend` a mapping that **does not exist yet**. The following code will work just fine:
 
 ```haxe
-conatiner.getMapping(Router).extend(router -> {
+container.getMapping(Router).extend(router -> {
   router.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
   // you're also able to change the value of a mapping using `extend`.

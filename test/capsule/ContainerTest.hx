@@ -185,6 +185,20 @@ class ContainerTest implements TestCase {
     expected2.get('two').equals('bar');
   }
 
+  @:test('Shared mappings on a parent do not get used by a child')
+  public function testChildDoesNotShareWithParent() {
+    var container = new Container();
+    container.map(Array(Int)).to(() -> [ 1, 2, 3 ]).share();
+    
+    var parent = container.get(Array(Int));
+    parent.length.equals(3);
+    parent.push(4);
+    container.get(Array(Int)).length.equals(4);
+    
+    var child = container.getChild();
+    child.get(Array(Int)).length.equals(3);
+  }
+
   @:test('Mappings can be extended before they\'re resolved')
   public function testMappingExtensionsToNullProvider() {
     var container = new Container();

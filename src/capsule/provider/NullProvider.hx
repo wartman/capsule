@@ -30,4 +30,8 @@ class NullProvider<T> implements Provider<T> {
     for (transform in extensions) other.extend(transform);
     return other;
   }
+
+  public function clone():Provider<T> {
+    return this;
+  }
 }

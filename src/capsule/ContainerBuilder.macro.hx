@@ -41,7 +41,7 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
       satisfied.push(export.id);
     }
   }
-
+  
   for (module in modules) {
     for (export in module.exports) for (dependency in export.dependencies) {
       if (!satisfied.contains(dependency)) {

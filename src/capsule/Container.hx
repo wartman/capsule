@@ -1,16 +1,9 @@
 package capsule;
 
-#if macro
-  import haxe.macro.Expr;
-  import capsule.internal.Builder;
-#end
-
 using Lambda;
 
 class Container {
-  public static macro function build(...modules:ExprOf<Module>) {
-    return ContainerBuilder.buildFromModules(modules.toArray());
-  }
+  public static macro function build(...modules);
 
   final parent:Null<Container>;
   final mappings:Array<Mapping<Dynamic>> = [];
@@ -19,38 +12,18 @@ class Container {
     this.parent = parent;
   }
 
+  public macro function map(target);
+
+  public macro function get(target);
+  
+  public macro function getMapping(target);
+
+  public macro function instantiate(target);
+
+  public macro function use(...modules);
+
   public function getChild() {
     return new Container(this);
-  }
-
-  public macro function map(self:Expr, target:Expr) {
-    var identifier = createIdentifier(target);
-    var type = getComplexType(target);
-    return macro @:pos(self.pos) @:privateAccess ($self.addOrGetMappingForId($v{identifier}):capsule.Mapping<$type>);
-  }
-
-  public macro function get(self:Expr, target:Expr) {
-    var identifier = createIdentifier(target);
-    var type = getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>).resolve();
-  }
-  
-  public macro function getMapping(self:Expr, target:Expr) {
-    var identifier = createIdentifier(target);
-    var type = getComplexType(target);
-    return macro @:pos(target.pos) ($self.getMappingById($v{identifier}):capsule.Mapping<$type>);
-  }
-
-  public macro function instantiate(self:Expr, target:Expr) {
-    var factory = createFactory(target, target.pos);
-    return macro @:pos(target.pos) ${factory}($self);
-  }
-
-  public macro function use(self:Expr, ...modules:ExprOf<Module>) {
-    var body = [ for (m in modules) macro @:privateAccess $self.useModule($self.instantiate(${m})) ];
-    return macro @:pos(self.pos) {
-      $b{body};
-    }
   }
 
   public function getMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
@@ -61,10 +34,9 @@ class Container {
 
   function recursiveGetMappingById<T>(id:Identifier #if debug , ?pos:haxe.PosInfos #end):Mapping<T> {
     var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-    if (mapping == null) {
-      if (parent == null) return null;
+    if (mapping == null && parent != null) {
       var mapping = parent.recursiveGetMappingById(id #if debug , pos #end);  
-      if (mapping != null) return mapping.withContainer(this);
+      if (mapping != null) return addMapping(mapping.clone(this));
     }
     return mapping;
   }

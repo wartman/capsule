@@ -113,6 +113,11 @@ function build() {
       containerName = f.args[0].name; // Ensure we have the right identifier.
 
       findMappings(expr, containerName);
+
+      // @todo: Storing dependencies like this is a bit weird. It would
+      //        be nice if we could just get them inside the macro and not
+      //        stick them on the class. Unfortunately, the current system
+      //        we have breaks compilation when we do that.
       fields = fields.concat((macro class {
         @:keep public final __imports:Array<capsule.MappingInfo> = [
           $a{imports.map(m -> macro {

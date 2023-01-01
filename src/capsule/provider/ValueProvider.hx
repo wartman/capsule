@@ -28,4 +28,8 @@ class ValueProvider<T> implements Provider<T> {
   public function transitionTo(other:Provider<T>):Provider<T> {
     throw new ProviderAlreadyExistsException();
   }
+
+  public function clone():Provider<T> {
+    return this;
+  }
 }
