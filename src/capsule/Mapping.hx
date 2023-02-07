@@ -2,6 +2,7 @@ package capsule;
 
 import capsule.provider.NullProvider;
 
+@:allow(capsule)
 class Mapping<T> {
   public final id:Identifier;
   final container:Container;
@@ -22,12 +23,6 @@ class Mapping<T> {
   public function resolvable() {
     if (provider == null) return false;
     return provider.resolvable();
-  }
-
-  public function getChild(container:Container) {
-    var mapping = new Mapping(id, container);
-    mapping.toProvider(provider.asOverridable());
-    return mapping;
   }
 
   public function with(cb:(container:Container)->Void) {
@@ -62,5 +57,11 @@ class Mapping<T> {
 
   public function resolve():T {
     return provider.resolve(getContainer());
+  }
+
+  function getChild(container:Container) {
+    var mapping = new Mapping(id, container);
+    mapping.toProvider(provider.asOverridable());
+    return mapping;
   }
 }

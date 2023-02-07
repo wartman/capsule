@@ -22,13 +22,13 @@ class NullProvider<T> implements Provider<T> {
     extensions.push(transform);
   }
 
-  public function asShared(options:ProviderSharingOptions):Provider<T> {
-    throw new ProviderDoesNotExistException(id, 'Cannot share a null provider');
-  }
-
   public function transitionTo(other:Provider<T>):Provider<T> {
     for (transform in extensions) other.extend(transform);
     return other;
+  }
+
+  public function asShared(options:ProviderSharingOptions):Provider<T> {
+    throw new ProviderDoesNotExistException(id, 'Cannot share a null provider');
   }
 
   public function asOverridable():Provider<T> {

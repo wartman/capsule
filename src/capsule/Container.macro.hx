@@ -33,8 +33,6 @@ class Container {
 
   public static function use(self:Expr, ...modules:ExprOf<Module>) {
     var body = [ for (m in modules) macro @:privateAccess $self.useModule($self.instantiate(${m})) ];
-    return macro @:pos(self.pos) {
-      $b{body};
-    }
+    return macro @:pos(self.pos) $b{body};
   } 
 }

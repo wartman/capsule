@@ -21,13 +21,13 @@ class FactoryProvider<T> implements Provider<T> {
     var prev = factory;
     factory = container -> transform(prev(container));
   }
-
-  public function asShared(options:ProviderSharingOptions):Provider<T> {
-    return new SharedProvider(this, options);
-  }
   
   public function transitionTo(other:Provider<T>):Provider<T> {
     throw new ProviderAlreadyExistsException();
+  }
+
+  public function asShared(options:ProviderSharingOptions):Provider<T> {
+    return new SharedProvider(this, options);
   }
 
   public function asOverridable():Provider<T> {
