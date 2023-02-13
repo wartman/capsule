@@ -1,5 +1,5 @@
 package coffeemaker;
 
 interface CoffeeMaker {
-  public function brew():Void;
+	public function brew():Void;
 }

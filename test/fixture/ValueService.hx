@@ -1,5 +1,5 @@
 package fixture;
 
 interface ValueService {
-  public function get():String;
+	public function get():String;
 }

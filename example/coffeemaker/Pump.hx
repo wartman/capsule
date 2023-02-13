@@ -1,5 +1,5 @@
 package coffeemaker;
 
 interface Pump {
-  public function pump():Void;
+	public function pump():Void;
 }
