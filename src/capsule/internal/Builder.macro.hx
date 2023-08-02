@@ -41,7 +41,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 
 function createFactory(expr:Expr, pos:Position) {
 	function argsToExpr(id:String) {
-		return macro container.ensureMapping($v{id}).resolve();
+		return macro container.resolveMapping($v{id});
 	}
 
 	return switch expr.expr {

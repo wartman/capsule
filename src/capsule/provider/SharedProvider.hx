@@ -22,8 +22,10 @@ class SharedProvider<T> implements Provider<T> {
 	}
 
 	public function extend(transform:(value:T) -> T) {
-		if (value != null) value = transform(value);
 		provider.extend(transform);
+		if (value != null) {
+			value = transform(value);
+		}
 	}
 
 	public function transitionTo(other:Provider<T>):Provider<T> {

@@ -30,8 +30,13 @@ class Container {
 	@:noCompletion
 	public function ensureMapping<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Mapping<T> {
 		var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-		if (mapping == null) return addMapping(new Mapping(id, this));
+		if (mapping == null) return addMapping(new Mapping(id));
 		return mapping;
+	}
+
+	@:noCompletion
+	public function resolveMapping<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
+		return ensureMapping(id).resolve(this);
 	}
 
 	function addMapping<T>(mapping:Mapping<T>):Mapping<T> {

@@ -17,7 +17,7 @@ class Container {
 	public static function get(self:Expr, target:Expr) {
 		var identifier = createIdentifier(target);
 		var type = getComplexType(target);
-		return macro @:pos(target.pos) ($self.ensureMapping($v{identifier}) : capsule.Mapping<$type>).resolve();
+		return macro @:pos(target.pos) ($self.resolveMapping($v{identifier}) : $type);
 	}
 
 	public static function getMapping(self:Expr, target:Expr) {

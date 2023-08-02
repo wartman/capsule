@@ -176,7 +176,7 @@ class ContainerTest implements TestCase {
 		child.get(Array(Int)).length.equals(3);
 
 		container.getMapping(Array(Int)).extend(value -> {
-			value.push(4);
+			value.push(5);
 			return value;
 		});
 		container.get(Array(Int)).length.equals(5);

@@ -6,24 +6,16 @@ import capsule.provider.NullProvider;
 class Mapping<T> {
 	public final id:Identifier;
 
-	final container:Container;
 	var provider:Provider<T>;
 
-	public function new(id, container) {
+	public function new(id) {
 		this.id = id;
-		this.container = container;
 		this.provider = new NullProvider(this.id);
 	}
 
 	public function resolvable() {
 		if (provider == null) return false;
 		return provider.resolvable();
-	}
-
-	public function clone() {
-		var mapping = new Mapping(id, container);
-		mapping.toProvider(provider.clone());
-		return mapping;
 	}
 
 	public macro function to(factory);
@@ -47,7 +39,11 @@ class Mapping<T> {
 		return this;
 	}
 
-	public function resolve():T {
+	public inline function resolve(container:Container):T {
 		return provider.resolve(container);
+	}
+
+	public function clone() {
+		return new Mapping(id).toProvider(provider.clone());
 	}
 }
