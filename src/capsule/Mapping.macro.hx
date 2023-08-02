@@ -17,9 +17,7 @@ class Mapping {
 	}
 
 	public static function toShared(self, factory) {
-		return macro @:pos(self.pos) $self.to($factory).share({
-			scope: Parent
-		});
+		return macro @:pos(self.pos) $self.to($factory).share();
 	}
 
 	public static function toDefault(self, factory) {

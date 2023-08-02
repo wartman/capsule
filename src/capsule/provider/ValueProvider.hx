@@ -4,11 +4,9 @@ import capsule.exception.ProviderAlreadyExistsException;
 
 class ValueProvider<T> implements Provider<T> {
 	var value:T;
-	var options:ProviderSharingOptions;
 
-	public function new(value, options) {
+	public function new(value) {
 		this.value = value;
-		this.options = options;
 	}
 
 	public function resolvable() {
@@ -27,15 +25,11 @@ class ValueProvider<T> implements Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}
 
-	public function asShared(options:ProviderSharingOptions):Provider<T> {
-		this.options = options;
+	public function asShared():Provider<T> {
 		return this;
 	}
 
-	public function asOverridable():Provider<T> {
-		return switch options.scope {
-			case Parent: new OverridableProvider(this);
-			case Container: new OverridableProvider(new ValueProvider(value, options));
-		}
+	public function clone() {
+		return this;
 	}
 }

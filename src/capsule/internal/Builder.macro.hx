@@ -22,7 +22,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 			switch Context.typeof(e) {
 				case TFun(_, _):
 					// Is an actual function call (hopefully)
-					return macro new capsule.provider.ValueProvider<$ret>(${expr}, {scope: Parent});
+					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 				default:
 					// Is a generic type -- continue.
 			}
@@ -31,7 +31,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 				case TType(_, _) | TFun(_, _): // continue
 				default:
 					// If not a function or type, default to using a ValueProvider.
-					return macro new capsule.provider.ValueProvider<$ret>(${expr}, {scope: Parent});
+					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 			}
 	}
 
