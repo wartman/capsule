@@ -1,8 +1,6 @@
 Capsule
 =======
 
-[![Build Status](https://travis-ci.com/wartman/capsule.svg?branch=master)](https://travis-ci.com/wartman/capsule)
-
 Capsule is a minimal, easy to use dependency injection library.
 
 > Note: The previous version can be found [here](https://github.com/wartman/capsule/releases/tag/v0.2.6).
