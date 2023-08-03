@@ -6,32 +6,16 @@ import capsule.provider.NullProvider;
 class Mapping<T> {
 	public final id:Identifier;
 
-	final container:Container;
-	var closure:Null<Container> = null;
 	var provider:Provider<T>;
 
-	public function new(id, container) {
+	public function new(id) {
 		this.id = id;
-		this.container = container;
 		this.provider = new NullProvider(this.id);
-	}
-
-	public function getContainer() {
-		if (closure != null) return closure;
-		return container;
 	}
 
 	public function resolvable() {
 		if (provider == null) return false;
 		return provider.resolvable();
-	}
-
-	public function with(cb:(container:Container) -> Void) {
-		if (closure == null) {
-			closure = container.getChild();
-		}
-		cb(closure);
-		return this;
 	}
 
 	public macro function to(factory);
@@ -50,19 +34,16 @@ class Mapping<T> {
 		return this;
 	}
 
-	public function share(?options:ProviderSharingOptions):Mapping<T> {
-		if (options == null) options = ProviderSharingOptions.defaultSharingOptions;
-		this.provider = provider.asShared(options);
+	public function share():Mapping<T> {
+		this.provider = provider.asShared();
 		return this;
 	}
 
-	public function resolve():T {
-		return provider.resolve(getContainer());
+	public inline function resolve(container:Container):T {
+		return provider.resolve(container);
 	}
 
-	function getChild(container:Container) {
-		var mapping = new Mapping(id, container);
-		mapping.toProvider(provider.asOverridable());
-		return mapping;
+	public function clone() {
+		return new Mapping(id).toProvider(provider.clone());
 	}
 }

@@ -1,11 +1,10 @@
 package capsule.internal;
 
-import haxe.macro.Expr;
-import haxe.macro.Type;
 import haxe.macro.Context;
+import haxe.macro.Expr;
 
-using haxe.macro.Tools;
 using capsule.internal.Tools;
+using haxe.macro.Tools;
 
 function getComplexType(target:Expr) {
 	return target.resolveComplexType();
@@ -22,7 +21,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 			switch Context.typeof(e) {
 				case TFun(_, _):
 					// Is an actual function call (hopefully)
-					return macro new capsule.provider.ValueProvider<$ret>(${expr}, {scope: Parent});
+					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 				default:
 					// Is a generic type -- continue.
 			}
@@ -31,7 +30,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 				case TType(_, _) | TFun(_, _): // continue
 				default:
 					// If not a function or type, default to using a ValueProvider.
-					return macro new capsule.provider.ValueProvider<$ret>(${expr}, {scope: Parent});
+					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 			}
 	}
 
@@ -41,7 +40,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 
 function createFactory(expr:Expr, pos:Position) {
 	function argsToExpr(id:String) {
-		return macro container.ensureMapping($v{id}).resolve();
+		return macro container.resolveMapping($v{id});
 	}
 
 	return switch expr.expr {

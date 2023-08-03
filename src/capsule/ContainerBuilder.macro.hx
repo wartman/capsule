@@ -22,7 +22,6 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 	var body:Array<Expr> = values.map(module -> macro @:privateAccess container.useModule($module));
 	var satisfied:Array<String> = [];
 	var defaults:Array<String> = [];
-	var errors:Array<String> = [];
 
 	for (module in rootModules) processModule(module, modules, module.pos);
 
@@ -35,7 +34,7 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 			if (export.isDefault) {
 				continue;
 			}
-			errors.push('The mapping ${export.id} in the module ${module.id} was already provided');
+			Context.error('${export.id} was already provided', module.pos);
 		} else {
 			if (export.isDefault) defaults.push(export.id);
 			satisfied.push(export.id);
@@ -45,21 +44,14 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 	for (module in modules) {
 		for (export in module.exports) for (dependency in export.dependencies) {
 			if (!satisfied.contains(dependency)) {
-				errors.push('${export.id} requires ${dependency} in the module ${module.id}');
+				Context.error('${export.id} requires ${dependency}', module.pos);
 			}
 		}
 		for (child in module.imports) for (dependency in child.dependencies) {
 			if (!satisfied.contains(dependency)) {
-				errors.push('The module ${child.id} requires ${dependency} in the module ${module.id}');
+				Context.error('The module ${child.id} requires ${dependency}', module.pos);
 			}
 		}
-	}
-
-	if (errors.length > 0) {
-		Context.error(
-			'Some dependencies were not satisfied and a Container could not be built. '
-			+ 'Fix the following problems: [ ${errors.join(', ')} ]',
-			Context.currentPos());
 	}
 
 	return macro {

@@ -162,28 +162,7 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo1');
 	}
 
-	@:test('Child can override parent')
-	public function testChildOverrides() {
-		var container = new Container();
-		container.map(String).to('foo');
-		container.map(FooIdentifier).to('bar');
-		container.map(Map(String, String)).to(function(one:String, two:FooIdentifier) {
-			return ['one' => one, 'two' => two];
-		});
-
-		var expected1 = container.get(Map(String, String));
-		expected1.get('one').equals('foo');
-		expected1.get('two').equals('bar');
-
-		var child = container.getChild();
-		child.map(String).to('changed');
-
-		var expected2 = child.get(Map(String, String));
-		expected2.get('one').equals('changed');
-		expected2.get('two').equals('bar');
-	}
-
-	@:test('Shared mappings on a parent do not get used by a child')
+	@:test('Shared mappings on a container do not get used by a clone')
 	public function testChildDoesNotShareWithParent() {
 		var container = new Container();
 		container.map(Array(Int)).to(() -> [1, 2, 3]).share();
@@ -193,29 +172,15 @@ class ContainerTest implements TestCase {
 		value.push(4);
 		container.get(Array(Int)).length.equals(4);
 
-		var child = container.getChild();
+		var child = container.clone();
 		child.get(Array(Int)).length.equals(3);
 
 		container.getMapping(Array(Int)).extend(value -> {
-			value.push(4);
+			value.push(5);
 			return value;
 		});
 		container.get(Array(Int)).length.equals(5);
-		container.getChild().get(Array(Int)).length.equals(4);
-	}
-
-	@:test('Shared mappings on a parent will get used by a child if the scope is Parent')
-	public function testChildDoesShareWithParentGivenParentScope() {
-		var container = new Container();
-		container.map(Array(Int)).to(() -> [1, 2, 3]).share({scope: Parent});
-
-		var value = container.get(Array(Int));
-		value.length.equals(3);
-		value.push(4);
-		container.get(Array(Int)).length.equals(4);
-
-		var child = container.getChild();
-		child.get(Array(Int)).length.equals(4);
+		container.clone().get(Array(Int)).length.equals(4);
 	}
 
 	@:test('Mappings can be extended before they\'re resolved')

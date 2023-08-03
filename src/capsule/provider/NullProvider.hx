@@ -27,11 +27,11 @@ class NullProvider<T> implements Provider<T> {
 		return other;
 	}
 
-	public function asShared(options:ProviderSharingOptions):Provider<T> {
+	public function asShared():Provider<T> {
 		throw new ProviderDoesNotExistException(id, 'Cannot share a null provider');
 	}
 
-	public function asOverridable():Provider<T> {
-		return new OverridableProvider(this);
+	public function clone() {
+		return this;
 	}
 }

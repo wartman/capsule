@@ -1,8 +1,6 @@
 Capsule
 =======
 
-[![Build Status](https://travis-ci.com/wartman/capsule.svg?branch=master)](https://travis-ci.com/wartman/capsule)
-
 Capsule is a minimal, easy to use dependency injection library.
 
 > Note: The previous version can be found [here](https://github.com/wartman/capsule/releases/tag/v0.2.6).
@@ -200,6 +198,9 @@ This is done to ensure that you don't need to worry about the order you map thin
 
 Changelog
 ---------
+
+### 0.4.0
+- Removed the confusing `getChild` stuff. It wasn't very useful and it mostly added lots of strange complexity and, worse, led to using Containers in very weird ways. Instead, you can now `clone` a Container if you really need to.
 
 ### 0.3.0
 - Breaks anything that used the old version of Capsule. Is that a feature?

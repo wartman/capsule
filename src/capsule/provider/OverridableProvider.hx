@@ -26,12 +26,12 @@ class OverridableProvider<T> implements Provider<T> {
 		return other;
 	}
 
-	public function asShared(options:ProviderSharingOptions):Provider<T> {
-		provider = provider.asShared(options);
+	public function asShared():Provider<T> {
+		provider = provider.asShared();
 		return this;
 	}
 
-	public function asOverridable():Provider<T> {
-		return provider.asOverridable();
+	public function clone() {
+		return new OverridableProvider(provider.clone());
 	}
 }
