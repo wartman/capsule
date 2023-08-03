@@ -1,11 +1,10 @@
 package capsule.internal;
 
-import haxe.macro.Expr;
-import haxe.macro.Type;
 import haxe.macro.Context;
+import haxe.macro.Expr;
 
-using haxe.macro.Tools;
 using capsule.internal.Tools;
+using haxe.macro.Tools;
 
 function getComplexType(target:Expr) {
 	return target.resolveComplexType();
