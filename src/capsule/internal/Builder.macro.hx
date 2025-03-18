@@ -50,7 +50,8 @@ function createFactory(expr:Expr, pos:Position) {
 		case ECall(e, params):
 			var expr = getConstructorFromCallExpr(expr, pos);
 			return createFactory(macro $expr, pos);
-		default: switch Context.typeof(expr) {
+		default:
+			switch Context.typeof(expr) {
 				case TType(_, _):
 					var path = expr.toString().split('.');
 					checkExprForCorrectTypeParams(expr, pos);
@@ -70,11 +71,12 @@ function createFactory(expr:Expr, pos:Position) {
 function getDependencies(expr:Expr, pos:Position):Array<String> {
 	return switch expr.expr {
 		case EFunction(_, f):
-			return f.args.map(a -> a.type.toType()).typesToIdentifiers(pos);
+			return argumentsToIdentifiers(f.args, pos);
 		case ECall(e, params):
 			var expr = getConstructorFromCallExpr(expr, pos);
 			return getDependencies(macro $expr, pos);
-		default: switch Context.typeof(expr) {
+		default:
+			switch Context.typeof(expr) {
 				case TType(_, _):
 					var path = expr.toString().split('.');
 					checkExprForCorrectTypeParams(expr, pos);
@@ -85,6 +87,10 @@ function getDependencies(expr:Expr, pos:Position):Array<String> {
 					return [];
 			}
 	}
+}
+
+function argumentsToIdentifiers(args:Array<FunctionArg>, pos:Position):Array<String> {
+	return args.map(a -> a.type.toType()).typesToIdentifiers(pos);
 }
 
 private function checkExprForCorrectTypeParams(expr:Expr, pos:Position) {

@@ -26,6 +26,20 @@ class Container {
 		return macro @:pos(target.pos) ($self.ensureMapping($v{identifier}) : capsule.Mapping<$type>);
 	}
 
+	public static function extend(self:Expr, target:Expr, transform:Expr) {
+		var identifier = createIdentifier(target);
+		var type = getComplexType(target);
+		var factory = createFactory(transform, transform.pos);
+		return macro {
+			var __container = $self;
+			var __mapping = @:pos(target.pos) ($self.ensureMapping($v{identifier}) : capsule.Mapping<$type>);
+			__mapping.extend(value -> {
+				@:pos(transform.pos) var out:$type = ${factory}(__container);
+				return out;
+			});
+		}
+	}
+
 	public static function instantiate(self:Expr, target:Expr) {
 		var factory = createFactory(target, target.pos);
 		return macro @:pos(target.pos) ${factory}($self);

@@ -194,6 +194,19 @@ container.getMapping(Router).extend(router -> {
 container.map(Router).toShared(Router);
 ```
 
+If you need other values from the Container you can also try the following:
+
+```haxe
+container.extend(Router, (routes:RouteCollection) -> {
+  // The value being extended is *always* called `value`.
+  for (route in routes) {
+    value.add(route);
+  }
+  // You must return the transformed value:
+  return value;
+});
+```
+
 This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
 
 Changelog

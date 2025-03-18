@@ -15,6 +15,8 @@ class Container {
 
 	public macro function getMapping(target);
 
+	public macro function extend(target, transform);
+
 	public macro function instantiate(target);
 
 	public macro function use(...modules);

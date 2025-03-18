@@ -133,6 +133,18 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo1');
 	}
 
+	@:test('Can open mappings')
+	public function testOpensMappings() {
+		var container = new Container();
+
+		container.map(String).to('foo');
+		container.map(Int).to(1);
+
+		container.extend(String, (i:Int) -> value + i);
+
+		container.get(String).equals('foo1');
+	}
+
 	@:test('Test sharing')
 	public function testSharing() {
 		var container = new Container();

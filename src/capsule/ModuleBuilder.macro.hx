@@ -13,6 +13,7 @@ typedef TrackedMapping = {
 	public var ?isDefault:Bool;
 };
 
+// @todo: Rethink this! We need to track dependencies on `Capsule.extend`.
 function build() {
 	var isDebug = Context.defined('debug');
 	var fields = Context.getBuildFields();
