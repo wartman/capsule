@@ -125,22 +125,10 @@ class ContainerTest implements TestCase {
 	public function testExtendsMappings() {
 		var container = new Container();
 
-		container.map(String).to('foo');
+		container.map(String).to('foo').share();
 		container.map(Int).to(1);
 
-		container.getMapping(String).extend(value -> container.instantiate((i:Int) -> value + i)).share();
-
-		container.get(String).equals('foo1');
-	}
-
-	@:test('Can open mappings')
-	public function testOpensMappings() {
-		var container = new Container();
-
-		container.map(String).to('foo');
-		container.map(Int).to(1);
-
-		container.extend(String, (i:Int) -> value + i);
+		container.when(String).resolved((i:Int) -> value + i);
 
 		container.get(String).equals('foo1');
 	}
@@ -156,7 +144,7 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo1');
 		container.get(String).equals('foo2');
 
-		container.getMapping(Int).share();
+		container.map(Int).share();
 
 		container.get(String).equals('foo3');
 		container.get(String).equals('foo3');
@@ -187,7 +175,7 @@ class ContainerTest implements TestCase {
 		var child = container.clone();
 		child.get(Array(Int)).length.equals(3);
 
-		container.getMapping(Array(Int)).extend(value -> {
+		container.when(Array(Int)).resolved(() -> {
 			value.push(5);
 			return value;
 		});
@@ -198,7 +186,7 @@ class ContainerTest implements TestCase {
 	@:test('Mappings can be extended before they\'re resolved')
 	public function testMappingExtensionsToNullProvider() {
 		var container = new Container();
-		container.getMapping(String).extend(str -> str + 'bar');
+		container.when(String).resolved(() -> value + 'bar');
 		container.map(String).to('foo');
 		container.get(String).equals('foobar');
 	}
@@ -208,14 +196,14 @@ class ContainerTest implements TestCase {
 		var container = new Container();
 		try {
 			container.map(String).to('foo');
-			container.getMapping(String).to('bar');
+			container.map(String).to('bar');
 			Assert.fail('Should have thrown an exception');
 		} catch (e:ProviderAlreadyExistsException) {
 			Assert.pass();
 		}
 	}
 
-	@:test('Default mappings can be overriden')
+	@:test('Default mappings can be overridden')
 	public function testDefaultMapping() {
 		var container = new Container();
 		container.map(String).toDefault('foo');
@@ -236,7 +224,8 @@ class ContainerTest implements TestCase {
 	@:test('Default mappings will forward their extensions')
 	public function testDefaultMappingExtensions() {
 		var container = new Container();
-		container.map(String).toDefault('foo').extend(value -> value + '_bar');
+		container.map(String).toDefault('foo');
+		container.when(String).resolved(() -> value + '_bar');
 		container.get(String).equals('foo_bar');
 		container.map(String).to('bar');
 		container.get(String).equals('bar_bar');

@@ -42,4 +42,10 @@ class ModuleTest implements TestCase {
 		var container = Container.build(new SimpleWithDefaultsModule(), new SimpleOverridesDefaultsModule());
 		container.get(SimpleService).getValue().equals('override');
 	}
+
+	@:test('Hooks register dependencies')
+	public function testHooksHaveDependencies() {
+		var container = Container.build(new StringModule('foo'), new ValueModule('bar'), new HasHooks());
+		container.get(String).equals('foo_bar');
+	}
 }

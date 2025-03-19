@@ -21,13 +21,6 @@ class SharedProvider<T> implements Provider<T> {
 		return value;
 	}
 
-	public function extend(transform:(value:T) -> T) {
-		provider.extend(transform);
-		if (value != null) {
-			value = transform(value);
-		}
-	}
-
 	public function transitionTo(other:Provider<T>):Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}

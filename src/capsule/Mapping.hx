@@ -24,11 +24,6 @@ class Mapping<T> {
 
 	public macro function toDefault(factory);
 
-	public function extend(transform:(value:T) -> T) {
-		provider.extend(transform);
-		return this;
-	}
-
 	public function toProvider(provider:Provider<T>):Mapping<T> {
 		this.provider = this.provider.transitionTo(provider);
 		return this;

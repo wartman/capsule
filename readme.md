@@ -171,46 +171,50 @@ container.map(FooBar).toShared(DefaultFooBar);
 
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.
 
-If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `getMapping` from your Container and `extend` it:
+If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `when` from your Container to get a mapping and add a `resolved` hook:
 
 ```haxe
-container.getMapping(Router).extend(router -> {
-  router.add(new Route('/foo/bar'));
+container.when(Router).resolved(() -> {
+  // Resolved is a macro that automatically makes the current value of the mapping
+  // available as `value`.
+  value.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
   // you're also able to change the value of a mapping using `extend`.
-  return router;
+  return value;value
 });
 ```
 
-Importantly, you can `extend` a mapping that **does not exist yet**. The following code will work just fine:
+Importantly, you can do this with a mapping that **does not exist yet**. In a sense, you're telling Capsule that *if/when* a type is *resolved*, apply the given transformation, much like an event handler. The following will work just fine:
 
 ```haxe
-container.getMapping(Router).extend(router -> {
-  router.add(new Route('/foo/bar'));
-  // You MUST return a Router from this function. Note that this means
-  // you're also able to change the value of a mapping using `extend`.
-  return router;
+container.when(Router).resolved(() -> {
+  value.add(new Route('/foo/bar'));
+  return value;
 });
 container.map(Router).toShared(Router);
 ```
 
-If you need other values from the Container you can also try the following:
+This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
+
+> Note: more hooks might be coming to the `when` method in the future.
+
+If you need other values from the Container you can also resolve them from the extend method:
 
 ```haxe
-container.extend(Router, (routes:RouteCollection) -> {
-  // The value being extended is *always* called `value`.
+container.when(Router).resolved((routes:RouteCollection) -> {
   for (route in routes) {
     value.add(route);
   }
-  // You must return the transformed value:
   return value;
 });
 ```
 
-This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
-
 Changelog
 ---------
+
+### 0.5.0
+- Removed `getMapping` in favor of `when`. `getMapping` was only ever used to `extend` mappings, and `when` provides a much safer and more event-like system to handle that. Right now it only has a `resolved` hook, but in the future there might be more added to it.
+  - Due to the way this works, the old `extend` method has been removed entirely, making this a breaking change.
 
 ### 0.4.0
 - Removed the confusing `getChild` stuff. It wasn't very useful and it mostly added lots of strange complexity and, worse, led to using Containers in very weird ways. Instead, you can now `clone` a Container if you really need to.

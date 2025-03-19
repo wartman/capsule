@@ -1,4 +1,5 @@
 .DS_Store
 /dist/
 /dump/
-/__src
+/*/**/__*
+__*

@@ -11,9 +11,10 @@ typedef TrackedMapping = {
 	public var ?id:Expr;
 	public var ?concrete:Expr;
 	public var ?isDefault:Bool;
+	public var ?isRequired:Bool;
 };
 
-// @todo: Rethink this! We need to track dependencies on `Capsule.extend`.
+// @todo: This code is a nightmare and hard to extend. Completely rethink.
 function build() {
 	var isDebug = Context.defined('debug');
 	var fields = Context.getBuildFields();
@@ -82,6 +83,12 @@ function build() {
 					case EField(e, 'toDefault'):
 						currentMapping = {concrete: params[0], isDefault: true};
 						findMappings(e, containerName);
+					case EField(e, 'resolved'):
+						currentMapping = {concrete: params[0], isRequired: true};
+						findMappings(e, containerName);
+					case EField(e, 'when') if (currentMapping != null):
+						currentMapping.id = params[0];
+						findMappings(e, containerName);
 					case EField(e, 'map') if (currentMapping != null):
 						currentMapping.id = params[0];
 						findMappings(e, containerName);
@@ -120,7 +127,8 @@ function build() {
 						imports.map(m -> macro {
 							id: capsule.Tools.getIdentifier(${m.id}),
 							dependencies: capsule.Tools.getDependencies(${m.concrete}),
-							isDefault: $v{m.isDefault == true}
+							isDefault: $v{m.isDefault == true},
+							isRequired: false
 						})
 					}
 				];
@@ -129,7 +137,8 @@ function build() {
 						exports.map(m -> macro {
 							id: capsule.Tools.getIdentifier(${m.id}),
 							dependencies: capsule.Tools.getDependencies(${m.concrete}),
-							isDefault: $v{m.isDefault == true}
+							isDefault: $v{m.isDefault == true},
+							isRequired: $v{m.isRequired == true},
 						})
 					}
 				];

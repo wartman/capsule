@@ -4,7 +4,6 @@ import capsule.exception.ProviderDoesNotExistException;
 
 class NullProvider<T> implements Provider<T> {
 	final id:Identifier;
-	final extensions:Array<(value:T) -> T> = [];
 
 	public function new(id) {
 		this.id = id;
@@ -18,12 +17,7 @@ class NullProvider<T> implements Provider<T> {
 		throw new ProviderDoesNotExistException(id);
 	}
 
-	public function extend(transform:(value:T) -> T) {
-		extensions.push(transform);
-	}
-
 	public function transitionTo(other:Provider<T>):Provider<T> {
-		for (transform in extensions) other.extend(transform);
 		return other;
 	}
 

@@ -17,10 +17,6 @@ class ValueProvider<T> implements Provider<T> {
 		return value;
 	}
 
-	public function extend(transform:(value:T) -> T) {
-		value = transform(value);
-	}
-
 	public function transitionTo(other:Provider<T>):Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}

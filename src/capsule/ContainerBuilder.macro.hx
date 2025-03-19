@@ -16,6 +16,10 @@ typedef ModuleInfo = {
 	public final pos:Position;
 }
 
+// @todo: This code is a nightmare and hard to extend. Completely rethink.
+// 				Mainly, we need a way to have access to a list of what a Module exports
+// 				available to a compiled container so that it can type-check requests
+//				and ensure they're actually available.
 function buildFromModules(values:Array<ExprOf<Module>>) {
 	var modules = values.map(parseModuleExpr);
 	var rootModules = modules.copy();
@@ -31,12 +35,13 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 				defaults.remove(export.id);
 				continue;
 			}
-			if (export.isDefault) {
+			if (export.isDefault || export.isRequired) {
 				continue;
 			}
 			Context.error('${export.id} was already provided', module.pos);
 		} else {
 			if (export.isDefault) defaults.push(export.id);
+			if (export.isRequired) continue;
 			satisfied.push(export.id);
 		}
 	}
@@ -44,7 +49,7 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 	for (module in modules) {
 		for (export in module.exports) for (dependency in export.dependencies) {
 			if (!satisfied.contains(dependency)) {
-				Context.error('${export.id} requires ${dependency}', module.pos);
+				Context.error('The mapping ${export.id} requires ${dependency}', module.pos);
 			}
 		}
 		for (child in module.imports) for (dependency in child.dependencies) {
@@ -123,10 +128,12 @@ private function exprToModuleMapping(expr:TypedExpr):MappingInfo {
 			var id = fields.find(f -> f.name == 'id').expr;
 			var deps = fields.find(f -> f.name == 'dependencies').expr;
 			var isDef = fields.find(f -> f.name == 'isDefault').expr;
+			var isRequired = fields.find(f -> f.name == 'isRequired').expr;
 			return {
 				id: exprToString(id),
 				dependencies: exprToArray(deps),
-				isDefault: exprToBool(isDef)
+				isDefault: exprToBool(isDef),
+				isRequired: exprToBool(isRequired)
 			};
 		default:
 			throw 'assert';
