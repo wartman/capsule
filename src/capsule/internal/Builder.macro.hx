@@ -46,7 +46,9 @@ function createFactory(expr:Expr, pos:Position) {
 	return switch expr.expr {
 		case EFunction(_, _):
 			var deps = getDependencies(expr, pos).map(argsToExpr);
-			macro(container:capsule.Container) -> ${expr}($a{deps});
+			macro @:pos(expr.pos) function(container:capsule.Container) {
+				return ${expr}($a{deps});
+			}
 		case ECall(e, params):
 			var expr = getConstructorFromCallExpr(expr, pos);
 			return createFactory(macro $expr, pos);
@@ -58,12 +60,12 @@ function createFactory(expr:Expr, pos:Position) {
 					return createFactory(macro $p{path}.new, pos);
 				case TFun(args, _):
 					var deps = getDependencies(expr, pos).map(argsToExpr);
-					macro function(container:capsule.Container) {
+					macro @:pos(expr.pos) function(container:capsule.Container) {
 						var factory = ${expr};
 						return factory($a{deps});
 					};
 				default:
-					return macro(container:capsule.Container) -> $expr;
+					return macro @:pos(expr.pos) function(container:capsule.Container) return $expr;
 			}
 	}
 }

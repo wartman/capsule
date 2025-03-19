@@ -17,9 +17,8 @@ class When {
 			var when = $self;
 			var mapping = @:privateAccess when.mapping;
 			var provider = @:privateAccess mapping.provider;
-			@:privateAccess mapping.provider = new capsule.provider.TransformerProvider(provider, (value, container) -> {
-				@:pos(transform.pos) var out:$t = ${factory}(container);
-				return out;
+			@:privateAccess mapping.provider = new capsule.provider.TransformerProvider<$t>(provider, @:pos(transform.pos) function(value, container) {
+				return ${factory}(container);
 			});
 			when;
 		}

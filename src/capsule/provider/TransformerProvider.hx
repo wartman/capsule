@@ -4,7 +4,7 @@ class TransformerProvider<T> implements Provider<T> {
 	final provider:Provider<T>;
 	final transform:(value:T, container:Container) -> T;
 
-	public function new(provider, transform) {
+	public function new(provider, transform:(value:T, container:Container) -> T) {
 		this.provider = provider;
 		this.transform = transform;
 	}
