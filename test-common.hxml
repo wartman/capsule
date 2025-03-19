@@ -5,4 +5,5 @@
 
 -D debug
 -D analyzer-optimize
+-D message.reporting=pretty
 -dce full

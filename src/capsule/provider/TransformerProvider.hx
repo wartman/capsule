@@ -15,15 +15,15 @@ class TransformerProvider<T> implements Provider<T> {
 	}
 
 	public function resolve(container:Container):T {
-		var shared = isShared();
+		var shared = provider.isShared();
 
 		if (shared && value != null) return value;
 
-		var newValue = transform(this.provider.resolve(container), container);
+		var transformedValue = transform(this.provider.resolve(container), container);
 
-		if (shared) value = newValue;
+		if (shared) value = transformedValue;
 
-		return newValue;
+		return transformedValue;
 	}
 
 	public function transitionTo(other:Provider<T>):Provider<T> {

@@ -17,7 +17,7 @@ class Container {
 	public static function get(self:Expr, target:Expr) {
 		var identifier = createIdentifier(target);
 		var type = getComplexType(target);
-		return macro @:pos(target.pos) ($self.resolveMapping($v{identifier}) : $type);
+		return macro @:pos(target.pos) ($self.resolveMappedValue($v{identifier}) : $type);
 	}
 
 	public static function when(self:Expr, target:Expr) {

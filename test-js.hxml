@@ -1,3 +1,5 @@
 test-common.hxml
 
+-D js-es=6
+
 -js dist/js/index.js

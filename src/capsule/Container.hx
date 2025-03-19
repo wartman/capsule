@@ -35,7 +35,7 @@ class Container {
 	}
 
 	@:noCompletion
-	public function resolveMapping<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
+	public function resolveMappedValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
 		return ensureMapping(id).resolve(this);
 	}
 

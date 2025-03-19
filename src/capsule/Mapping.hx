@@ -14,7 +14,6 @@ class Mapping<T> {
 	}
 
 	public function resolvable() {
-		if (provider == null) return false;
 		return provider.resolvable();
 	}
 
