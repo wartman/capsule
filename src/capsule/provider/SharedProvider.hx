@@ -25,6 +25,10 @@ class SharedProvider<T> implements Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}
 
+	public function isShared() {
+		return true;
+	}
+
 	public function asShared():Provider<T> {
 		return this;
 	}

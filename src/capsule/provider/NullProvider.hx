@@ -21,6 +21,10 @@ class NullProvider<T> implements Provider<T> {
 		return other;
 	}
 
+	public function isShared() {
+		return false;
+	}
+
 	public function asShared():Provider<T> {
 		throw new ProviderDoesNotExistException(id, 'Cannot share a null provider');
 	}

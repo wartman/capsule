@@ -25,6 +25,10 @@ class FactoryProvider<T> implements Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}
 
+	public function isShared() {
+		return false;
+	}
+
 	public function asShared():Provider<T> {
 		return new SharedProvider(this);
 	}

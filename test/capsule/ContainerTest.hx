@@ -230,4 +230,18 @@ class ContainerTest implements TestCase {
 		container.map(String).to('bar');
 		container.get(String).equals('bar_bar');
 	}
+
+	@:test('Mapping extensions will not be run more than once on shared mappings')
+	public function testSharedMappingExtensions() {
+		var container = new Container();
+
+		container.when(Array(String)).resolved(() -> {
+			value.push('bar');
+			value;
+		});
+		container.map(Array(String)).to(() -> ['foo']).share();
+
+		container.get(Array(String)).join('_').equals('foo_bar');
+		container.get(Array(String)).join('_').equals('foo_bar');
+	}
 }

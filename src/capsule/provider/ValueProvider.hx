@@ -21,6 +21,10 @@ class ValueProvider<T> implements Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}
 
+	public function isShared() {
+		return true;
+	}
+
 	public function asShared():Provider<T> {
 		return this;
 	}

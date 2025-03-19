@@ -13,14 +13,8 @@ class When {
 			case TInst(_, [t]): t.toComplexType();
 			default: macro :Dynamic;
 		}
-		return macro @:pos(self.pos) {
-			var when = $self;
-			var mapping = @:privateAccess when.mapping;
-			var provider = @:privateAccess mapping.provider;
-			@:privateAccess mapping.provider = new capsule.provider.TransformerProvider<$t>(provider, @:pos(transform.pos) function(value, container) {
-				return ${factory}(container);
-			});
-			when;
-		}
+		return macro @:privateAccess @:pos(self.pos) $self.applyTransform(@:pos(transform.pos) function(value, container) {
+			return ${factory}(container);
+		});
 	}
 }
