@@ -23,7 +23,7 @@ class Container {
 	public static function when(self:Expr, target:Expr) {
 		var identifier = createIdentifier(target);
 		var type = getComplexType(target);
-		return macro @:pos(target.pos) new capsule.When<$type>($self.ensureMapping($v{identifier}));
+		return macro new capsule.When<$type>($self.ensureMapping($v{identifier}));
 	}
 
 	public static function instantiate(self:Expr, target:Expr) {
