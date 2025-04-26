@@ -171,16 +171,18 @@ container.map(FooBar).toShared(DefaultFooBar);
 
 This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.
 
-If you need to extend a mapping -- say you need to register a route to a router in some notional web app -- you can call `when` from your Container to get a mapping and add a `resolved` hook:
+If you need to modify a mapping -- by, say, adding a route to a router in some notional web app -- you can use Capsule's `when` api. Right now Capsule only has one hook -- `resolved` -- which is called whenever a mapping is (as you might have guessed) resolved. Here's an example:
 
 ```haxe
 container.when(Router).resolved(() -> {
-  // Resolved is a macro that automatically makes the current value of the mapping
-  // available as `value`.
+  // `resolved` is a macro, meaning there is one slightly magical thing happening here.
+  // You'll note that there isn't any `value` parameter in the method, but it's
+  // available here anyway. `value` is always bound to the value of the mapping we want to
+  // modify, which is a Router in this case.
   value.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
   // you're also able to change the value of a mapping using `extend`.
-  return value;value
+  return value;
 });
 ```
 
@@ -194,11 +196,7 @@ container.when(Router).resolved(() -> {
 container.map(Router).toShared(Router);
 ```
 
-This is done to ensure that you don't need to worry about the order you map things in -- everything should just work.
-
-> Note: more hooks might be coming to the `when` method in the future.
-
-If you need other values from the Container you can also resolve them from the extend method:
+Note that the container will inject any arguments you use on the method you pass to `resolved` (which is why we do the magical thing with `value`):
 
 ```haxe
 container.when(Router).resolved((routes:RouteCollection) -> {

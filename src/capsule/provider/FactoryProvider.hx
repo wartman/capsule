@@ -17,10 +17,6 @@ class FactoryProvider<T> implements Provider<T> {
 		return this.factory(container);
 	}
 
-	public function extend(transform:(value:T, container:Container) -> T) {
-		return new TransformerProvider(this, transform);
-	}
-
 	public function transitionTo(other:Provider<T>):Provider<T> {
 		throw new ProviderAlreadyExistsException();
 	}

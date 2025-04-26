@@ -83,7 +83,7 @@ function build() {
 					case EField(e, 'toDefault'):
 						currentMapping = {concrete: params[0], isDefault: true};
 						findMappings(e, containerName);
-					case EField(e, 'resolved'):
+					case EField(e, 'resolved') | EField(e, 'visited'):
 						currentMapping = {concrete: params[0], isRequired: true};
 						findMappings(e, containerName);
 					case EField(e, 'when') if (currentMapping != null):
