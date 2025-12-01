@@ -174,41 +174,42 @@ This will ensure that an instance is only created once, and is returned whenever
 If you need to modify a mapping -- by, say, adding a route to a router in some notional web app -- you can use Capsule's `when` api. Right now Capsule only has one hook -- `resolved` -- which is called whenever a mapping is (as you might have guessed) resolved. Here's an example:
 
 ```haxe
-container.when(Router).resolved(() -> {
-  // `resolved` is a macro, meaning there is one slightly magical thing happening here.
-  // You'll note that there isn't any `value` parameter in the method, but it's
-  // available here anyway. `value` is always bound to the value of the mapping we want to
-  // modify, which is a Router in this case.
-  value.add(new Route('/foo/bar'));
+container.when(Router).resolved(router -> {
+  router.add(new Route('/foo/bar'));
   // You MUST return a Router from this function. Note that this means
-  // you're also able to change the value of a mapping using `extend`.
-  return value;
+  // you're also able to change the value of a mapping using `resolved`,
+  // which you should be careful about.
+  return router;
 });
 ```
 
 Importantly, you can do this with a mapping that **does not exist yet**. In a sense, you're telling Capsule that *if/when* a type is *resolved*, apply the given transformation, much like an event handler. The following will work just fine:
 
 ```haxe
-container.when(Router).resolved(() -> {
-  value.add(new Route('/foo/bar'));
-  return value;
+container.when(Router).resolved(router -> {
+  router.add(new Route('/foo/bar'));
+  return router;
 });
 container.map(Router).toShared(Router);
 ```
 
-Note that the container will inject any arguments you use on the method you pass to `resolved` (which is why we do the magical thing with `value`):
+Note that the container will inject any arguments you use on the method you pass to `resolved` *except for* the first argument, which points to the mapping being investigated. This first argument must be present and must not have a manually set type. 
 
 ```haxe
-container.when(Router).resolved((routes:RouteCollection) -> {
+container.when(Router).resolved((router, routes:RouteCollection) -> {
   for (route in routes) {
-    value.add(route);
+    router.add(route);
   }
-  return value;
+  return router;
 });
 ```
 
 Changelog
 ---------
+
+### 0.6.0
+
+- `resolved` now requires an argument that points to the value being inspected, which feels much less magic.
 
 ### 0.5.0
 - Removed `getMapping` in favor of `when`. `getMapping` was only ever used to `extend` mappings, and `when` provides a much safer and more event-like system to handle that. Right now it only has a `resolved` hook, but in the future there might be more added to it.

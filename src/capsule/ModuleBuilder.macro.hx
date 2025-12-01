@@ -83,8 +83,29 @@ function build() {
 					case EField(e, 'toDefault'):
 						currentMapping = {concrete: params[0], isDefault: true};
 						findMappings(e, containerName);
-					case EField(e, 'resolved') | EField(e, 'visited'):
-						currentMapping = {concrete: params[0], isRequired: true};
+					case EField(e, 'resolved'):
+						// @todo: this is fragile, replace with something better when we're doing the
+						// refactor.
+						currentMapping = {
+							concrete: switch params[0]?.expr {
+								// Remove the first arg from the mapping -- that just points to the
+								// value the hook is targeting
+								case EFunction(kind, f):
+									{
+										expr: EFunction(kind, {
+											args: f.args.slice(1),
+											params: f.params,
+											expr: f.expr,
+											ret: f.ret
+										}),
+										pos: e.pos
+									}
+								default:
+									params[0];
+							},
+							isRequired: true
+						};
+
 						findMappings(e, containerName);
 					case EField(e, 'when') if (currentMapping != null):
 						currentMapping.id = params[0];

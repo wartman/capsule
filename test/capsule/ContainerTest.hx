@@ -128,7 +128,7 @@ class ContainerTest implements TestCase {
 		container.map(String).to('foo').share();
 		container.map(Int).to(1);
 
-		container.when(String).resolved((i:Int) -> value + i);
+		container.when(String).resolved((value, i:Int) -> value + i);
 
 		container.get(String).equals('foo1');
 	}
@@ -175,7 +175,7 @@ class ContainerTest implements TestCase {
 		var child = container.clone();
 		child.get(Array(Int)).length.equals(3);
 
-		container.when(Array(Int)).resolved(() -> {
+		container.when(Array(Int)).resolved(value -> {
 			value.push(5);
 			return value;
 		});
@@ -186,7 +186,7 @@ class ContainerTest implements TestCase {
 	@:test('Mappings can be extended before they\'re resolved')
 	public function testMappingExtensionsToNullProvider() {
 		var container = new Container();
-		container.when(String).resolved(() -> value + 'bar');
+		container.when(String).resolved(value -> value + 'bar');
 		container.map(String).to('foo');
 		container.get(String).equals('foobar');
 	}
@@ -225,7 +225,7 @@ class ContainerTest implements TestCase {
 	public function testDefaultMappingExtensions() {
 		var container = new Container();
 		container.map(String).toDefault('foo');
-		container.when(String).resolved(() -> value + '_bar');
+		container.when(String).resolved(value -> value + '_bar');
 		container.get(String).equals('foo_bar');
 		container.map(String).to('bar');
 		container.get(String).equals('bar_bar');
@@ -235,7 +235,7 @@ class ContainerTest implements TestCase {
 	public function testResolvedHook() {
 		var container = new Container();
 
-		container.when(Array(String)).resolved(() -> {
+		container.when(Array(String)).resolved(value -> {
 			value.push('bar');
 			value;
 		});

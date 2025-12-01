@@ -10,7 +10,7 @@
     ],
     "releasenote": "Breaking API changes regarding mapping and extending.",
     "classPath": "src",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "url": "https://github.com/wartman/capsule",
     "dependencies": {}
 }
