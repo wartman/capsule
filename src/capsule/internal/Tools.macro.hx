@@ -57,4 +57,26 @@ class Tools {
 				}
 		}
 	}
+
+	static public function exprToArray(expr:TypedExpr):Array<String> {
+		return switch expr.expr {
+			case TArrayDecl(el): el.map(exprToString);
+			default: throw 'assert';
+		}
+	}
+
+	static public function exprToString(expr:TypedExpr):String {
+		return switch expr.expr {
+			case TConst(TString(s)): s;
+			case TConst(TNull): null;
+			default: throw 'assert';
+		}
+	}
+
+	static public function exprToBool(expr:TypedExpr):Bool {
+		return switch expr.expr {
+			case TConst(TBool(b)): b;
+			default: throw 'assert';
+		}
+	}
 }

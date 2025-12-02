@@ -3,7 +3,7 @@ package capsule;
 using Lambda;
 
 class Container {
-	public static macro function build(...modules);
+	public static macro function compile(...modules);
 
 	final mappings:Array<Mapping<Dynamic>> = [];
 

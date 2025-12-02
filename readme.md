@@ -96,29 +96,50 @@ class FooBarModule implements Module {
 }
 
 function main() {
-  var container = Container.build(
+  var container = Container.compile(
     new FooAndBarModule(),
     new FooBarModule()
   );
-  trace(container.get(FooBar).getFooBar()); // => "foobar"
+  container.open((item:FooBar) -> {
+    trace(item.getFooBar()); // => "foobar"
+  });
 }
 ```
 
 This should all be pretty straightforward, but there are some important things to call out.
 
-The first is that `Container.build` is a macro that ensures the dependencies of all `capsule.Module`s passed to it are satisfied. If, for example, we omitted the `FooAndBarModule` from the above example:
+The first is that `Container.compile` is a macro that ensures the dependencies of all `capsule.Module`s passed to it are satisfied. If, for example, we omitted the `FooAndBarModule` from the above example:
 
 ```haxe
 function main() {
-  var container = Container.build(
+  var container = Container.compile(
     // new FooAndBarModule(),
     new FooBarModule()
   );
-  trace(container.get(FooBar).getFooBar());
+  container.open((item:FooBar) -> {
+    trace(item.getFooBar()); // => "foobar"
+  });
 }
 ```
 
-...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied. You don't _need_ to use Capsule with `Container.build` and `Module`s, but it's probably a good idea.
+...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied.
+
+Additionally, we'd get a compile-time error with `container.open(...)` if we asked for a dependency we didn't provide:
+
+```haxe
+function main() {
+  var container = Container.compile(
+    new FooAndBarModule(),
+    new FooBarModule()
+  );
+  // Will throw a compile time exception that we haven't provided a `String`:
+  container.open((item:FooBar, otherThing:String) -> {
+    trace(item.getFooBar()); // => "foobar"
+  });
+}
+```
+
+You don't _need_ to use Capsule with `Container.compile` and `Module`s, but it's probably a good idea.
 
 Something that the example doesn't cover is how to handle generic types. Haxe only lets us use the angle bracket syntax (e.g. `Map<String, String>`) in a few places, so Capsule hacks the function-call syntax to get around this:
 
@@ -210,6 +231,7 @@ Changelog
 ### 0.6.0
 
 - `resolved` now requires an argument that points to the value being inspected, which feels much less magic.
+- Removed `build` in favor of `compile`, a macro that gives us a type-safe way to open the Container.
 
 ### 0.5.0
 - Removed `getMapping` in favor of `when`. `getMapping` was only ever used to `extend` mappings, and `when` provides a much safer and more event-like system to handle that. Right now it only has a `resolved` hook, but in the future there might be more added to it.

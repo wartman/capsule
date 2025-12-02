@@ -6,10 +6,6 @@ import haxe.macro.Expr;
 using capsule.internal.Tools;
 using haxe.macro.Tools;
 
-function getComplexType(target:Expr) {
-	return target.resolveComplexType();
-}
-
 function createIdentifier(expr:Expr) {
 	return expr.resolveComplexType().complexTypeToIdentifier();
 }
@@ -38,7 +34,9 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position) {
 	return macro new capsule.provider.FactoryProvider<$ret>(${factory});
 }
 
-function createFactory(expr:Expr, pos:Position) {
+function createFactory(expr:Expr, ?pos:Position) {
+	if (pos == null) pos = expr.pos;
+
 	function argsToExpr(id:String) {
 		return macro container.resolveMappedValue($v{id});
 	}
@@ -70,7 +68,9 @@ function createFactory(expr:Expr, pos:Position) {
 	}
 }
 
-function getDependencies(expr:Expr, pos:Position):Array<String> {
+function getDependencies(expr:Expr, ?pos:Position):Array<String> {
+	if (pos == null) pos = expr.pos;
+
 	return switch expr.expr {
 		case EFunction(_, f):
 			return argumentsToIdentifiers(f.args, pos);

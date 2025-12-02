@@ -14,7 +14,7 @@ typedef TrackedMapping = {
 	public var ?isRequired:Bool;
 };
 
-// @todo: This code is a nightmare and hard to extend. Completely rethink.
+// @todo: This code needs a refactor.
 function build() {
 	var isDebug = Context.defined('debug');
 	var fields = Context.getBuildFields();
@@ -137,13 +137,13 @@ function build() {
 
 			findMappings(expr, containerName);
 
-			// @todo: This is a very weird way to store dependencies, although it
+			// @todo: This is a weird way to store dependencies, although it
 			// does work. Ideally we'd at least put these all on static fields.
 			//
 			// Unfortunately, due to the use of `Context.typeof(...)` in our macros,
 			// this is the only way not to break the compiler.
 			fields = fields.concat((macro class {
-				@:keep public final __imports:Array<capsule.MappingInfo> = [
+				@:keep @:noCompletion public final __imports:Array<capsule.MappingInfo> = [
 					$a{
 						imports.map(m -> macro {
 							id: capsule.Tools.getIdentifier(${m.id}),
@@ -153,7 +153,7 @@ function build() {
 						})
 					}
 				];
-				@:keep public final __exports:Array<capsule.MappingInfo> = [
+				@:keep @:noCompletion public final __exports:Array<capsule.MappingInfo> = [
 					$a{
 						exports.map(m -> macro {
 							id: capsule.Tools.getIdentifier(${m.id}),

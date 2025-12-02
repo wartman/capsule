@@ -1,33 +1,35 @@
 package capsule;
 
 import haxe.macro.Expr;
-import capsule.internal.Builder;
+
+using capsule.internal.Builder;
+using capsule.internal.Tools;
 
 class Container {
-	public static function build(...modules:ExprOf<Module>) {
-		return ContainerBuilder.buildFromModules(modules.toArray());
+	public static function compile(...modules:ExprOf<Module>) {
+		return CompiledContainerBuilder.createCompiledContainer(modules);
 	}
 
 	public static function map(self:Expr, target:Expr) {
-		var identifier = createIdentifier(target);
-		var type = getComplexType(target);
+		var identifier = target.createIdentifier();
+		var type = target.resolveComplexType();
 		return macro @:pos(self.pos) @:privateAccess ($self.ensureMapping($v{identifier}) : capsule.Mapping<$type>);
 	}
 
 	public static function get(self:Expr, target:Expr) {
-		var identifier = createIdentifier(target);
-		var type = getComplexType(target);
+		var identifier = target.createIdentifier();
+		var type = target.resolveComplexType();
 		return macro @:pos(target.pos) ($self.resolveMappedValue($v{identifier}) : $type);
 	}
 
 	public static function when(self:Expr, target:Expr) {
-		var identifier = createIdentifier(target);
-		var type = getComplexType(target);
-		return macro new capsule.When<$type>($self.ensureMapping($v{identifier}));
+		var identifier = target.createIdentifier();
+		var type = target.resolveComplexType();
+		return macro new capsule.When<$type>(@:privateAccess $self.ensureMapping($v{identifier}));
 	}
 
 	public static function instantiate(self:Expr, target:Expr) {
-		var factory = createFactory(target, target.pos);
+		var factory = target.createFactory();
 		return macro @:pos(target.pos) ${factory}($self);
 	}
 

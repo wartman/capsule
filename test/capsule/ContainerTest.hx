@@ -113,7 +113,7 @@ class ContainerTest implements TestCase {
 	}
 
 	@:test('Container.instantiate can inject dependencies')
-	public function testSimpleBuild() {
+	public function testSimpleInstantiate() {
 		var container = new Container();
 		container.map(String).to('foo');
 

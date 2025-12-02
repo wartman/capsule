@@ -3,32 +3,61 @@ package capsule;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
-import capsule.MappingInfo;
 
 using Lambda;
-using haxe.macro.Tools;
 using capsule.internal.Tools;
+using haxe.crypto.Md5;
+using haxe.macro.Tools;
 
-typedef ModuleInfo = {
-	public final id:String;
-	public final exports:Array<MappingInfo>;
-	public final imports:Array<MappingInfo>;
-	public final pos:Position;
+function buildGeneric() {
+	return switch Context.getLocalType() {
+		case TInst(_, [TInst(_.get() => {kind: KExpr({expr: EConst(CString(s, _)), pos: _})}, _)]):
+			buildContainer(s);
+		default:
+			throw 'assert';
+	}
 }
 
-// @todo: This code is a nightmare and hard to extend. Completely rethink.
-// 				Mainly, we need a way to have access to a list of what a Module exports
-// 				available to a compiled container so that it can type-check requests
-//				and ensure they're actually available.
-function buildFromModules(values:Array<ExprOf<Module>>) {
+function buildContainer(provides:String) {
+	var id = provides.encode();
+	var path:TypePath = {
+		name: 'Container_$id',
+		pack: ['capsule', 'compiled']
+	};
+	var type:ComplexType = TPath(path);
+	var fields:Array<Field> = (macro class {
+		@:keep @:noCompletion public static final __provides:Array<String> = [$a{provides.split(';').map(s -> macro $v{s})}];
+	}).fields;
+
+	try {
+		type.toType();
+		// If this does not throw, the type already exists.
+		return type;
+	} catch (_) {}
+
+	Context.defineType({
+		name: path.name,
+		pack: path.pack,
+		pos: (macro null).pos,
+		kind: TDClass({
+			name: 'CompiledContainer',
+			sub: 'CompiledContainerBase',
+			pack: ['capsule']
+		}),
+		fields: fields
+	});
+
+	return type;
+}
+
+function createCompiledContainer(values:Array<ExprOf<Module>>):Expr {
 	var modules = values.map(parseModuleExpr);
 	var rootModules = modules.copy();
-	var body:Array<Expr> = values.map(module -> macro @:privateAccess container.useModule($module));
+	var body:Array<Expr> = values.map(module -> macro $module.provide(container));
 	var satisfied:Array<String> = [];
 	var defaults:Array<String> = [];
 
 	for (module in rootModules) processModule(module, modules, module.pos);
-
 	for (module in modules) for (export in module.exports) {
 		if (satisfied.contains(export.id)) {
 			if (defaults.contains(export.id)) {
@@ -45,7 +74,6 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 			satisfied.push(export.id);
 		}
 	}
-
 	for (module in modules) {
 		for (export in module.exports) for (dependency in export.dependencies) {
 			if (!satisfied.contains(dependency)) {
@@ -59,11 +87,20 @@ function buildFromModules(values:Array<ExprOf<Module>>) {
 		}
 	}
 
+	satisfied.sort((a, b) -> if (a > b) 1 else -1);
+
+	var provides = satisfied.join(';');
+	var path:TypePath = {
+		pack: ['capsule'],
+		name: 'CompiledContainer',
+		params: [TPExpr(macro $v{provides})]
+	};
+
 	return macro {
 		var container = new capsule.Container();
-		$b{body};
-		container;
-	};
+		@:mergeBlock $b{body};
+		new $path(container);
+	}
 }
 
 private function processModule(module:ModuleInfo, modules:Array<ModuleInfo>, pos:Position) {
@@ -130,34 +167,12 @@ private function exprToModuleMapping(expr:TypedExpr):MappingInfo {
 			var isDef = fields.find(f -> f.name == 'isDefault').expr;
 			var isRequired = fields.find(f -> f.name == 'isRequired').expr;
 			return {
-				id: exprToString(id),
-				dependencies: exprToArray(deps),
-				isDefault: exprToBool(isDef),
-				isRequired: exprToBool(isRequired)
+				id: id.exprToString(),
+				dependencies: deps.exprToArray(),
+				isDefault: isDef.exprToBool(),
+				isRequired: isRequired.exprToBool()
 			};
 		default:
 			throw 'assert';
-	}
-}
-
-private function exprToArray(expr:TypedExpr):Array<String> {
-	return switch expr.expr {
-		case TArrayDecl(el): el.map(exprToString);
-		default: throw 'assert';
-	}
-}
-
-private function exprToString(expr:TypedExpr):String {
-	return switch expr.expr {
-		case TConst(TString(s)): s;
-		case TConst(TNull): null;
-		default: throw 'assert';
-	}
-}
-
-private function exprToBool(expr:TypedExpr):Bool {
-	return switch expr.expr {
-		case TConst(TBool(b)): b;
-		default: throw 'assert';
 	}
 }
