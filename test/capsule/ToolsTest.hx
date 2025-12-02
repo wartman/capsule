@@ -1,14 +1,12 @@
 package capsule;
 
 import fixture.*;
+import utest.*;
 
-using Medic;
 using capsule.Tools;
+using utest.Assert;
 
-class ToolsTest implements TestCase {
-	public function new() {}
-
-	@:test('Tools provide .net-style shortcuts')
+class ToolsTest extends Test {
 	function testSimpleTools() {
 		var container = new Container().withTransient(String, 'foo');
 
@@ -27,7 +25,6 @@ class ToolsTest implements TestCase {
 		container.get(SimpleService).getValue().equals('foo');
 	}
 
-	@:test('Tools allow you to get a list of dependencies')
 	function testDeps() {
 		var deps = Tools.getDependencies(SimpleWithDep);
 		deps.length.equals(1);

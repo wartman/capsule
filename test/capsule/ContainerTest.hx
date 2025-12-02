@@ -2,13 +2,11 @@ package capsule;
 
 import capsule.exception.ProviderAlreadyExistsException;
 import fixture.*;
+import utest.*;
 
-using Medic;
+using utest.Assert;
 
-class ContainerTest implements TestCase {
-	public function new() {}
-
-	@:test('Simple values')
+class ContainerTest extends Test {
 	public function testSimple() {
 		var container = new Container();
 		container.map(String).to('foo');
@@ -18,14 +16,12 @@ class ContainerTest implements TestCase {
 		container.get(Int).equals(1);
 	}
 
-	@:test('Maps classes without dependencies')
 	public function testBasicClassMapping() {
 		var container = new Container();
 		container.map(SimpleService).to(Simple);
 		container.get(SimpleService).getValue().equals('value');
 	}
 
-	@:test('Maps classes to instances if provided')
 	public function testClassInstanceMapping() {
 		var container = new Container();
 
@@ -34,7 +30,6 @@ class ContainerTest implements TestCase {
 		container.get(ValueService).get().equals('foo');
 	}
 
-	@:test('Classes can have dependencies')
 	public function testBasicClassDeps() {
 		var container = new Container();
 
@@ -44,7 +39,6 @@ class ContainerTest implements TestCase {
 		container.get(SimpleService).getValue().equals('dep');
 	}
 
-	@:test('Inline functions can be used as providers')
 	public function testBasicInlineFunctionProvider() {
 		var container = new Container();
 
@@ -60,7 +54,6 @@ class ContainerTest implements TestCase {
 		return value.get();
 	}
 
-	@:test('Named functions can be used as providers')
 	public function testBasicNamedFunctionProvider() {
 		var container = new Container();
 
@@ -70,21 +63,18 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('dep');
 	}
 
-	@:test('Typedefs can be used as identifiers')
 	public function testBasicTypedefAsId() {
 		var container = new Container();
 		container.map(FooIdentifier).to('foo');
 		container.get(FooIdentifier).equals('foo');
 	}
 
-	@:test('Can handle type params with a hacky syntax')
 	public function testSimpleParams() {
 		var container = new Container();
 		container.map(Map(String, String)).to(['foo' => 'foo']);
 		container.get(Map(String, String)).get('foo').equals('foo');
 	}
 
-	@:test('Can handle generic classes')
 	public function testSimpleGenericClass() {
 		var container = new Container();
 		container.map(String).to('foo');
@@ -92,7 +82,6 @@ class ContainerTest implements TestCase {
 		container.get(HasParamsService(String)).getValue().equals('foo');
 	}
 
-	@:test('Can figure out when a function is being called instead of the hacky generic syntax')
 	public function testFunctionCall() {
 		var fun = () -> 'foo';
 		var container = new Container();
@@ -100,7 +89,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo');
 	}
 
-	@:test('Can handle nested generic classes')
 	public function testNestedGenericClass() {
 		var container = new Container();
 		container.map(String).to('foo');
@@ -112,7 +100,6 @@ class ContainerTest implements TestCase {
 			.equals('foo');
 	}
 
-	@:test('Container.instantiate can inject dependencies')
 	public function testSimpleInstantiate() {
 		var container = new Container();
 		container.map(String).to('foo');
@@ -121,7 +108,6 @@ class ContainerTest implements TestCase {
 		test.getValue().equals('foo');
 	}
 
-	@:test('Can extend mappings')
 	public function testExtendsMappings() {
 		var container = new Container();
 
@@ -133,7 +119,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo1');
 	}
 
-	@:test('Test sharing')
 	public function testSharing() {
 		var container = new Container();
 		var iter = 1;
@@ -150,7 +135,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo3');
 	}
 
-	@:test('toShared is available as a shortcut.')
 	public function testToShared() {
 		var container = new Container();
 		var iter = 1;
@@ -162,7 +146,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foo1');
 	}
 
-	@:test('Shared mappings on a container do not get used by a clone')
 	public function testChildDoesNotShareWithParent() {
 		var container = new Container();
 		container.map(Array(Int)).to(() -> [1, 2, 3]).share();
@@ -183,7 +166,6 @@ class ContainerTest implements TestCase {
 		container.clone().get(Array(Int)).length.equals(4);
 	}
 
-	@:test('Mappings can be extended before they\'re resolved')
 	public function testMappingExtensionsToNullProvider() {
 		var container = new Container();
 		container.when(String).resolved(value -> value + 'bar');
@@ -191,7 +173,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('foobar');
 	}
 
-	@:test('Mappings that have been resolved will throw an error if you try to remap them')
 	public function testMappingToAlreadyResolvedMapping() {
 		var container = new Container();
 		try {
@@ -203,7 +184,6 @@ class ContainerTest implements TestCase {
 		}
 	}
 
-	@:test('Default mappings can be overridden')
 	public function testDefaultMapping() {
 		var container = new Container();
 		container.map(String).toDefault('foo');
@@ -212,7 +192,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('bar');
 	}
 
-	@:test('Default mappings will not override existing ones')
 	public function testNotOverridingDefaultMapping() {
 		var container = new Container();
 		container.map(String).to('bar');
@@ -221,7 +200,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('bar');
 	}
 
-	@:test('Default mappings will forward their extensions')
 	public function testDefaultMappingExtensions() {
 		var container = new Container();
 		container.map(String).toDefault('foo');
@@ -231,7 +209,6 @@ class ContainerTest implements TestCase {
 		container.get(String).equals('bar_bar');
 	}
 
-	@:test('Resolved hooks will not be run more than once on shared mappings')
 	public function testResolvedHook() {
 		var container = new Container();
 
