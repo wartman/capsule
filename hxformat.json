@@ -6,13 +6,27 @@
     "forBody": "keep",
     "whileBody": "keep",
     "caseBody": "keep",
-    "expressionIf": "keep"
+    "expressionIf": "keep",
+    "comprehensionFor": "keep",
+    "tryBody": "keep",
+		"tryCatch": "keep",
+    "ifElse": "keep",
+    "elseBody": "keep"
   },
   "whitespace": {
     "arrowFunctionsPolicy": "around"
   },
   "wrapping": {
     "opAddSubChain": {
+      "defaultWrap": "keep"
+    },
+    "methodChain": {
+      "defaultWrap": "keep"
+    },
+    "arrayWrap": {
+      "defaultWrap": "keep"
+    },
+    "callParameter": {
       "defaultWrap": "keep"
     }
   }

@@ -1,10 +1,14 @@
 -cp src
 -cp example
 
+-dce full
+-D analyzer-optimize
+
 -main Main
 
 --each
 
+-D js-es=6
 -js dist/example/index.js
 
 --next

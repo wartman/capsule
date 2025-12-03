@@ -9,8 +9,6 @@ using capsule.internal.Tools;
 using haxe.crypto.Md5;
 using haxe.macro.Tools;
 
-@:persistent final compiledContainerProviders:Map<String, Array<String>> = [];
-
 function buildGeneric() {
 	return switch Context.getLocalType() {
 		case TInst(_, [TInst(_.get() => {kind: KExpr({expr: EConst(CString(s, _)), pos: _})}, _)]):
@@ -27,9 +25,9 @@ function buildContainer(provides:String) {
 		pack: ['capsule', 'compiled']
 	};
 	var type:ComplexType = TPath(path);
-	// var fields:Array<Field> = (macro class {
-	// 	@:keep @:noCompletion public static final __provides:Array<String> = [$a{provides.split(';').map(s -> macro $v{s})}];
-	// }).fields;
+	var fields:Array<Field> = (macro class {
+		@:noCompletion public static final __provides:Array<String> = [$a{provides.split(';').map(s -> macro $v{s})}];
+	}).fields;
 
 	try {
 		type.toType();
@@ -37,7 +35,7 @@ function buildContainer(provides:String) {
 		return type;
 	} catch (_) {}
 
-	compiledContainerProviders.set(path.name, provides.split(';'));
+	// compiledContainerProviders.set(path.name, provides.split(';'));
 
 	Context.defineType({
 		name: path.name,
@@ -48,7 +46,7 @@ function buildContainer(provides:String) {
 			sub: 'CompiledContainerBase',
 			pack: ['capsule']
 		}),
-		fields: []
+		fields: fields
 	});
 
 	return type;
