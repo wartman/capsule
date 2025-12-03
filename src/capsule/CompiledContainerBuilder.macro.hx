@@ -25,9 +25,6 @@ function buildContainer(provides:String) {
 		pack: ['capsule', 'compiled']
 	};
 	var type:ComplexType = TPath(path);
-	var fields:Array<Field> = (macro class {
-		@:noCompletion public static final __provides:Array<String> = [$a{provides.split(';').map(s -> macro $v{s})}];
-	}).fields;
 
 	try {
 		type.toType();
@@ -35,18 +32,25 @@ function buildContainer(provides:String) {
 		return type;
 	} catch (_) {}
 
-	// compiledContainerProviders.set(path.name, provides.split(';'));
-
 	Context.defineType({
 		name: path.name,
 		pack: path.pack,
 		pos: (macro null).pos,
+		meta: [
+			{
+				name: ':capsule.provides',
+				params: [
+					macro $v{provides}
+				],
+				pos: (macro null).pos
+			}
+		],
 		kind: TDClass({
 			name: 'CompiledContainer',
 			sub: 'CompiledContainerBase',
 			pack: ['capsule']
 		}),
-		fields: fields
+		fields: []
 	});
 
 	return type;
