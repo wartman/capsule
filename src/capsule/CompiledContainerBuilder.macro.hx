@@ -115,8 +115,6 @@ function createCompiledContainer(values:Array<ExprOf<Module>>):Expr {
 
 	satisfied.sort((a, b) -> if (a > b) 1 else -1);
 
-	trace(satisfied);
-
 	var path:TypePath = {
 		pack: ['capsule'],
 		name: 'CompiledContainer',

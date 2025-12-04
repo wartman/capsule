@@ -36,12 +36,5 @@ class Container {
 	public static function use(self:Expr, ...modules:ExprOf<Module>) {
 		var factory = modules.toArray().createModuleUser();
 		return macro ${factory}($self);
-		// var body = [
-		// 	for (m in modules) macro @:privateAccess container.useModule(container.instantiate(${m}))
-		// ];
-		// return macro @:pos(self.pos) {
-		// 	var container = $self;
-		// 	@:mergeBlock $b{body};
-		// }
 	}
 }

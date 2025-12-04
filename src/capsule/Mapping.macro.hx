@@ -8,7 +8,6 @@ using haxe.macro.TypeTools;
 
 class Mapping {
 	public static function to(self:Expr, factory:Expr) {
-		var context = Context.getLocalClass();
 		var t = switch Context.typeof(self) {
 			case TInst(_, [t]): t.toComplexType();
 			default: macro :Dynamic;
