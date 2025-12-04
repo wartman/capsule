@@ -31,8 +31,8 @@ class When {
 					}),
 					pos: transform.pos
 				};
-				var factory = createFactory(wrapper, wrapper.pos);
-				macro @:privateAccess @:pos(self.pos) $self.applyTransform(@:pos(transform.pos) function($name, container) {
+				var factory = createFactory(wrapper);
+				macro @:pos(self.pos) @:privateAccess $self.applyTransform(@:pos(transform.pos) function($name, container) {
 					return ${factory}(container);
 				});
 			default:

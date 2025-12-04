@@ -16,10 +16,13 @@ class CompiledContainerBase {
 				switch entry.params {
 					case [expr]:
 						switch expr.expr {
-							case EConst(CString(s, _)):
-								s.split(';');
+							case EArrayDecl(values):
+								values.map(value -> switch value.expr {
+									case EConst(CString(s, _)): s;
+									default: null;
+								}).filter(s -> s != null);
 							default:
-								Context.error('Expected a string', expr.pos);
+								Context.error('Expected an array', expr.pos);
 						}
 					case []:
 						[];

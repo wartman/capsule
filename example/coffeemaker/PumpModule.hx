@@ -8,5 +8,9 @@ class PumpModule implements Module {
 
 	public function provide(container:Container) {
 		container.map(Pump).to(Thermosiphon).share();
+		container.when(Pump).resolved((pump, logger:CoffeeLogger) -> {
+			logger.log('Pump found');
+			pump;
+		});
 	}
 }

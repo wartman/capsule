@@ -8,12 +8,13 @@ using haxe.macro.TypeTools;
 
 class Mapping {
 	public static function to(self:Expr, factory:Expr) {
+		var context = Context.getLocalClass();
 		var t = switch Context.typeof(self) {
 			case TInst(_, [t]): t.toComplexType();
 			default: macro :Dynamic;
 		}
 		var provider = createProvider(factory, t, factory.pos);
-		return macro @:pos(self.pos) $self.toProvider($provider);
+		return macro @:pos(self.pos) $self.toProvider(${provider});
 	}
 
 	public static function toShared(self, factory) {
@@ -25,11 +26,11 @@ class Mapping {
 			case TInst(_, [t]): t.toComplexType();
 			default: macro :Dynamic;
 		}
-		var provider = createProvider(factory, t, factory.pos);
+		var provider = createProvider(factory, t, factory.pos, true);
 		return macro @:pos(self.pos) {
 			var mapping = $self;
 			if (!mapping.resolvable()) {
-				mapping.toProvider(new capsule.provider.OverridableProvider($provider));
+				mapping.toProvider(new capsule.provider.OverridableProvider(${provider}));
 			}
 			mapping;
 		}

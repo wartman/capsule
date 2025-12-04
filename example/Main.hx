@@ -5,8 +5,9 @@ import generics.*;
 function main() {
 	Container
 		.compile(new CoffeeLoggerModule(), new CoffeeKernel(), new CoffeeMakerModule())
-		.open((coffeemaker:CoffeeMaker) -> {
+		.open((coffeemaker:CoffeeMaker, logger:CoffeeLogger) -> {
 			coffeemaker.brew();
+			logger.log('Done');
 		});
 
 	Container
