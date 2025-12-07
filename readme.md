@@ -1,19 +1,14 @@
-Capsule
-=======
+# Capsule
 
-Capsule is a minimal, easy to use dependency injection library.
+Capsule is a minimal, easy to use dependency injection/IoC library that checks your dependencies at compile time.
 
-> Note: The previous version can be found [here](https://github.com/wartman/capsule/releases/tag/v0.2.6).
+## Features
 
-Features
---------
-
-- Simple, opinionated API.
+- Simple API.
 - All the complicated stuff is handled by macros -- at runtime Capsule is just a few simple classes.
-- Using `capsule.Module`s and `capsule.Container.build` will check your dependencies at compile time -- no more runtime exceptions if you forget to add something, and you'll be warned if any changes to your code requires a new dependency.
+- Using `capsule.Module`s and `capsule.Container.compile` will check your dependencies at compile time -- no more runtime exceptions if you forget to add something, and you'll be warned if any changes to your code requires a new dependency.
 
-Getting Started
----------------
+## Getting Started
 
 Install using [Lix](https://github.com/lix-pm):
 
@@ -25,224 +20,286 @@ Install using haxelib:
 
 Add `-lib capsule` to your hxml file and you're ready to go!
 
-Guide
------
+## Guide
 
-> The [examples](./example) folder is a good place to see how Capsule works too!
+> Be sure to check the [examples](./example) folder for some working code. 
 
-Here's a quick look at the API in action:
+Capsule's API is very simple and should be familiar if you've ever used a dependency injection framework. It does have a few quirks due to its heavy use of macros and some of the limitations of Haxe's syntax, but we'll cover those when they come up.
+
+Before we start, lets take a look at an example of the *recommended* way to create a Container. We'll then strip things back to a simpler example, go over the basics of how mapping dependencies to the Container works, and then bring back more advanced concepts and explain while they're needed.
 
 ```haxe
-import capsule.Container;
-import capsule.Module;
+import capsule.*;
 
-interface Foo {
-  public function getFoo():String;
-}
+class Value<T> {
+  final value:T;
 
-interface Bar {
-  public function getBar():String;
-}
+  public function new(value) {
+    this.value = value;
+  }
 
-interface FooBar {
-  public function getFooBar():String;
-}
-
-class DefaultFoo implements Foo {
-  public function new() {}
-
-  public function getFoo() {
-    return 'foo';
+  public function getValue() {
+    return this.value;
   }
 }
 
-class DefaultBar implements Bar {
-  public function new() {}
-
-  public function getBar() {
-    return 'bar';
-  }
-}
-
-class DefaultFooBar implements FooBar {
-  final foo:Foo;
-  final bar:Bar;
-
-  public function new(foo, bar) {
-    this.foo = foo;
-    this.bar = bar;
-  }
-
-  public function getFooBar() {
-    return '${foo.geFoo()}${bar.getBar()}';
-  }
-}
-
-class FooAndBarModule implements Module {
+class StringModule implements Module {
   public function new() {}
 
   public function provide(container:Container) {
-    container.map(Foo).to(DefaultFoo);
-    container.map(Bar).to(DefaultBar);
+    container.map(String).to('foo');
+    container.map(Value(String)).to(Value(String)).share();
+
+    container.when(Value(String)).resolved((value, str:String) -> {
+      trace(value.getValue() == str);
+      value;
+    });
   }
 }
 
-class FooBarModule implements Module {
-  public function new() {}
-
-  public function provide(container:Container) {
-    container.map(FooBar).to(DefaultFooBar);
-  }
-}
-
 function main() {
-  var container = Container.compile(
-    new FooAndBarModule(),
-    new FooBarModule()
-  );
-  container.open((item:FooBar) -> {
-    trace(item.getFooBar()); // => "foobar"
-  });
+  Container
+    .compile(new StringModule())
+    .open((value:Value(String)) -> {
+      trace(value.getValue());
+    });
 }
 ```
 
-This should all be pretty straightforward, but there are some important things to call out.
+There's a lot going on here, so let's start by just looking at the Container.
 
-The first is that `Container.compile` is a macro that ensures the dependencies of all `capsule.Module`s passed to it are satisfied. If, for example, we omitted the `FooAndBarModule` from the above example:
+### Container
 
-```haxe
-function main() {
-  var container = Container.compile(
-    // new FooAndBarModule(),
-    new FooBarModule()
-  );
-  container.open((item:FooBar) -> {
-    trace(item.getFooBar()); // => "foobar"
-  });
-}
-```
-
-...our code **wouldn't compile**. Instead, we'd get an error telling us that the `Foo` and `Bar` dependencies were not satisfied.
-
-Additionally, we'd get a compile-time error with `container.open(...)` if we asked for a dependency we didn't provide:
+While you *should* use the `Container.compile` macro (for reasons we'll get into shortly), for the purposes of this example we'll just create a container directly and map a value to it.
 
 ```haxe
-function main() {
-  var container = Container.compile(
-    new FooAndBarModule(),
-    new FooBarModule()
-  );
-  // Will throw a compile time exception that we haven't provided a `String`:
-  container.open((item:FooBar, otherThing:String) -> {
-    trace(item.getFooBar()); // => "foobar"
-  });
-}
-```
-
-You don't _need_ to use Capsule with `Container.compile` and `Module`s, but it's probably a good idea.
-
-Something that the example doesn't cover is how to handle generic types. Haxe only lets us use the angle bracket syntax (e.g. `Map<String, String>`) in a few places, so Capsule hacks the function-call syntax to get around this:
-
-```haxe
-capsule.map(Map(String, String)).to([ 'foo' => 'bar', 'bin' => 'bax' ]);
-```
-
-> If you're new to Haxe, please note that this is **NOT** standard syntax. It'll only work in `capsule.map(...)`, `capsule.get(...)` and `capsule.map(...).to(...)`.
-
-Another thing not covered in the example are the different kinds of values you can map to. The simplest is mapping to a Class, which automatically injects its constructor:
-
-```haxe
-container.map(FooBar).to(FooBar);
-```
-
-However, say we wanted to provide a different implementation of `Foo` _only_ for `FooBar`. We could map to a function instead:
-
-```haxe
-container.map(FooBar).to(function (bar:Bar) {
-  return new FooBar(new SomeOtherFoo(), bar);
-});
-```
-
-Function parameters will all be injected by the container and tracked by `Module`s, just like mapping to a class. Note that any function will work here, so something like this is fine:
-
-```haxe
-container.map(FooBar).to(FooBar.createWithCustomFoo);
-```
-
-> Internally Capsule is actually mapping **everything** to functions -- `container.map(FooBar).to(FooBar)` is the same as `container.map(FooBar).to(FooBar.new)`, and if you poke around in the source code you'll see that's exactly what's happening.
-
-You can also just map a type to a value, like we did with `Map<String, String>`.
-
-```haxe
-// This will work:
+var container = new Container();
 container.map(String).to('foo');
 ```
 
-Unlike the other mappings, value mappings will **always** return the same value. Function and Class mappings will be called every time, returning a new instance/value. This isn't always what we want, so you can mark a mapping as shared with the `share` method:
+Now that we've done this, we can ask our container for a `String` and we'll get `'foo'` back.
 
 ```haxe
-container.map(FooBar).to(DefaultFooBar).share();
+container.get(String); // -> 'foo'
 ```
 
-Because this is such a common pattern, you can also use the `toShared` shortcut to do the same thing:
+More importantly, we can now use this mapped value to satisfy the dependencies of other mappings in the container. Let's take the `Value<T>` class from the initial example. There are a few ways we could add it to our container, but lets start with a callback.
 
 ```haxe
-container.map(FooBar).toShared(DefaultFooBar);
+container.map(Value(String)).to((str:String) -> new Value(str));
 ```
 
-This will ensure that an instance is only created once, and is returned whenever it's requested thereafter.
+> Note: In an ideal world, we'd write this like `container.map(Value<String>).to(...)`, or perhaps `container.map<Value<String>>().to(...)`. Unfortunately Haxe does not allow this, so Capsule uses the function-call syntax for generics instead as a bit of a hack. This is not a normal Haxe thing -- Capsule is using macros here.
 
-If you need to modify a mapping -- by, say, adding a route to a router in some notional web app -- you can use Capsule's `when` api. Right now Capsule only has one hook -- `resolved` -- which is called whenever a mapping is (as you might have guessed) resolved. Here's an example:
+Now when we ask for a `Value<String>` it will create a new instance of the Value class, inject the `String` mapping and give us the result.
 
 ```haxe
-container.when(Router).resolved(router -> {
-  router.add(new Route('/foo/bar'));
-  // You MUST return a Router from this function. Note that this means
-  // you're also able to change the value of a mapping using `resolved`,
-  // which you should be careful about.
-  return router;
-});
+var value = container.get(Value(String)); 
+value.getValue(); // -> 'foo' 
 ```
 
-Importantly, you can do this with a mapping that **does not exist yet**. In a sense, you're telling Capsule that *if/when* a type is *resolved*, apply the given transformation, much like an event handler. The following will work just fine:
+To make this simpler, we could also map directly to the `Value<T>` class, which automatically injects its constructor.
 
 ```haxe
-container.when(Router).resolved(router -> {
-  router.add(new Route('/foo/bar'));
-  return router;
-});
-container.map(Router).toShared(Router);
+container.map(Value(String)).to(Value(String));
 ```
 
-Note that the container will inject any arguments you use on the method you pass to `resolved` *except for* the first argument, which points to the mapping being investigated. This first argument must be present and must not have a manually set type. 
+This means that we could, for example, add a new dependency to our `Value<T>` class. 
 
 ```haxe
-container.when(Router).resolved((router, routes:RouteCollection) -> {
-  for (route in routes) {
-    router.add(route);
+interface Logger {
+  public function log(message:String):Void;
+}
+
+class Value<T> {
+  final value:T;
+  final logger:Logger;
+
+  public function new(value, logger) {
+    this.value = value;
+    this.logger = logger;
   }
-  return router;
-});
+
+  public function getValue() {
+    logger.log('Getting value: ${this.value}');
+    return this.value;
+  }
+}
 ```
 
-Changelog
----------
+If we were mapping `Value<String>` to our container using a callback, we'd have to go in and change things manually to make it work.
 
-### 0.6.0
+```haxe
+container.map(Value(String)).to((str:String, logger:Logger) -> new Value(str, logger));
+```
 
-- `resolved` now requires an argument that points to the value being inspected, which feels much less magic.
-- Removed `build` in favor of `compile`, a macro that gives us a type-safe way to open the Container.
+This is why it's recommended to map to a class whenever possible and allow Capsule to automatically inject dependencies.
 
-### 0.5.0
-- Removed `getMapping` in favor of `when`. `getMapping` was only ever used to `extend` mappings, and `when` provides a much safer and more event-like system to handle that. Right now it only has a `resolved` hook, but in the future there might be more added to it.
-  - Due to the way this works, the old `extend` method has been removed entirely, making this a breaking change.
+> Note: Internally, `container.map(Value(String)).to(Value(String))` is the same as writing `container.map(Value(String)).to(Value.new)`. Capsule uses a macro to inspect the expression passed to the `to` method. If it's a value, like `"String"` or an instance like `new Value("Foo")`, it will map the type directly to that value. If it's a class or a function, it will inspect the arguments of the function (or constructor) and generate the code needed to resolve the dependencies from the Container.
 
-### 0.4.0
-- Removed the confusing `getChild` stuff. It wasn't very useful and it mostly added lots of strange complexity and, worse, led to using Containers in very weird ways. Instead, you can now `clone` a Container if you really need to.
+However we still have a problem, regardless of which method we use. We don't have a `Logger` mapped to our container. When we try to get a `Value<String>` from it we'll get a *runtime* exception telling us that it's missing a dependency. This is something we can fix and it's better than nothing, but wouldn't it be better if our code warned us at compile time that a dependency was missing?
 
-### 0.3.0
-- Breaks anything that used the old version of Capsule. Is that a feature?
-  - I promise it's for the best.
-- Removed all `@:inject.*` meta. Instead, dependencies are only injected into constructors (or derived from any function's arguments). This is to simplify the API and ensure that code doesn't require Capsule to work.
-- All functions passed to the `Mapping.to(...)` macro are injectable now, not just lambdas.
-- `capsule.Module` replaces `capsule.ServiceProvider` and tracks dependencies at compile time.
+### Modules and CompiledContainers
+
+This is where Modules come in. While they're also a useful way to organize dependencies, they also allow Capsule to build a dependency graph and warn you if you're missing (or repeating) a mapping.
+
+This *only* works if you're using `Container.compile`. This is a macro that will build a `CompiledContainer` which contains a list of all the dependencies it can satisfy. It will also check the Modules its given, at compile time, to make sure that no dependency is missing.
+
+Lets use our `Value<T>` class with its `Logger` dependency. As it stands, the following code will not compile and instead we'll get a warning similar to `the mapping Value<String> requires Logger`. 
+
+```haxe
+class ValueModule implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    container.map(String).to('foo');
+    container.map(Value(String)).to(Value(String));
+  }
+}
+
+function main() {
+  var container = Container.compile(new ValueModule());
+}
+```
+
+We *could* add a mapping for our `Logger` in the `ValueModule` module, but lets create a new module instead and use that.
+
+```haxe
+class SimpleLogger implements Logger {
+  public function new() {}
+
+  public function log(message:String) {
+    trace(message);
+  }
+}
+
+class SimpleLoggerModule implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    // Note that we're mapping an interface to an implementing class:
+    container.map(Logger).to(SimpleLogger);
+  }
+}
+```
+
+Once we add this module our code will compile.
+
+```haxe
+function main() {
+  var container = Container.compile(new SimpleLoggerModule(), new ValueModule());
+}
+```
+
+To get at our mapped values, we can use `container.open(...)` or `container.get(...)`. Capsule will also check both of these methods at compile time and warn us if it can't satisfy the requested mapping.
+
+```haxe
+function main() {
+  var container = Container.compile(new SimpleLoggerModule(), new ValueModule());
+
+  // The following will work:
+  container.open((value:Value<String>, logger:Logger) -> {
+    logger.log('Hello world');
+    var value = value.getValue();
+  });
+  var value = container.get(Value(String));
+  
+  // ...but if we ask for something the CompiledContainer does not have (such as 
+  // Value<Int>) we'll get an error:
+  container.open((value:Value<Int>, logger:Logger) -> {
+    logger.log('Hello world');
+    var value = value.getValue();
+  });
+  var value = container.get(Value(Int));
+}
+```
+
+### Advanced Mapping
+
+There are still a few issues with our code. The most important one is that a new `Logger` will be created *every time* it's requested, which we don't want. Fixing this is simple: we need to mark it as `shared`. There are two ways to do this:
+
+```haxe
+// Using the `share` method:
+container.map(Logger).to(SimpleLogger).share();
+
+// Using the `toShared` shortcut:
+container.map(Logger).toShared(SimpleLogger);
+```
+
+This means that the Logger will *only be created once*, the first time it's requested.
+
+We might also want to make the Logger overridable by another mapping. Let's say we have a `NullLogger` that simply ignores the messages passed to it. We want to use this in production, but allow another module to override it during debugging. We can use `toDefault` to map `Logger` to `NullLogger`, which will ensure that `NullLogger` will only be used if another mapping does not exist or is not provided later.
+
+```haxe
+class NullLogger implements Logger {
+  public function new() {}
+
+  public function log(message:String) {
+    // noop
+  }
+}
+
+class NullLoggerModule implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    // We still want to mark this as `shared` so it's only created once *if* it is used.
+    container.map(Logger).toDefault(NullLogger).share();
+  }
+}
+
+function main() {
+  var container = Container.compile(
+    new NullLoggerModule(),
+    #if debug
+    new SimpleLoggerModule(), 
+    #end
+    new ValueModule()
+  );
+
+  // etc.
+}
+```
+
+Note that if you *don't* use `toDefault`, mapping a type more than once will cause the Container to fail to compile.
+
+### When Resolved
+
+One final feature to go over is the `when(...).resolved(...)` hook. This allows you to inspect and modify a mapping right before its resolved by the container, much like an event or a filter. Lets set up our example to track how many times each mapping is instantiated by the container. The `shared` mappings should only be created once, while the others should trigger multiple times.
+
+```haxe
+class Tracking implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    // Note: the first argument is always the value being investigated. The rest of the 
+    // arguments, if any, will be injected by the container. If you try to inject a
+    // dependency the container does not satisfy you'll get a compiler error.
+    container.when(Logger).resolved((logger) -> {
+      logger.log('Logger resolved');
+      logger;
+    });
+
+    var count = 0;
+    container.when(Value(String)).resolved((value, logger:Logger) -> {
+      count++;
+      logger.log('Value<String> has be used ${count} times');
+      value;
+    });
+  }
+}
+
+function main() {
+  var container = Container.compile(
+    new NullLoggerModule(),
+    #if debug
+    new Tracking(),
+    new SimpleLoggerModule(),
+    #end
+    new ValueModule()
+  );
+
+  // etc.
+}
+```
+

@@ -4,14 +4,40 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 
 using capsule.internal.Builder;
+using capsule.internal.Tools;
 using haxe.macro.Tools;
 
 class CompiledContainerBase {
-	macro public static function open(self, handler):Expr {
+	public static function open(self:Expr, handler:Expr):Expr {
+		var provides = getListOfProvidedTypes(self);
+		var deps = handler.getDependencies();
+
+		for (dep in deps) {
+			if (!provides.contains(dep)) {
+				Context.error('Container requires $dep.', handler.pos);
+			}
+		}
+
+		var factory = handler.createFactory();
+		return macro @:pos(handler.pos) ${factory}(@:privateAccess $self.container);
+	}
+
+	public static function get(self, target:Expr):Expr {
+		var provides = getListOfProvidedTypes(self);
+		var id = target.createIdentifier();
+		var type = target.resolveComplexType();
+
+		if (!provides.contains(id)) {
+			Context.error('Container does not provide $id.', target.pos);
+		}
+
+		return macro @:pos(target.pos) @:privateAccess ($self.container.resolveMappedValue($v{id}) : $type);
+	}
+
+	static function getListOfProvidedTypes(self:Expr) {
 		var type = Context.typeof(self);
 		var cls = type.getClass();
-
-		var provides = switch cls.meta.extract(':capsule.provides') {
+		return switch cls.meta.extract(':capsule.provides') {
 			case [entry]:
 				switch entry.params {
 					case [expr]:
@@ -32,15 +58,5 @@ class CompiledContainerBase {
 			default:
 				Context.error('Completion failed -- try restarting the Haxe server.', self.pos);
 		}
-
-		var deps = handler.getDependencies();
-		for (dep in deps) {
-			if (!provides.contains(dep)) {
-				Context.error('Container requires $dep.', handler.pos);
-			}
-		}
-
-		var factory = handler.createFactory();
-		return macro @:pos(handler.pos) ${factory}(@:privateAccess $self.container);
 	}
 }

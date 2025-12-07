@@ -10,11 +10,15 @@ function main() {
 			logger.log('Done');
 		});
 
-	Container
-		.compile(new ValueModule())
-		.open((int:Value<Int>, str:Value<String>, thing:String) -> {
-			trace(int.getValue());
-			trace(str.getValue());
-			trace(thing);
-		});
+	var container = Container.compile(new ValueModule());
+
+	container.open((int:Value<Int>, str:Value<String>, thing:String) -> {
+		trace(int.getValue());
+		trace(str.getValue());
+		trace(thing);
+	});
+
+	// `container.get` is also checked at compile time:
+	container.get(Value(Int)).getValue();
+	container.get(Value(String)).getValue();
 }

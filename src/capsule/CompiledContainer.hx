@@ -11,4 +11,6 @@ abstract class CompiledContainerBase {
 	}
 
 	macro public function open(handler);
+
+	macro public function get(id);
 }
