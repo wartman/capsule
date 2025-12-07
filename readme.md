@@ -303,3 +303,57 @@ function main() {
 }
 ```
 
+### Composing Modules
+
+A module can use other modules, and the dependencies those modules provide will be tracked by the Container compiler.
+
+```haxe
+class CoreModule implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    container.use(NullLoggerModule, ValueModule);
+  }
+}
+
+function main() {
+  var container = Container.compile(
+    #if debug
+    new Tracking(),
+    new SimpleLoggerModule(),
+    #end
+    new CoreModule()
+  );
+
+  // etc.
+}
+```
+
+Containers composed in this way will be instantiated by the container, which means they can have dependencies of their own. For example, suppose we wanted to add a `Value<Int>` to our container:
+
+```haxe
+class IntValueModule implements Module {
+  final value:Int;
+
+  public function new(value) {
+    this.value = value;
+  }
+
+  public function provide(container:Container) {
+    container.map(Value(Int)).to(new Value(value));
+  }
+}
+```
+
+If we add this to our `CoreModule` we'll also need to map something to `Int` to get it to compile.
+
+```haxe
+class CoreModule implements Module {
+  public function new() {}
+
+  public function provide(container:Container) {
+    container.map(Int).toDefault(1);
+    container.use(NullLoggerModule, ValueModule, IntValueModule);
+  }
+}
+```

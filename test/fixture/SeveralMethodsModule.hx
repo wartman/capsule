@@ -9,7 +9,6 @@ class SeveralMethodsModule implements Module {
 	public function provide(container:Container) {
 		provideString(container);
 		this.provideSimpleService(container);
-		thisWillNotBeTracked();
 		container.use(ValueModule);
 	}
 
@@ -19,9 +18,5 @@ class SeveralMethodsModule implements Module {
 
 	function provideSimpleService(c:Container) {
 		c.map(SimpleService).to(SimpleWithDep).share();
-	}
-
-	function thisWillNotBeTracked() {
-		// noop
 	}
 }
