@@ -265,7 +265,7 @@ Note that if you *don't* use `toDefault`, mapping a type more than once will cau
 
 ### When Resolved
 
-One final feature to go over is the `when(...).resolved(...)` hook. This allows you to inspect and modify a mapping right before its resolved by the container, much like an event or a filter. Lets set up our example to track how many times each mapping is instantiated by the container. The `shared` mappings should only be created once, while the others should trigger multiple times.
+One final feature to go over is the `when(...).resolved(...)` hook. This allows you to inspect and modify a mapping right before it's resolved by the container, much like an event or a filter. Lets set up our example to track how many times each mapping is instantiated by the container. The `shared` mappings should only be created once, while the others should trigger multiple times.
 
 ```haxe
 class Tracking implements Module {
@@ -283,7 +283,7 @@ class Tracking implements Module {
     var count = 0;
     container.when(Value(String)).resolved((value, logger:Logger) -> {
       count++;
-      logger.log('Value<String> has be used ${count} times');
+      logger.log('Value<String> has been used ${count} times');
       value;
     });
   }
