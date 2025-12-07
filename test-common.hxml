@@ -6,4 +6,8 @@
 -D debug
 -D analyzer-optimize
 -D message.reporting=pretty
+
+# Setting this is not recommended, we're just using it for testing:
+-D capsule.suppress-module-subclass-warning
+
 -dce full

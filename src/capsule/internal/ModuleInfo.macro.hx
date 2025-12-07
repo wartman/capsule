@@ -21,22 +21,41 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 		Context.error('Must be a capsule.Module', pos);
 	}
 
-	var cls = type.getClass();
-
-	// Iterate through module fields and ensure types are loaded.
-	for (field in cls.fields.get()) {
-		field.expr();
-	}
-
+	var mappings:Array<MetadataEntry> = [];
+	var requirements:Array<MetadataEntry> = [];
+	var subModules:Array<MetadataEntry> = [];
 	var exports:Array<MappingInfo> = [];
 	var dependencies:Array<Identifier> = [];
 	var uses:Array<Identifier> = [];
 
-	// Reload type to make sure we have any added meta (this feels super hacky, but it works?).
-	var cls = type.getClass();
-	var mappings = cls.meta.extract(':capsule.mapping');
-	var requirements = cls.meta.extract(':capsule.dependency');
-	var subModules = cls.meta.extract(':capsule.uses');
+	function loadMetadata(get:() -> ClassType) {
+		var cls = get();
+		// Iterate through module fields and ensure types are loaded.
+		for (field in cls.fields.get()) {
+			field.expr();
+		}
+		// Reload type to make sure we have any added meta (this feels hacky, but it works?).
+		var cls = get();
+
+		mappings = mappings.concat(cls.meta.extract(':capsule.mapping'));
+		requirements = requirements.concat(cls.meta.extract(':capsule.dependency'));
+		subModules = subModules.concat(cls.meta.extract(':capsule.uses'));
+
+		if (cls.superClass != null) {
+			#if !capsule.suppress_module_subclass_warning
+			Context.warning(
+				'You\'re extending another Module. This is not recommended. It will work, but'
+				+ ' may not track dependencies correctly if you override any methods and do not'
+				+ ' call `super.{methodName}()`. This is a good way to get runtime errors.'
+				+ ' As an alternative, try composing modules with `container.use(...)` instead.'
+				+ ' You can suppress this warning with `-D capsule.suppress-module-subclass-warning`.'
+				, cls.pos);
+			#end
+			loadMetadata(() -> cls.superClass.t.get());
+		}
+	}
+
+	loadMetadata(() -> type.getClass());
 
 	for (mapping in mappings) switch mapping.params {
 		case [obj]:

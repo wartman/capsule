@@ -62,4 +62,11 @@ class ModuleTest extends Test {
 			str.equals('foo_bar');
 		});
 	}
+
+	public function testModulesCanBeSubclassed() {
+		var container = Container.compile(new SubClassedModule());
+		container.open((simple:SimpleService) -> {
+			simple.getValue().equals('foo');
+		});
+	}
 }
