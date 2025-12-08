@@ -63,7 +63,7 @@ function createFactory(expr:Expr, ?pos:Position) {
 
 private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Position) {
 	function argsToExpr(id:String) {
-		return macro container.resolveMappedValue($v{id});
+		return macro container.resolveBoundValue($v{id});
 	}
 
 	return switch expr.expr {

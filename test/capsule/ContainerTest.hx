@@ -9,8 +9,8 @@ using utest.Assert;
 class ContainerTest extends Test {
 	public function testSimple() {
 		var container = new Container();
-		container.map(String).to('foo');
-		container.map(Int).to(1);
+		container.bind(String).to('foo');
+		container.bind(Int).to(1);
 
 		container.get(String).equals('foo');
 		container.get(Int).equals(1);
@@ -18,14 +18,14 @@ class ContainerTest extends Test {
 
 	public function testBasicClassMapping() {
 		var container = new Container();
-		container.map(SimpleService).to(Simple);
+		container.bind(SimpleService).to(Simple);
 		container.get(SimpleService).getValue().equals('value');
 	}
 
 	public function testClassInstanceMapping() {
 		var container = new Container();
 
-		container.map(ValueService).to(new Value('foo'));
+		container.bind(ValueService).to(new Value('foo'));
 
 		container.get(ValueService).get().equals('foo');
 	}
@@ -33,8 +33,8 @@ class ContainerTest extends Test {
 	public function testBasicClassDeps() {
 		var container = new Container();
 
-		container.map(ValueService).to(new Value('dep'));
-		container.map(SimpleService).to(SimpleWithDep);
+		container.bind(ValueService).to(new Value('dep'));
+		container.bind(SimpleService).to(SimpleWithDep);
 
 		container.get(SimpleService).getValue().equals('dep');
 	}
@@ -42,8 +42,8 @@ class ContainerTest extends Test {
 	public function testBasicInlineFunctionProvider() {
 		var container = new Container();
 
-		container.map(ValueService).to(new Value('dep'));
-		container.map(String).to(function(value:ValueService) {
+		container.bind(ValueService).to(new Value('dep'));
+		container.bind(String).to(function(value:ValueService) {
 			return value.get();
 		});
 
@@ -57,43 +57,43 @@ class ContainerTest extends Test {
 	public function testBasicNamedFunctionProvider() {
 		var container = new Container();
 
-		container.map(ValueService).to(new Value('dep'));
-		container.map(String).to(namedFunctionProvider);
+		container.bind(ValueService).to(new Value('dep'));
+		container.bind(String).to(namedFunctionProvider);
 
 		container.get(String).equals('dep');
 	}
 
 	public function testBasicTypedefAsId() {
 		var container = new Container();
-		container.map(FooIdentifier).to('foo');
+		container.bind(FooIdentifier).to('foo');
 		container.get(FooIdentifier).equals('foo');
 	}
 
 	public function testSimpleParams() {
 		var container = new Container();
-		container.map(Map(String, String)).to(['foo' => 'foo']);
+		container.bind(Map(String, String)).to(['foo' => 'foo']);
 		container.get(Map(String, String)).get('foo').equals('foo');
 	}
 
 	public function testSimpleGenericClass() {
 		var container = new Container();
-		container.map(String).to('foo');
-		container.map(HasParamsService(String)).to(HasParams(String));
+		container.bind(String).to('foo');
+		container.bind(HasParamsService(String)).to(HasParams(String));
 		container.get(HasParamsService(String)).getValue().equals('foo');
 	}
 
 	public function testFunctionCall() {
 		var fun = () -> 'foo';
 		var container = new Container();
-		container.map(String).to(fun());
+		container.bind(String).to(fun());
 		container.get(String).equals('foo');
 	}
 
 	public function testNestedGenericClass() {
 		var container = new Container();
-		container.map(String).to('foo');
-		container.map(HasParamsService(String)).to(HasParams(String));
-		container.map(HasParamsService(HasParamsService(String))).to(HasParams(HasParamsService(String)));
+		container.bind(String).to('foo');
+		container.bind(HasParamsService(String)).to(HasParams(String));
+		container.bind(HasParamsService(HasParamsService(String))).to(HasParams(HasParamsService(String)));
 		container.get(HasParamsService(HasParamsService(String)))
 			.getValue()
 			.getValue()
@@ -102,7 +102,7 @@ class ContainerTest extends Test {
 
 	public function testSimpleInstantiate() {
 		var container = new Container();
-		container.map(String).to('foo');
+		container.bind(String).to('foo');
 
 		var test = container.instantiate(HasParams(String));
 		test.getValue().equals('foo');
@@ -111,8 +111,8 @@ class ContainerTest extends Test {
 	public function testExtendsMappings() {
 		var container = new Container();
 
-		container.map(String).to('foo').share();
-		container.map(Int).to(1);
+		container.bind(String).to('foo').share();
+		container.bind(Int).to(1);
 
 		container.when(String).resolved((value, i:Int) -> value + i);
 
@@ -123,13 +123,13 @@ class ContainerTest extends Test {
 		var container = new Container();
 		var iter = 1;
 
-		container.map(String).to(() -> 'foo' + container.get(Int));
-		container.map(Int).to(() -> iter++);
+		container.bind(String).to(() -> 'foo' + container.get(Int));
+		container.bind(Int).to(() -> iter++);
 
 		container.get(String).equals('foo1');
 		container.get(String).equals('foo2');
 
-		container.map(Int).share();
+		container.bind(Int).share();
 
 		container.get(String).equals('foo3');
 		container.get(String).equals('foo3');
@@ -139,8 +139,8 @@ class ContainerTest extends Test {
 		var container = new Container();
 		var iter = 1;
 
-		container.map(String).to(() -> 'foo' + container.get(Int));
-		container.map(Int).toShared(() -> iter++);
+		container.bind(String).to(() -> 'foo' + container.get(Int));
+		container.bind(Int).toShared(() -> iter++);
 
 		container.get(String).equals('foo1');
 		container.get(String).equals('foo1');
@@ -148,7 +148,7 @@ class ContainerTest extends Test {
 
 	public function testChildDoesNotShareWithParent() {
 		var container = new Container();
-		container.map(Array(Int)).to(() -> [1, 2, 3]).share();
+		container.bind(Array(Int)).to(() -> [1, 2, 3]).share();
 
 		var value = container.get(Array(Int));
 		value.length.equals(3);
@@ -169,15 +169,15 @@ class ContainerTest extends Test {
 	public function testMappingExtensionsToNullProvider() {
 		var container = new Container();
 		container.when(String).resolved(value -> value + 'bar');
-		container.map(String).to('foo');
+		container.bind(String).to('foo');
 		container.get(String).equals('foobar');
 	}
 
 	public function testMappingToAlreadyResolvedMapping() {
 		var container = new Container();
 		try {
-			container.map(String).to('foo');
-			container.map(String).to('bar');
+			container.bind(String).to('foo');
+			container.bind(String).to('bar');
 			Assert.fail('Should have thrown an exception');
 		} catch (e:ProviderAlreadyExistsException) {
 			Assert.pass();
@@ -186,26 +186,26 @@ class ContainerTest extends Test {
 
 	public function testDefaultMapping() {
 		var container = new Container();
-		container.map(String).toDefault('foo');
+		container.bind(String).toDefault('foo');
 		container.get(String).equals('foo');
-		container.map(String).to('bar');
+		container.bind(String).to('bar');
 		container.get(String).equals('bar');
 	}
 
 	public function testNotOverridingDefaultMapping() {
 		var container = new Container();
-		container.map(String).to('bar');
+		container.bind(String).to('bar');
 		container.get(String).equals('bar');
-		container.map(String).toDefault('foo');
+		container.bind(String).toDefault('foo');
 		container.get(String).equals('bar');
 	}
 
 	public function testDefaultMappingExtensions() {
 		var container = new Container();
-		container.map(String).toDefault('foo');
+		container.bind(String).toDefault('foo');
 		container.when(String).resolved(value -> value + '_bar');
 		container.get(String).equals('foo_bar');
-		container.map(String).to('bar');
+		container.bind(String).to('bar');
 		container.get(String).equals('bar_bar');
 	}
 
@@ -216,7 +216,7 @@ class ContainerTest extends Test {
 			value.push('bar');
 			value;
 		});
-		container.map(Array(String)).to(() -> ['foo']).share();
+		container.bind(Array(String)).to(() -> ['foo']).share();
 
 		container.get(Array(String)).join('_').equals('foo_bar');
 		container.get(Array(String)).join('_').equals('foo_bar');

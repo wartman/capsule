@@ -8,9 +8,7 @@ using utest.Assert;
 class ModuleTest extends Test {
 	public function testSimpleModules() {
 		var container = Container.compile(new ValueModule('value'), new SimpleModule());
-		container.open((service:SimpleService) -> {
-			service.getValue().equals('value');
-		});
+		container.get(SimpleService).getValue().equals('value');
 	}
 
 	public function testSimpleCompile() {

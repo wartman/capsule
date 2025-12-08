@@ -5,11 +5,14 @@ using Lambda;
 class Container {
 	public static macro function compile(...modules);
 
-	final mappings:Array<Mapping<Dynamic>> = [];
+	final mappings:Array<Binding<Dynamic>> = [];
 
 	public function new() {}
 
+	@:deprecated('Use `bind` instead')
 	public macro function map(target);
+
+	public macro function bind(target);
 
 	public macro function get(target);
 
@@ -22,24 +25,24 @@ class Container {
 	public function clone() {
 		var cloned = new Container();
 		for (mapping in mappings) {
-			cloned.addMapping(mapping.clone());
+			cloned.addBinding(mapping.clone());
 		}
 		return cloned;
 	}
 
 	@:noCompletion
-	public function ensureMapping<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Mapping<T> {
-		var mapping:Null<Mapping<T>> = cast mappings.find(mapping -> mapping.id == id);
-		if (mapping == null) return addMapping(new Mapping(id));
+	public function ensureBinding<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Binding<T> {
+		var mapping:Null<Binding<T>> = cast mappings.find(mapping -> mapping.id == id);
+		if (mapping == null) return addBinding(new Binding(id));
 		return mapping;
 	}
 
 	@:noCompletion
-	public function resolveMappedValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
-		return ensureMapping(id).resolve(this);
+	public function resolveBoundValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
+		return ensureBinding(id).resolve(this);
 	}
 
-	function addMapping<T>(mapping:Mapping<T>):Mapping<T> {
+	function addBinding<T>(mapping:Binding<T>):Binding<T> {
 		mappings.push(mapping);
 		return mapping;
 	}

@@ -31,7 +31,7 @@ class CompiledContainerBase {
 			Context.error('Container does not provide $id.', target.pos);
 		}
 
-		return macro @:pos(target.pos) @:privateAccess ($self.container.resolveMappedValue($v{id}) : $type);
+		return macro @:pos(target.pos) @:privateAccess ($self.container.resolveBoundValue($v{id}) : $type);
 	}
 
 	static function getListOfProvidedTypes(self:Expr) {

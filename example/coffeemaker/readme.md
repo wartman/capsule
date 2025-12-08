@@ -1,5 +1,4 @@
-Coffee Maker Example
-====================
+# Coffee Maker Example
 
 Based on: [Dagger's Example](https://github.com/google/dagger/tree/master/examples/maven/coffee/src/main/java/example/dagger).
 

@@ -3,7 +3,7 @@ package capsule;
 import capsule.provider.*;
 
 class When<T> {
-	final mapping:Mapping<T>;
+	final mapping:Binding<T>;
 
 	public function new(mapping) {
 		this.mapping = mapping;

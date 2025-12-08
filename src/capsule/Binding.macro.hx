@@ -6,7 +6,7 @@ import capsule.internal.Builder;
 
 using haxe.macro.TypeTools;
 
-class Mapping {
+class Binding {
 	public static function to(self:Expr, factory:Expr) {
 		var t = switch Context.typeof(self) {
 			case TInst(_, [t]): t.toComplexType();

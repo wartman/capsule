@@ -10,7 +10,7 @@ using haxe.macro.Tools;
 
 typedef ModuleInfo = {
 	public final id:String;
-	public final exports:Array<MappingInfo>;
+	public final exports:Array<BindingInfo>;
 	public final dependencies:Array<Identifier>;
 	public final uses:Array<Identifier>;
 	public final pos:Position;
@@ -24,7 +24,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 	var mappings:Array<MetadataEntry> = [];
 	var requirements:Array<MetadataEntry> = [];
 	var subModules:Array<MetadataEntry> = [];
-	var exports:Array<MappingInfo> = [];
+	var exports:Array<BindingInfo> = [];
 	var dependencies:Array<Identifier> = [];
 	var uses:Array<Identifier> = [];
 

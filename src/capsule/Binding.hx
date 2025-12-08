@@ -3,7 +3,7 @@ package capsule;
 import capsule.provider.NullProvider;
 
 @:allow(capsule)
-class Mapping<T> {
+class Binding<T> {
 	public final id:Identifier;
 
 	var provider:Provider<T>;
@@ -23,12 +23,12 @@ class Mapping<T> {
 
 	public macro function toDefault(factory);
 
-	public function toProvider(provider:Provider<T>):Mapping<T> {
+	public function toProvider(provider:Provider<T>):Binding<T> {
 		this.provider = this.provider.transitionTo(provider);
 		return this;
 	}
 
-	public function share():Mapping<T> {
+	public function share():Binding<T> {
 		this.provider = provider.asShared();
 		return this;
 	}
@@ -38,6 +38,6 @@ class Mapping<T> {
 	}
 
 	public function clone() {
-		return new Mapping(id).toProvider(provider.clone());
+		return new Binding(id).toProvider(provider.clone());
 	}
 }
