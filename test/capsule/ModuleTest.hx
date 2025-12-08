@@ -40,14 +40,14 @@ class ModuleTest extends Test {
 		});
 	}
 
-	public function testDefaultMappings() {
+	public function testDefaultBindings() {
 		var container = Container.compile(new SimpleWithDefaultsModule());
 		container.open((simple:SimpleService) -> {
 			simple.getValue().equals('foo');
 		});
 	}
 
-	public function testOverrideDefaultMappings() {
+	public function testOverrideDefaultBindings() {
 		var container = Container.compile(new SimpleWithDefaultsModule(), new SimpleOverridesDefaultsModule());
 		container.open((simple:SimpleService) -> {
 			simple.getValue().equals('override');

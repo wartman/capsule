@@ -16,13 +16,13 @@ class ContainerTest extends Test {
 		container.get(Int).equals(1);
 	}
 
-	public function testBasicClassMapping() {
+	public function testBasicClassBinding() {
 		var container = new Container();
 		container.bind(SimpleService).to(Simple);
 		container.get(SimpleService).getValue().equals('value');
 	}
 
-	public function testClassInstanceMapping() {
+	public function testClassInstanceBinding() {
 		var container = new Container();
 
 		container.bind(ValueService).to(new Value('foo'));
@@ -108,7 +108,7 @@ class ContainerTest extends Test {
 		test.getValue().equals('foo');
 	}
 
-	public function testExtendsMappings() {
+	public function testExtendsBindings() {
 		var container = new Container();
 
 		container.bind(String).to('foo').share();
@@ -166,14 +166,14 @@ class ContainerTest extends Test {
 		container.clone().get(Array(Int)).length.equals(4);
 	}
 
-	public function testMappingExtensionsToNullProvider() {
+	public function testBindingExtensionsToNullProvider() {
 		var container = new Container();
 		container.when(String).resolved(value -> value + 'bar');
 		container.bind(String).to('foo');
 		container.get(String).equals('foobar');
 	}
 
-	public function testMappingToAlreadyResolvedMapping() {
+	public function testBindingToAlreadyResolvedBinding() {
 		var container = new Container();
 		try {
 			container.bind(String).to('foo');
@@ -184,7 +184,7 @@ class ContainerTest extends Test {
 		}
 	}
 
-	public function testDefaultMapping() {
+	public function testDefaultBinding() {
 		var container = new Container();
 		container.bind(String).toDefault('foo');
 		container.get(String).equals('foo');
@@ -192,7 +192,7 @@ class ContainerTest extends Test {
 		container.get(String).equals('bar');
 	}
 
-	public function testNotOverridingDefaultMapping() {
+	public function testNotOverridingDefaultBinding() {
 		var container = new Container();
 		container.bind(String).to('bar');
 		container.get(String).equals('bar');
@@ -200,7 +200,7 @@ class ContainerTest extends Test {
 		container.get(String).equals('bar');
 	}
 
-	public function testDefaultMappingExtensions() {
+	public function testDefaultBindingExtensions() {
 		var container = new Container();
 		container.bind(String).toDefault('foo');
 		container.when(String).resolved(value -> value + '_bar');

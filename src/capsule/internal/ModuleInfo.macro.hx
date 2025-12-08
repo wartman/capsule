@@ -21,7 +21,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 		Context.error('Must be a capsule.Module', pos);
 	}
 
-	var mappings:Array<MetadataEntry> = [];
+	var bindings:Array<MetadataEntry> = [];
 	var requirements:Array<MetadataEntry> = [];
 	var subModules:Array<MetadataEntry> = [];
 	var exports:Array<BindingInfo> = [];
@@ -37,7 +37,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 		// Reload type to make sure we have any added meta (this feels hacky, but it works?).
 		var cls = get();
 
-		mappings = mappings.concat(cls.meta.extract(':capsule.mapping'));
+		bindings = bindings.concat(cls.meta.extract(':capsule.binding'));
 		requirements = requirements.concat(cls.meta.extract(':capsule.dependency'));
 		subModules = subModules.concat(cls.meta.extract(':capsule.uses'));
 
@@ -57,7 +57,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 
 	loadMetadata(() -> type.getClass());
 
-	for (mapping in mappings) switch mapping.params {
+	for (binding in bindings) switch binding.params {
 		case [obj]:
 			switch obj.expr {
 				case EObjectDecl(fields):
@@ -82,8 +82,8 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 				case EArrayDecl(values):
 					var deps = values.map(value -> value.getValue());
 					for (dep in deps) {
-						for (mapping in exports) {
-							if (mapping.id != dep && !dependencies.contains(dep)) {
+						for (binding in exports) {
+							if (binding.id != dep && !dependencies.contains(dep)) {
 								dependencies.push(dep);
 								break;
 							}
@@ -122,10 +122,10 @@ function getLocalModule():Null<ClassType> {
 	return type.getClass();
 }
 
-function registerMappingWithLocalModule(id:String, dependencies:Array<String>, isDefault:Bool = false) {
+function registerBindingWithLocalModule(id:String, dependencies:Array<String>, isDefault:Bool = false) {
 	var module = getLocalModule();
 	if (module == null) return;
-	module.meta.add(':capsule.mapping', [macro {
+	module.meta.add(':capsule.binding', [macro {
 		id: $v{id},
 		dependencies: [$a{dependencies.map(v -> macro $v{v})}],
 		isDefault: $v{isDefault}

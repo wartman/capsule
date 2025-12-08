@@ -31,7 +31,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position, isDefault:Bool
 			switch Context.typeof(e) {
 				case TFun(_, _):
 					// Is an actual function call (hopefully)
-					registerMappingWithLocalModule(id, [], isDefault);
+					registerBindingWithLocalModule(id, [], isDefault);
 					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 				default:
 					// Is a generic type -- continue.
@@ -41,7 +41,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position, isDefault:Bool
 				case TType(_, _) | TFun(_, _): // continue
 				default:
 					// If not a function or type, default to using a ValueProvider.
-					registerMappingWithLocalModule(id, [], isDefault);
+					registerBindingWithLocalModule(id, [], isDefault);
 					return macro new capsule.provider.ValueProvider<$ret>(${expr});
 			}
 	}
@@ -49,7 +49,7 @@ function createProvider(expr:Expr, ret:ComplexType, pos:Position, isDefault:Bool
 	var deps = getDependencies(expr, pos);
 	var factory = createFactoryWithDeps(deps, expr, pos);
 
-	registerMappingWithLocalModule(id, deps, isDefault);
+	registerBindingWithLocalModule(id, deps, isDefault);
 
 	return macro new capsule.provider.FactoryProvider<$ret>(${factory});
 }

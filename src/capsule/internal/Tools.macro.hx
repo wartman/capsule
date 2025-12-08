@@ -21,14 +21,10 @@ class Tools {
 		var exprs:Array<String> = [];
 		for (arg in args) {
 			switch arg {
-				case null:
+				case null | TMono(_):
 					Context.error(
-						'Could not resolve an argument type. Ensure that you are mapping '
-						+ 'to a concrete type with no unresolved type parameters.', pos);
-				case TMono(t):
-					Context.error(
-						'Could not resolve an argument type. Ensure that you are mapping '
-						+ 'to a concrete type with no unresolved type parameters.', pos);
+						'Could not resolve an argument type. Ensure that you are binding'
+						+ ' a concrete type with no unresolved type parameters.', pos);
 				default:
 			}
 			exprs.push(typeToIdentifier(arg));

@@ -103,7 +103,7 @@ function createCompiledContainer(values:Array<ExprOf<Module>>):Expr {
 	for (module in modules) {
 		for (export in module.exports) for (dependency in export.dependencies) {
 			if (!satisfied.contains(dependency)) {
-				Context.error('The mapping ${export.id} requires ${dependency}', module.pos);
+				Context.error('The binding ${export.id} requires ${dependency}', module.pos);
 			}
 		}
 		for (dependency in module.dependencies) {

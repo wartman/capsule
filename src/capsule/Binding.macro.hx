@@ -27,11 +27,11 @@ class Binding {
 		}
 		var provider = createProvider(factory, t, factory.pos, true);
 		return macro @:pos(self.pos) {
-			var mapping = $self;
-			if (!mapping.resolvable()) {
-				mapping.toProvider(new capsule.provider.OverridableProvider(${provider}));
+			var binding = $self;
+			if (!binding.resolvable()) {
+				binding.toProvider(new capsule.provider.OverridableProvider(${provider}));
 			}
-			mapping;
+			binding;
 		}
 	}
 }
