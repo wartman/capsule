@@ -7,14 +7,14 @@ using capsule.internal.Builder;
 using capsule.internal.Tools;
 using haxe.macro.Tools;
 
-class CompiledContainerBase {
+class CompiledContainer {
 	public static function open(self:Expr, handler:Expr):Expr {
-		var provides = getListOfProvidedTypes(self);
+		var provides = getProvidedTypes(self);
 		var deps = handler.getDependencies();
 
 		for (dep in deps) {
 			if (!provides.contains(dep)) {
-				Context.error('Container requires $dep.', handler.pos);
+				Context.error('Container does not provide $dep.', handler.pos);
 			}
 		}
 
@@ -22,8 +22,8 @@ class CompiledContainerBase {
 		return macro @:pos(handler.pos) ${factory}(@:privateAccess $self.container);
 	}
 
-	public static function get(self, target:Expr):Expr {
-		var provides = getListOfProvidedTypes(self);
+	public static function get(self:Expr, target:Expr):Expr {
+		var provides = getProvidedTypes(self);
 		var id = target.createIdentifier();
 		var type = target.resolveComplexType();
 
@@ -34,7 +34,7 @@ class CompiledContainerBase {
 		return macro @:pos(target.pos) @:privateAccess ($self.container.resolveBoundValue($v{id}) : $type);
 	}
 
-	static function getListOfProvidedTypes(self:Expr) {
+	static function getProvidedTypes(self:Expr) {
 		var type = Context.typeof(self);
 		var cls = type.getClass();
 		return switch cls.meta.extract(':capsule.provides') {

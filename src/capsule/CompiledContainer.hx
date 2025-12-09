@@ -1,9 +1,6 @@
 package capsule;
 
-@:genericBuild(capsule.CompiledContainerBuilder.buildGeneric())
-interface CompiledContainer<@:const Provides> {}
-
-abstract class CompiledContainerBase {
+abstract class CompiledContainer {
 	final container:capsule.Container;
 
 	public function new(container) {

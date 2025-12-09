@@ -1,4 +1,4 @@
-package capsule;
+package capsule.internal;
 
 typedef BindingInfo = {
 	public final id:Identifier;

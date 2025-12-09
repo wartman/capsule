@@ -6,73 +6,71 @@ import haxe.macro.Expr;
 
 using haxe.macro.Tools;
 
-class Tools {
-	static public function typeToIdentifier(type:Type) {
-		return type.toComplexType().toString();
-	}
+function typeToIdentifier(type:Type) {
+	return type.toComplexType().toString();
+}
 
-	static public function complexTypeToIdentifier(complexType:ComplexType) {
-		// note: We need to convert ComplexTypes to Types first and then
-		// back, as we need to ensure that we have the FULL type path.
-		return typeToIdentifier(complexType.toType());
-	}
+function complexTypeToIdentifier(complexType:ComplexType) {
+	// note: We need to convert ComplexTypes to Types first and then
+	// back, as we need to ensure that we have the FULL type path.
+	return typeToIdentifier(complexType.toType());
+}
 
-	static public function typesToIdentifiers(args:Array<Type>, pos:Position):Array<String> {
-		var exprs:Array<String> = [];
-		for (arg in args) {
-			switch arg {
-				case null | TMono(_):
-					Context.error(
-						'Could not resolve an argument type. Ensure that you are binding'
-						+ ' a concrete type with no unresolved type parameters.', pos);
+function typesToIdentifiers(args:Array<Type>, pos:Position):Array<String> {
+	var exprs:Array<String> = [];
+	for (arg in args) {
+		switch arg {
+			case null | TMono(_):
+				Context.error(
+					'Could not resolve an argument type. Ensure that you are binding'
+					+ ' a concrete type with no unresolved type parameters.', pos);
+			default:
+		}
+		exprs.push(typeToIdentifier(arg));
+	}
+	return exprs;
+}
+
+function parseAsType(name:String):ComplexType {
+	return switch Context.parse('(null:${name})', Context.currentPos()) {
+		case macro(null : $type): type;
+		default: null;
+	}
+}
+
+function resolveComplexType(expr:Expr):ComplexType {
+	return switch expr.expr {
+		case ECall(e, params):
+			var tParams = params.map(param -> resolveComplexType(param).toString()).join(',');
+			parseAsType(resolveComplexType(e).toString() + '<' + tParams + '>');
+		default: switch Context.typeof(expr) {
+				case TType(_, _):
+					parseAsType(expr.toString());
 				default:
+					Context.error('Invalid expression: ${expr.toString()}', expr.pos);
+					null;
 			}
-			exprs.push(typeToIdentifier(arg));
-		}
-		return exprs;
 	}
+}
 
-	static public function parseAsType(name:String):ComplexType {
-		return switch Context.parse('(null:${name})', Context.currentPos()) {
-			case macro(null : $type): type;
-			default: null;
-		}
+function exprToArray(expr:TypedExpr):Array<String> {
+	return switch expr.expr {
+		case TArrayDecl(el): el.map(exprToString);
+		default: throw 'assert';
 	}
+}
 
-	static public function resolveComplexType(expr:Expr):ComplexType {
-		return switch expr.expr {
-			case ECall(e, params):
-				var tParams = params.map(param -> resolveComplexType(param).toString()).join(',');
-				parseAsType(resolveComplexType(e).toString() + '<' + tParams + '>');
-			default: switch Context.typeof(expr) {
-					case TType(_, _):
-						parseAsType(expr.toString());
-					default:
-						Context.error('Invalid expression: ${expr.toString()}', expr.pos);
-						null;
-				}
-		}
+function exprToString(expr:TypedExpr):String {
+	return switch expr.expr {
+		case TConst(TString(s)): s;
+		case TConst(TNull): null;
+		default: throw 'assert';
 	}
+}
 
-	static public function exprToArray(expr:TypedExpr):Array<String> {
-		return switch expr.expr {
-			case TArrayDecl(el): el.map(exprToString);
-			default: throw 'assert';
-		}
-	}
-
-	static public function exprToString(expr:TypedExpr):String {
-		return switch expr.expr {
-			case TConst(TString(s)): s;
-			case TConst(TNull): null;
-			default: throw 'assert';
-		}
-	}
-
-	static public function exprToBool(expr:TypedExpr):Bool {
-		return switch expr.expr {
-			case TConst(TBool(b)): b;
-			default: throw 'assert';
-		}
+function exprToBool(expr:TypedExpr):Bool {
+	return switch expr.expr {
+		case TConst(TBool(b)): b;
+		default: throw 'assert';
 	}
 }
