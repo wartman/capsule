@@ -21,36 +21,64 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 		Context.error('Must be a capsule.Module', pos);
 	}
 
+	var cls = type.getClass();
 	var bindings:Array<MetadataEntry> = [];
 	var requirements:Array<MetadataEntry> = [];
 	var subModules:Array<MetadataEntry> = [];
+	var visitedMethods:Array<String> = [];
 	var exports:Array<BindingInfo> = [];
 	var dependencies:Array<Identifier> = [];
 	var uses:Array<Identifier> = [];
 
+	function usesContainer(id:Int, args:Array<TypedExpr>) {
+		for (arg in args) switch arg.expr {
+			case TLocal(v) if (v.id == id):
+				return true;
+			default:
+		}
+		return false;
+	}
+
+	function visitMethod(cls:ClassType, field:Null<ClassField>) {
+		function scanMethodsThatUseContainer(id:Int, expr:TypedExpr) {
+			switch expr?.expr {
+				case TCall(e, args) if (usesContainer(id, args)):
+					switch e?.expr {
+						case TField(e, FInstance(_.get() => c, params, _.get() => field)):
+							visitMethod(c, field);
+						default:
+					}
+				default:
+					expr?.iter(e -> scanMethodsThatUseContainer(id, e));
+			}
+		}
+
+		if (field == null) return;
+		switch field.kind {
+			case FMethod(_):
+				switch field.expr()?.expr {
+					case TFunction(f):
+						var container = f.args.find(f -> f.v.t.unify((macro :capsule.Container).toType()));
+						if (container == null) return;
+
+						var id = formatMethodId(cls, field.name);
+						if (!visitedMethods.contains(id)) visitedMethods.push(id);
+						scanMethodsThatUseContainer(container.v.id, f.expr);
+					default:
+				}
+			default:
+		}
+	}
+
+	visitMethod(cls, cls.findField('provide', false));
+
 	function loadMetadata(get:() -> ClassType) {
 		var cls = get();
-		// Iterate through module fields and ensure types are loaded.
-		for (field in cls.fields.get()) {
-			field.expr();
-		}
-		// Reload type to make sure we have any added meta (this feels hacky, but it works?).
-		var cls = get();
-
 		bindings = bindings.concat(cls.meta.extract(':capsule.binding'));
 		requirements = requirements.concat(cls.meta.extract(':capsule.dependency'));
 		subModules = subModules.concat(cls.meta.extract(':capsule.uses'));
 
 		if (cls.superClass != null) {
-			#if !capsule.suppress_module_subclass_warning
-			Context.warning(
-				'You\'re extending another Module. This is not recommended. It will work, but'
-				+ ' may not track dependencies correctly if you override any methods and do not'
-				+ ' call `super.{methodName}()`. This is a good way to get runtime errors.'
-				+ ' As an alternative, try composing modules with `container.use(...)` instead.'
-				+ ' You can suppress this warning with `-D capsule.suppress-module-subclass-warning`.'
-				, cls.pos);
-			#end
 			loadMetadata(() -> cls.superClass.t.get());
 		}
 	}
@@ -58,7 +86,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 	loadMetadata(() -> type.getClass());
 
 	for (binding in bindings) switch binding.params {
-		case [obj]:
+		case [method, obj] if (visitedMethods.contains(method.getValue())):
 			switch obj.expr {
 				case EObjectDecl(fields):
 					exports.push({
@@ -77,7 +105,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 	}
 
 	for (item in requirements) switch item.params {
-		case [arr]:
+		case [method, arr] if (visitedMethods.contains(method.getValue())):
 			switch arr.expr {
 				case EArrayDecl(values):
 					var deps = values.map(value -> value.getValue());
@@ -95,7 +123,7 @@ function getModuleInfo(type:Type, pos:Position):ModuleInfo {
 	}
 
 	for (module in subModules) switch module.params {
-		case [id]:
+		case [method, id] if (visitedMethods.contains(method.getValue())):
 			switch id.expr {
 				case EConst(CString(s, _)):
 					uses.push(s);
@@ -122,10 +150,20 @@ function getLocalModule():Null<ClassType> {
 	return type.getClass();
 }
 
+private function formatMethodId(module:ClassType, name:String) {
+	var moduleId = module.module + ';' + module.pack.concat([module.name]).join('.');
+	return moduleId + '|' + name;
+}
+
+private function getQualifiedLocalMethod(module:ClassType) {
+	return formatMethodId(module, Context.getLocalMethod());
+}
+
 function registerBindingWithLocalModule(id:String, dependencies:Array<String>, isDefault:Bool = false) {
 	var module = getLocalModule();
 	if (module == null) return;
-	module.meta.add(':capsule.binding', [macro {
+	var method = getQualifiedLocalMethod(module);
+	module.meta.add(':capsule.binding', [macro $v{method}, macro {
 		id: $v{id},
 		dependencies: [$a{dependencies.map(v -> macro $v{v})}],
 		isDefault: $v{isDefault}
@@ -135,12 +173,14 @@ function registerBindingWithLocalModule(id:String, dependencies:Array<String>, i
 function registerDependenciesWithLocalModule(dependencies:Array<String>) {
 	var module = getLocalModule();
 	if (module == null) return;
+	var method = getQualifiedLocalMethod(module);
 	var param = macro [$a{dependencies.map(v -> macro $v{v})}];
-	module.meta.add(':capsule.dependency', [param], (macro null).pos);
+	module.meta.add(':capsule.dependency', [macro $v{method}, param], (macro null).pos);
 }
 
 function registerSubModuleWithLocalModule(id:String) {
 	var module = getLocalModule();
 	if (module == null) return;
-	module.meta.add(':capsule.uses', [macro $v{id}], (macro null).pos);
+	var method = getQualifiedLocalMethod(module);
+	module.meta.add(':capsule.uses', [macro $v{method}, macro $v{id}], (macro null).pos);
 }
