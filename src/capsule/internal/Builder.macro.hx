@@ -67,6 +67,8 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 	}
 
 	return switch expr.expr {
+		case null:
+			macro @:pos(expr.pos) function(container:capsule.Container) return null;
 		case EFunction(_, _):
 			var args = deps.map(argsToExpr);
 			macro @:pos(expr.pos) function(container:capsule.Container) {
@@ -74,13 +76,13 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 			}
 		case ECall(e, params):
 			var expr = getConstructorFromCallExpr(expr, pos);
-			return createFactoryWithDeps(deps, macro $expr, pos);
+			createFactoryWithDeps(deps, macro $expr, pos);
 		default:
 			switch Context.typeof(expr) {
 				case TType(_, _):
 					var path = expr.toString().split('.');
 					checkExprForCorrectTypeParams(expr, pos);
-					return createFactoryWithDeps(deps, macro $p{path}.new, pos);
+					createFactoryWithDeps(deps, macro $p{path}.new, pos);
 				case TFun(args, _):
 					var args = deps.map(argsToExpr);
 					macro @:pos(expr.pos) function(container:capsule.Container) {
@@ -88,7 +90,7 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 						return factory($a{args});
 					};
 				default:
-					return macro @:pos(expr.pos) function(container:capsule.Container) return $expr;
+					macro @:pos(expr.pos) function(container:capsule.Container) return $expr;
 			}
 	}
 }
@@ -97,6 +99,8 @@ function getDependencies(expr:Expr, ?pos:Position):Array<String> {
 	if (pos == null) pos = expr.pos;
 
 	return switch expr.expr {
+		case null:
+			return [];
 		case EFunction(_, f):
 			return argumentsToIdentifiers(f.args, pos);
 		case ECall(e, params):
