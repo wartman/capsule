@@ -39,4 +39,10 @@ class When {
 				Context.error('Expected a function', transform.pos);
 		}
 	}
+
+	public static function needs(self:Expr, type:Expr, factory:Expr):Expr {
+		var id = createIdentifier(type);
+		var expr = createFactory(factory);
+		return macro @:pos(self.pos) @:privateAccess $self.applyNeedsBinding($v{id}, $expr);
+	}
 }

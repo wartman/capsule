@@ -63,15 +63,15 @@ function createFactory(expr:Expr, ?pos:Position) {
 
 private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Position) {
 	function argsToExpr(id:String) {
-		return macro container.resolveBoundValue($v{id});
+		return macro bindings.resolve($v{id});
 	}
 
 	return switch expr.expr {
 		case null:
-			macro @:pos(expr.pos) function(container:capsule.Container) return null;
+			macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) return null;
 		case EFunction(_, _):
 			var args = deps.map(argsToExpr);
-			macro @:pos(expr.pos) function(container:capsule.Container) {
+			macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) {
 				return ${expr}($a{args});
 			}
 		case ECall(e, params):
@@ -85,12 +85,12 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 					createFactoryWithDeps(deps, macro $p{path}.new, pos);
 				case TFun(args, _):
 					var args = deps.map(argsToExpr);
-					macro @:pos(expr.pos) function(container:capsule.Container) {
+					macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) {
 						var factory = ${expr};
 						return factory($a{args});
 					};
 				default:
-					macro @:pos(expr.pos) function(container:capsule.Container) return $expr;
+					macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) return $expr;
 			}
 	}
 }

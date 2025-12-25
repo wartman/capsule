@@ -19,7 +19,7 @@ class CompiledContainer {
 		}
 
 		var factory = handler.createFactory();
-		return macro @:pos(handler.pos) ${factory}(@:privateAccess $self.container);
+		return macro @:pos(handler.pos) ${factory}(@:privateAccess $self.container.bindings);
 	}
 
 	public static function get(self:Expr, target:Expr):Expr {
@@ -31,7 +31,7 @@ class CompiledContainer {
 			Context.error('Container does not provide $id.', target.pos);
 		}
 
-		return macro @:pos(target.pos) @:privateAccess ($self.container.resolveBoundValue($v{id}) : $type);
+		return macro @:pos(target.pos) @:privateAccess ($self.container.bindings.resolve($v{id}) : $type);
 	}
 
 	static function getProvidedTypes(self:Expr) {

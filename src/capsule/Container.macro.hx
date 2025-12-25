@@ -20,24 +20,24 @@ class Container {
 	public static function bind(self:Expr, target:Expr) {
 		var identifier = target.createIdentifier();
 		var type = target.resolveComplexType();
-		return macro @:pos(self.pos) @:privateAccess ($self.ensureBinding($v{identifier}) : capsule.Binding<$type>);
+		return macro @:pos(self.pos) @:privateAccess ($self.bindings.get($v{identifier}) : capsule.Binding<$type>);
 	}
 
 	public static function get(self:Expr, target:Expr) {
 		var identifier = target.createIdentifier();
 		var type = target.resolveComplexType();
-		return macro @:pos(target.pos) ($self.resolveBoundValue($v{identifier}) : $type);
+		return macro @:pos(target.pos) @:privateAccess ($self.bindings.resolve($v{identifier}) : $type);
 	}
 
 	public static function when(self:Expr, target:Expr) {
 		var identifier = target.createIdentifier();
 		var type = target.resolveComplexType();
-		return macro new capsule.When<$type>(@:privateAccess $self.ensureBinding($v{identifier}));
+		return macro new capsule.When<$type>(@:privateAccess $self.bindings.get($v{identifier}));
 	}
 
 	public static function instantiate(self:Expr, target:Expr) {
 		var factory = target.createFactory();
-		return macro @:pos(target.pos) ${factory}($self);
+		return macro @:pos(target.pos) ${factory}(@:privateAccess $self.bindings);
 	}
 
 	public static function use(self:Expr, ...modules:ExprOf<Module>) {

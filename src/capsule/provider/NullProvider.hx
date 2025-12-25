@@ -13,7 +13,7 @@ class NullProvider<T> implements Provider<T> {
 		return false;
 	}
 
-	public function resolve(container:Container):T {
+	public function resolve(bindings:BindingCollection):T {
 		throw new ProviderDoesNotExistException(id);
 	}
 

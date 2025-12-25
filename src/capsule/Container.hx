@@ -5,7 +5,7 @@ using Lambda;
 class Container {
 	public static macro function compile(...modules);
 
-	final bindings:Array<Binding<Dynamic>> = [];
+	final bindings = new BindingCollection();
 
 	public function new() {}
 
@@ -25,27 +25,25 @@ class Container {
 	public function clone() {
 		var cloned = new Container();
 		for (binding in bindings) {
-			cloned.addBinding(binding.clone());
+			cloned.bindings.add(binding.clone());
 		}
 		return cloned;
 	}
 
-	@:noCompletion
-	public function ensureBinding<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Binding<T> {
-		var binding:Null<Binding<T>> = cast bindings.find(binding -> binding.id == id);
-		if (binding == null) return addBinding(new Binding(id));
-		return binding;
-	}
-
-	@:noCompletion
-	public function resolveBoundValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
-		return ensureBinding(id).resolve(this);
-	}
-
-	function addBinding<T>(binding:Binding<T>):Binding<T> {
-		bindings.push(binding);
-		return binding;
-	}
+	// @:noCompletion
+	// public function ensureBinding<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Binding<T> {
+	// 	var binding:Null<Binding<T>> = cast bindings.find(binding -> binding.id == id);
+	// 	if (binding == null) return addBinding(new Binding(id));
+	// 	return binding;
+	// }
+	// @:noCompletion
+	// public function resolveBoundValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
+	// 	return ensureBinding(id).resolve(this);
+	// }
+	// function addBinding<T>(binding:Binding<T>):Binding<T> {
+	// 	bindings.push(binding);
+	// 	return binding;
+	// }
 
 	function useModule(module:Module) {
 		module.provide(this);

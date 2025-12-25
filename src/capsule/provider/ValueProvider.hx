@@ -13,7 +13,7 @@ class ValueProvider<T> implements Provider<T> {
 		return true;
 	}
 
-	public function resolve(container:Container):T {
+	public function resolve(bindings:BindingCollection):T {
 		return value;
 	}
 

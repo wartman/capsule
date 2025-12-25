@@ -34,7 +34,7 @@ class Binding<T> {
 	}
 
 	public inline function resolve(container:Container):T {
-		return provider.resolve(container);
+		return provider.resolve(@:privateAccess container.bindings);
 	}
 
 	public function clone() {

@@ -3,7 +3,7 @@ package capsule.provider;
 import capsule.exception.ProviderAlreadyExistsException;
 
 class FactoryProvider<T> implements Provider<T> {
-	var factory:(container:Container) -> T;
+	var factory:(bindings:BindingCollection) -> T;
 
 	public function new(factory) {
 		this.factory = factory;
@@ -13,8 +13,8 @@ class FactoryProvider<T> implements Provider<T> {
 		return true;
 	}
 
-	public function resolve(container:Container):T {
-		return this.factory(container);
+	public function resolve(bindings:BindingCollection):T {
+		return this.factory(bindings);
 	}
 
 	public function transitionTo(other:Provider<T>):Provider<T> {

@@ -2,10 +2,10 @@ package capsule.provider;
 
 class TransformerProvider<T> implements Provider<T> {
 	final provider:Provider<T>;
-	final transform:(value:T, container:Container) -> T;
+	final transform:(value:T, container:BindingCollection) -> T;
 	var value:Null<T> = null;
 
-	public function new(provider, transform:(value:T, container:Container) -> T) {
+	public function new(provider, transform:(value:T, bindings:BindingCollection) -> T) {
 		this.provider = provider;
 		this.transform = transform;
 	}
@@ -14,12 +14,12 @@ class TransformerProvider<T> implements Provider<T> {
 		return provider.resolvable();
 	}
 
-	public function resolve(container:Container):T {
+	public function resolve(bindings:BindingCollection):T {
 		var shared = provider.isShared();
 
 		if (shared && value != null) return value;
 
-		var transformedValue = transform(this.provider.resolve(container), container);
+		var transformedValue = transform(this.provider.resolve(bindings), bindings);
 
 		if (shared) value = transformedValue;
 

@@ -11,8 +11,8 @@ class OverridableProvider<T> implements Provider<T> {
 		return true;
 	}
 
-	public function resolve(container:Container):T {
-		return provider.resolve(container);
+	public function resolve(bindings:BindingCollection):T {
+		return provider.resolve(bindings);
 	}
 
 	public function transitionTo(other:Provider<T>):Provider<T> {

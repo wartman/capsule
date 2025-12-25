@@ -14,9 +14,9 @@ class SharedProvider<T> implements Provider<T> {
 		return true;
 	}
 
-	public function resolve(container:Container):T {
+	public function resolve(bindings:BindingCollection):T {
 		if (value == null) {
-			value = provider.resolve(container);
+			value = provider.resolve(bindings);
 		}
 		return value;
 	}
