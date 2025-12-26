@@ -112,7 +112,7 @@ import robot.standard.*;
 function main() {
   Container.compile(
     new StandardRobotModule()
-  ).open((robot:Robot, friend:FriendlyRobot) -> {
+  ).open((robot:Robot) -> {
     trace(robot.head.lookAt('tree'));
   });
 }
