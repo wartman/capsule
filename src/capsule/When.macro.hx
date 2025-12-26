@@ -5,6 +5,7 @@ import capsule.internal.Builder;
 import haxe.macro.Expr;
 
 using haxe.macro.TypeTools;
+using capsule.internal.Tools;
 
 class When {
 	public static function resolved(self:Expr, transform:Expr):Expr {
@@ -40,9 +41,12 @@ class When {
 		}
 	}
 
-	public static function needs(self:Expr, type:Expr, factory:Expr):Expr {
-		var id = createIdentifier(type);
-		var expr = createFactory(factory);
-		return macro @:pos(self.pos) @:privateAccess $self.applyNeedsBinding($v{id}, $expr);
+	public static function needs(self:Expr, type:Expr):Expr {
+		var t = switch Context.typeof(self) {
+			case TInst(_, [t]): t.toComplexType();
+			default: macro :Dynamic;
+		}
+		var v = type.resolveComplexType();
+		return macro new capsule.Needs<$t, $v>(@:privateAccess $self.binding);
 	}
 }

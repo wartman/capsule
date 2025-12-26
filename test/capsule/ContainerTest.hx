@@ -226,16 +226,25 @@ class ContainerTest extends Test {
 		var container = new Container();
 		container.bind(String).to('bar');
 		container.bind(HasParams(String)).to(HasParams(String));
-		container.when(HasParams(String)).needs(String, 'foo');
+		container.when(HasParams(String)).needs(String).give('foo');
 		container.get(HasParams(String)).getValue().equals('foo');
+		container.get(String).equals('bar');
 	}
 
 	public function testComplexNeedsHook() {
 		var container = new Container();
 		container.bind(String).to('bar');
 		container.bind(Int).to(3);
-		container.bind(HasParams(String)).to(HasParams(String));
-		container.when(HasParams(String)).needs(String, (previous:String, int:Int) -> '${previous}_foo_${int}');
-		container.get(HasParams(String)).getValue().equals('bar_foo_3');
+		container.bind(HasParams(String)).to(HasParams(String)).share();
+		container.when(HasParams(String))
+			.needs(String)
+			.give((previous:String, int:Int) -> '${previous}_foo_${int}');
+		container.when(HasParams(String))
+			.needs(Int)
+			.give(2);
+
+		container.get(HasParams(String)).getValue().equals('bar_foo_2');
+		container.get(String).equals('bar');
+		container.get(Int).equals(3);
 	}
 }

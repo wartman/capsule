@@ -11,17 +11,11 @@ class When<T> {
 
 	public macro function resolved(expr);
 
-	public macro function needs(expr, expr);
+	public macro function needs(expr);
 
 	function applyTransform(transform:(value:T, bindings:BindingCollection) -> T) {
 		var previous = binding.provider;
 		binding.provider = new TransformerProvider(previous, transform);
-		return this;
-	}
-
-	function applyNeedsBinding<V>(id:Identifier, factory:(bindings:BindingCollection) -> V) {
-		var previous = binding.provider;
-		binding.provider = new WhenNeedsBindingProvider(previous, id, factory);
 		return this;
 	}
 }

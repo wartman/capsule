@@ -1,0 +1,3 @@
+package robot;
+
+interface Body {}
