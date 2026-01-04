@@ -3,6 +3,7 @@ import coffeemaker.*;
 import robot.*;
 import robot.standard.*;
 import robot.friendly.*;
+import robot.generic.*;
 
 function main() {
 	Container.compile(
@@ -15,9 +16,12 @@ function main() {
 
 	Container.compile(
 		new StandardRobotModule(),
-		new FriendlyRobotModule()
-	).open((robot:Robot, friend:FriendlyRobot) -> {
+		new FriendlyRobotModule(),
+		new GenericRobotModule()
+	).open((robot:Robot, friend:FriendlyRobot, standard:GenericRobot<Brain>, alsoFriend:GenericRobot<FriendlyBrain>) -> {
 		trace(robot.head.lookAt('tree'));
 		trace(friend.head.lookAt('tree'));
+		trace(standard.head.lookAt('tree'));
+		trace(alsoFriend.head.lookAt('tree'));
 	});
 }

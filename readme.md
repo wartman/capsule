@@ -20,7 +20,7 @@ As an example of how Capsule works we're going to put together a few robots. Onc
 
 ### Creating Some Parts
 
-Our first step is to create our robot's parts. First we'll create a `Robot` class that will hold everything together:
+First let's create a `Robot` class that will hold everything together:
 
 ```haxe
 package robot;
