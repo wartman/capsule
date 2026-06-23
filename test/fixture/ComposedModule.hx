@@ -4,7 +4,7 @@ import capsule.Container;
 import capsule.Module;
 
 /**
-	This shows how module compisition works. Note that `ValueModule`
+	This shows how module composition works. Note that `ValueModule`
 	has a constructor that takes a String, so this module has one
 	`String` dependency that must be met.
 **/

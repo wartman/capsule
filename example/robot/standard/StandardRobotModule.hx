@@ -12,5 +12,8 @@ class StandardRobotModule implements Module {
 		container.bind(Body).to(StandardBody);
 		container.bind(Arms).to(StandardArms);
 		container.bind(Legs).to(StandardLegs);
+		container.when(Array(Robot)).resolved((robots, standard:Robot) -> {
+			robots.concat([standard]);
+		});
 	}
 }

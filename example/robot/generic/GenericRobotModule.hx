@@ -10,5 +10,8 @@ class GenericRobotModule implements Module {
 		container.bind(FriendlyBrain).to(FriendlyBrain);
 		container.bind(GenericRobot(Brain)).to(GenericRobot(Brain));
 		container.bind(GenericRobot(FriendlyBrain)).to(GenericRobot(FriendlyBrain));
+		container.when(Array(Robot)).resolved((robots, generic:GenericRobot<Brain>, friendly:GenericRobot<FriendlyBrain>) -> {
+			robots.concat([generic, friendly]);
+		});
 	}
 }

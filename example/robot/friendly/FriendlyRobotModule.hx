@@ -8,5 +8,8 @@ class FriendlyRobotModule implements Module {
 	public function provide(container:Container) {
 		container.bind(FriendlyRobot).to(Robot).share();
 		container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain);
+		container.when(Array(Robot)).resolved((robots, friendly:FriendlyRobot) -> {
+			robots.concat([friendly]);
+		});
 	}
 }

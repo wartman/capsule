@@ -26,17 +26,17 @@ First let's create a `Robot` class that will hold everything together:
 package robot;
 
 class Robot {
-  public final head:Head;
-  public final body:Body;
-  public final legs:Legs;
-  public final arms:Arms;
+	public final head:Head;
+	public final body:Body;
+	public final legs:Legs;
+	public final arms:Arms;
 
-  public function new(head, body, legs, arms) {
-    this.head = head;
-    this.body = body;
-    this.legs = legs;
-    this.arms = arms;
-  }
+	public function new(head, body, legs, arms) {
+		this.head = head;
+		this.body = body;
+		this.legs = legs;
+		this.arms = arms;
+	}
 }
 ```
 
@@ -46,7 +46,7 @@ Just by creating a class with a constructor, we've given Capsule all the informa
 package robot;
 
 interface Head {
-  public function lookAt(target:String):String;
+	public function lookAt(target:String):String;
 }
 ```
 
@@ -56,11 +56,11 @@ We'll also create some standard implementations for each of these robot parts. F
 package robot.standard;
 
 class StandardArms implements Arms {
-  public function new() {}
+	public function new() {}
 
-  public function pickUp(target:String):String {
-    return 'Picks up $target.';
-  }
+	public function pickUp(target:String):String {
+		return 'Picks up $target.';
+	}
 }
 ```
 
@@ -70,15 +70,15 @@ We'll do something a little different with the robot's `Head` and make that part
 package robot.standard;
 
 class StandardHead implements Head {
-  final brain:Brain;
+	final brain:Brain;
 
-  public function new(brain) {
-    this.brain = brain;
-  }
+	public function new(brain) {
+		this.brain = brain;
+	}
 
-  public function lookAt(target:String):String {
-    return 'Looks at $target. ' + brain.consider(target);
-  }
+	public function lookAt(target:String):String {
+		return 'Looks at $target. ' + brain.consider(target);
+	}
 }
 ```
 
@@ -94,11 +94,11 @@ package robot.standard;
 import capsule.*;
 
 class StandardRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(Robot).to(Robot);
-  }
+	public function provide(container:Container) {
+		container.bind(Robot).to(Robot);
+	}
 }
 ```
 
@@ -110,11 +110,11 @@ import robot.*;
 import robot.standard.*;
 
 function main() {
-  Container.compile(
-    new StandardRobotModule()
-  ).open((robot:Robot) -> {
-    trace(robot.head.lookAt('tree'));
-  });
+	Container.compile(
+		new StandardRobotModule()
+	).open((robot:Robot) -> {
+		trace(robot.head.lookAt('tree'));
+	});
 }
 ```
 
@@ -126,16 +126,16 @@ package robot.standard;
 import capsule.*;
 
 class StandardRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(Robot).to(Robot);
-    container.bind(Brain).to(StandardBrain);
-    container.bind(Head).to(StandardHead);
-    container.bind(Body).to(StandardBody);
-    container.bind(Arms).to(StandardArms);
-    container.bind(Legs).to(StandardLegs);
-  }
+	public function provide(container:Container) {
+		container.bind(Robot).to(Robot);
+		container.bind(Brain).to(StandardBrain);
+		container.bind(Head).to(StandardHead);
+		container.bind(Body).to(StandardBody);
+		container.bind(Arms).to(StandardArms);
+		container.bind(Legs).to(StandardLegs);
+	}
 }
 ```
 
@@ -149,11 +149,11 @@ Lets say we want a robot with a more friendly brain:
 package robot.friendly;
 
 class FriendlyBrain implements Brain {
-  public function new() {}
+	public function new() {}
 
-  public function consider(target:String):String {
-    return 'Would like $target to be its friend.';
-  }
+	public function consider(target:String):String {
+		return 'Would like $target to be its friend.';
+	}
 }
 ```
 
@@ -168,16 +168,16 @@ import capsule.*;
 import robot.friendly.*;
 
 class StandardRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(Robot).to(Robot);
-    container.bind(Brain).to(FriendlyBrain); // <- Changed here
-    container.bind(Head).to(StandardHead);
-    container.bind(Body).to(StandardBody);
-    container.bind(Arms).to(StandardArms);
-    container.bind(Legs).to(StandardLegs);
-  }
+	public function provide(container:Container) {
+		container.bind(Robot).to(Robot);
+		container.bind(Brain).to(FriendlyBrain); // <- Changed here
+		container.bind(Head).to(StandardHead);
+		container.bind(Body).to(StandardBody);
+		container.bind(Arms).to(StandardArms);
+		container.bind(Legs).to(StandardLegs);
+	}
 }
 ```
 
@@ -197,11 +197,11 @@ package robot.friendly;
 import capsule.*;
 
 class FriendlyRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(FriendlyRobot).to(Robot);
-  }
+	public function provide(container:Container) {
+		container.bind(FriendlyRobot).to(Robot);
+	}
 }
 ```
 
@@ -213,16 +213,16 @@ package robot.friendly;
 import capsule.*;
 
 class FriendlyRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(FriendlyRobot).to((body:Body, legs:Legs, arms:Arms) -> new Robot(
-      new Head(new FriendlyBrain()),
-      body,
-      legs,
-      arms
-    ));
-  }
+	public function provide(container:Container) {
+		container.bind(FriendlyRobot).to((body:Body, legs:Legs, arms:Arms) -> new Robot(
+			new Head(new FriendlyBrain()),
+			body,
+			legs,
+			arms
+		));
+	}
 }
 ```
 
@@ -234,12 +234,12 @@ package robot.friendly;
 import capsule.*;
 
 class FriendlyRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(FriendlyRobot).to(Robot);
-    container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain); // <- Rebound `Brain`
-  }
+	public function provide(container:Container) {
+		container.bind(FriendlyRobot).to(Robot);
+		container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain); // <- Rebound `Brain`
+	}
 }
 ```
 
@@ -251,12 +251,12 @@ package robot.friendly;
 import capsule.*;
 
 class FriendlyRobotModule implements Module {
-  public function new() {}
+	public function new() {}
 
-  public function provide(container:Container) {
-    container.bind(FriendlyRobot).to(Robot).share(); // <- Added `share()`
-    container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain);
-  }
+	public function provide(container:Container) {
+		container.bind(FriendlyRobot).to(Robot).share(); // <- Added `share()`
+		container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain);
+	}
 }
 ```
 
@@ -269,12 +269,12 @@ import robot.standard.*;
 import robot.friendly.*;
 
 function main() {
-  Container.compile(
-    new StandardRobotModule()
-  ).open((robot:Robot, friend:FriendlyRobot) -> {
-    trace(robot.head.lookAt('tree'));
-    trace(friend.head.lookAt('tree'));
-  });
+	Container.compile(
+		new StandardRobotModule()
+	).open((robot:Robot, friend:FriendlyRobot) -> {
+		trace(robot.head.lookAt('tree'));
+		trace(friend.head.lookAt('tree'));
+	});
 }
 ```
 
@@ -287,18 +287,172 @@ import robot.standard.*;
 import robot.friendly.*;
 
 function main() {
-  Container.compile(
-    new StandardRobotModule(),
-    new FriendlyRobotModule()
-  ).open((robot:Robot, friend:FriendlyRobot) -> {
-    trace(robot.head.lookAt('tree'));
-    trace(friend.head.lookAt('tree'));
-  });
+	Container.compile(
+		new StandardRobotModule(),
+		new FriendlyRobotModule()
+	).open((robot:Robot, friend:FriendlyRobot) -> {
+		trace(robot.head.lookAt('tree'));
+		trace(friend.head.lookAt('tree'));
+	});
 }
 ```
 
-## Advanced Concepts and Real-world examples
+### Making our robot generic
 
-<!-- Todo: `share()`, `when(...).resolved(...)`, etc. -->
+It's entirely possible that we'll want more than the two types of brain we've created for our robot. We could create a typedef for every variation, as we did with the `FriendlyRobot`, but we might decide that it makes more sense to create a `GenericRobot<T:Brain>`. Let's create it:
 
-> Coming soon
+```haxe
+package robot.generic;
+
+import robot.standard.StandardHead;
+
+class GenericRobot<T:Brain> extends Robot {
+	public function new(brain:T, body, legs, arms) {
+		super(new StandardHead(brain), body, legs, arms);
+	}
+}
+```
+
+We'll also need to create a `GenericRobotModule` to bind everything, but we'll quickly run into a problem. Let's look at how we'd ideally write the module:
+
+```haxe
+package robot.generic;
+
+import robot.friendly.FriendlyBrain;
+import capsule.*;
+
+class GenericRobotModule implements Module {
+	public function new() {}
+
+	public function provide(container:Container) {
+		container.bind(FriendlyBrain).to(FriendlyBrain);
+		container.bind(GenericRobot<Brain>).to(GenericRobot<Brain>);
+		container.bind(GenericRobot<FriendlyBrain>).to(GenericRobot<FriendlyBrain>);
+	}
+}
+```
+
+Unfortunately this is not valid Haxe code -- we can't use type parameters in an expression like this. Capsule abuses the function call syntax and uses parens instead:
+
+```haxe
+package robot.generic;
+
+import robot.friendly.FriendlyBrain;
+import capsule.*;
+
+class GenericRobotModule implements Module {
+	public function new() {}
+
+	public function provide(container:Container) {
+		container.bind(FriendlyBrain).to(FriendlyBrain);
+		container.bind(GenericRobot(Brain)).to(GenericRobot(Brain));
+		container.bind(GenericRobot(FriendlyBrain)).to(GenericRobot(FriendlyBrain));
+	}
+}
+```
+
+It's important to note that this is *not* a Haxe feature, this is just a workaround used by Capsule.
+
+Let's add the `GenericRobotModule` to our container. Note that we always use the proper syntax for type parameters in the places where it's valid (in this case as function arguments).
+
+```haxe
+import capsule.Container;
+import robot.*;
+import robot.friendly.*;
+import robot.generic.*;
+import robot.standard.*;
+
+function main() {
+	Container.compile(
+		new StandardRobotModule(),
+		new FriendlyRobotModule(),
+		new GenericRobotModule()
+	).open((robot:Robot, friend:FriendlyRobot, standard:GenericRobot<Brain>, alsoFriend:GenericRobot<FriendlyBrain>) -> {
+		trace(robot.head.lookAt('tree'));
+		trace(friend.head.lookAt('tree'));
+		trace(standard.head.lookAt('tree'));
+		trace(alsoFriend.head.lookAt('tree'));
+	});
+}
+```
+
+### Extending bindings
+
+Our little program would be more extensible if we had an array of robots we could tell to do things instead of having to get them all one at a time. It would also be handy if we could add our robots to this array inside each of their modules.
+
+To do this, let's first create a new module to bind our robots array:
+
+```haxe
+package robot;
+
+import capsule.*;
+import robot.friendly.FriendlyRobotModule;
+import robot.generic.GenericRobotModule;
+import robot.logger.DefaultLoggerModule;
+import robot.standard.StandardRobotModule;
+
+class RobotsModule implements Module {
+	public function new() {}
+
+	public function provide(container:Container) {
+		container.bind(Array(Robot)).to([]);
+	}
+}
+```
+
+In each of our other modules that bind a robot we'll tell Capsule to add the robot to the `Array<Robot>` when it's resolved. For example, this is what our `FriendlyRobotModule` will look like:
+
+```haxe
+package robot.friendly;
+
+import capsule.*;
+
+class FriendlyRobotModule implements Module {
+	public function new() {}
+
+	public function provide(container:Container) {
+		container.bind(FriendlyRobot).to(Robot).share();
+		container.when(FriendlyRobot).needs(Brain).give(FriendlyBrain);
+		container.when(Array(Robot)).resolved((robots, friendly:FriendlyRobot) -> {
+			return robots.concat([friendly]);
+		});
+	}
+}
+```
+
+The first argument in the callback passed to `resolve` (`robots` in this case) is always the value of the current binding. An arbitrary number of other arguments (such as `friendly:FriendlyRobot` in our example) can be used to inject other bindings.
+
+Lets add similar lines to our other modules:
+
+```haxe
+// In StandardRobotModule:
+container.when(Array(Robot)).resolved((robots, standard:Robot) -> {
+	robots.concat([standard]);
+});
+
+// In GenericRobotModule:
+container.when(Array(Robot)).resolved((robots, generic:GenericRobot<Brain>, friendly:GenericRobot<FriendlyBrain>) -> {
+	robots.concat([generic, friendly]);
+});
+```
+
+...and then simplify our `main` function:
+
+```haxe
+import capsule.Container;
+import robot.*;
+import robot.friendly.*;
+import robot.generic.*;
+import robot.standard.*;
+
+function main() {
+	Container.compile(
+		new StandardRobotModule(),
+		new FriendlyRobotModule(),
+		new GenericRobotModule(),
+		new RobotsModule()
+	).open((robots:Array<Robot>) -> {
+		for (robot in robots) trace(robot.head.lookAt('tree'));
+	});
+}
+```

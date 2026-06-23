@@ -1,27 +1,29 @@
 import capsule.Container;
-import coffeemaker.*;
 import robot.*;
-import robot.standard.*;
 import robot.friendly.*;
 import robot.generic.*;
+import robot.standard.*;
+import robot.logger.*;
 
 function main() {
 	Container.compile(
-		new CoffeeLoggerModule(),
-		new CoffeeApp()
-	).open((coffeemaker:CoffeeMaker, logger:CoffeeLogger) -> {
-		coffeemaker.brew();
-		logger.log('Done');
+		new StandardRobotModule(),
+		new FriendlyRobotModule(),
+		new GenericRobotModule(),
+		new DefaultLoggerModule()
+	).open((logger:Logger, robot:Robot, friend:FriendlyRobot, standard:GenericRobot<Brain>, alsoFriend:GenericRobot<FriendlyBrain>) -> {
+		logger.log(robot.head.lookAt('tree'));
+		logger.log(friend.head.lookAt('tree'));
+		logger.log(standard.head.lookAt('tree'));
+		logger.log(alsoFriend.head.lookAt('tree'));
 	});
 
 	Container.compile(
 		new StandardRobotModule(),
 		new FriendlyRobotModule(),
-		new GenericRobotModule()
-	).open((robot:Robot, friend:FriendlyRobot, standard:GenericRobot<Brain>, alsoFriend:GenericRobot<FriendlyBrain>) -> {
-		trace(robot.head.lookAt('tree'));
-		trace(friend.head.lookAt('tree'));
-		trace(standard.head.lookAt('tree'));
-		trace(alsoFriend.head.lookAt('tree'));
+		new GenericRobotModule(),
+		new RobotsModule()
+	).open((logger:Logger, robots:Array<Robot>) -> {
+		for (robot in robots) logger.log(robot.head.lookAt('tree'));
 	});
 }

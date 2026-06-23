@@ -62,7 +62,7 @@ function createFactory(expr:Expr, ?pos:Position) {
 }
 
 private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Position) {
-	function argsToExpr(id:String) {
+	function createBindingResolver(id:String) {
 		return macro bindings.resolve($v{id});
 	}
 
@@ -70,7 +70,7 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 		case null:
 			macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) return null;
 		case EFunction(_, _):
-			var args = deps.map(argsToExpr);
+			var args = deps.map(createBindingResolver);
 			macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) {
 				return ${expr}($a{args});
 			}
@@ -84,7 +84,7 @@ private function createFactoryWithDeps(deps:Array<String>, expr:Expr, pos:Positi
 					checkExprForCorrectTypeParams(expr, pos);
 					createFactoryWithDeps(deps, macro $p{path}.new, pos);
 				case TFun(args, _):
-					var args = deps.map(argsToExpr);
+					var args = deps.map(createBindingResolver);
 					macro @:pos(expr.pos) function(bindings:capsule.BindingCollection) {
 						var factory = ${expr};
 						return factory($a{args});
@@ -104,8 +104,7 @@ function getDependencies(expr:Expr, ?pos:Position):Array<String> {
 		case EFunction(_, f):
 			return argumentsToIdentifiers(f.args, pos);
 		case ECall(e, params):
-			var expr = getConstructorFromCallExpr(expr, pos);
-			return getDependencies(macro $expr, pos);
+			return getDependencies(getConstructorFromCallExpr(expr, pos), pos);
 		default:
 			switch Context.typeof(expr) {
 				case TType(_, _):
