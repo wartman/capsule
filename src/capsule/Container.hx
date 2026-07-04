@@ -30,21 +30,6 @@ class Container {
 		return cloned;
 	}
 
-	// @:noCompletion
-	// public function ensureBinding<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):Binding<T> {
-	// 	var binding:Null<Binding<T>> = cast bindings.find(binding -> binding.id == id);
-	// 	if (binding == null) return addBinding(new Binding(id));
-	// 	return binding;
-	// }
-	// @:noCompletion
-	// public function resolveBoundValue<T>(id:Identifier #if debug, ?pos:haxe.PosInfos #end):T {
-	// 	return ensureBinding(id).resolve(this);
-	// }
-	// function addBinding<T>(binding:Binding<T>):Binding<T> {
-	// 	bindings.push(binding);
-	// 	return binding;
-	// }
-
 	function useModule(module:Module) {
 		module.provide(this);
 		return this;
